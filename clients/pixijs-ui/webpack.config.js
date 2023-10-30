@@ -69,7 +69,6 @@ module.exports = (env, argv) => {
     plugins: [
       new CopyWebpackPlugin({
         patterns: [
-          { from: 'assets/' },
           { from: 'public/' }
         ],
       }),
