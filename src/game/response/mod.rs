@@ -5,7 +5,7 @@ use crate::game::command::GameExistsResponse;
 use super::command::{
   GetConstantsRsp,
   DefaultSettingsRsp,
-  ElevationsResponse,
+  MapDataResponse,
   MiniElevationsResponse,
   AnimalsResponse,
 };
@@ -19,7 +19,7 @@ pub(crate) enum ResponseEnvelope {
   DefaultSettings(Box<DefaultSettingsRsp>),
   GameExists(Box<GameExistsResponse>),
   NoGameExists {},
-  Elevations(Box<ElevationsResponse>),
+  MapData(Box<MapDataResponse>),
   MiniElevations(Box<MiniElevationsResponse>),
   Animals(Box<AnimalsResponse>),
 }

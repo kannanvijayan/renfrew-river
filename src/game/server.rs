@@ -14,7 +14,7 @@ use crate::{
       HasGameCmd, HasGameRsp, GameExistsResponse,
       GetConstantsCmd, GetConstantsRsp,
       DefaultSettingsCmd, DefaultSettingsRsp,
-      ReadElevationsCmd, ReadElevationsRsp, ElevationsResponse,
+      ReadMapDataCmd, ReadMapDataKind, ReadMapDataRsp, MapDataResponse,
       MiniElevationsCmd, MiniElevationsRsp, MiniElevationsResponse,
       ReadAnimalsCmd, ReadAnimalsRsp, AnimalsResponse,
     },
@@ -24,7 +24,12 @@ use crate::{
     },
     settings::{ MAX_WORLD_DIMS, MIN_WORLD_DIMS }
   },
-  world::TERRAIN_ELEVATION_BITS,
+  world::{
+    TerrainElevationValueType,
+    TERRAIN_ELEVATION_BITS,
+
+    AnimalId,
+  },
 };
 
 /**
@@ -57,98 +62,6 @@ impl GameServer {
       }
     };
     response
-  }
-
-  pub(crate) fn default_settings(&self) -> GameSettings {
-    log::debug!("GameServer::default_settings");
-    let default_settings_command = DefaultSettingsCmd {};
-    self.command_tx.send(
-      CommandEnvelope::DefaultSettings(Box::new(default_settings_command))
-    ).unwrap();
-    let response = self.await_response::<DefaultSettingsCmd>();
-    response.settings
-  }
-
-  pub(crate) fn has_game(&self) -> bool {
-    log::debug!("GameServer::has_game");
-    let has_game_command = HasGameCmd {};
-    self.command_tx.send(
-      CommandEnvelope::HasGame(Box::new(has_game_command))
-    ).unwrap();
-    let response = self.await_response::<HasGameCmd>();
-    match response {
-      HasGameRsp::GameExists(_) => {
-        log::debug!("GameServer::has_game: GameExists");
-        true
-      },
-      HasGameRsp::NoGameExists => {
-        log::debug!("GameServer::has_game: NoGameExists");
-        false
-      }
-    }
-  }
-
-  pub(crate) fn new_game(&self, settings: GameSettings) -> bool {
-    log::debug!("GameServer::new_game");
-    let new_command = NewGameCmd { settings };
-    self.command_tx.send(
-      CommandEnvelope::NewGame(Box::new(new_command))
-    ).unwrap();
-    let response = self.await_response::<NewGameCmd>();
-    match response {
-      NewGameRsp::Ok{} => {
-        log::debug!("GameServer::new_game: NewGameCreated");
-        true
-      },
-      NewGameRsp::Failed(_) => {
-        log::warn!("GameServer::new_game: NewGameFailed");
-        false
-      }
-    }
-  }
-
-  pub(crate) fn stop_game(&mut self) {
-    log::debug!("GameServer::stop");
-    if self.join_handle.is_none() {
-      log::warn!("GameServer::stop: Already stopped");
-      return;
-    }
-    let join_handle = self.join_handle.take().unwrap();
-    let stop_command = StopGameCmd {};
-    self.command_tx.send(
-      CommandEnvelope::StopGame(Box::new(stop_command))
-    ).unwrap();
-    let join_result = join_handle.join();
-    match join_result {
-      Ok(_) => {
-        log::debug!("GameServer::stop: Joined thread");
-      },
-      Err(_) => {
-        log::error!("GameServer::stop: Failed to join thread");
-      }
-    }
-  }
-
-  fn await_response<C: Command>(&self) -> C::Response {
-    let response = match self.response_rx.recv() {
-      Ok(response) => response,
-      Err(err) => {
-        panic!(
-          "GameServer::await_response: response channel errored: {:?}",
-          err
-        );
-      }
-    };
-
-    match C::extract_response(&response) {
-      Some(response) => response,
-      None => {
-        panic!(
-          "GameServer::await_response: unexpected response: {:?}",
-          response
-        );
-      }
-    }
   }
 }
 
@@ -221,9 +134,9 @@ impl GameServerInner {
         let resp = self.handle_stop_command(*stop_command);
         return StopGameCmd::embed_response(resp);
       },
-      CommandEnvelope::ReadElevations(read_elevations_command) => {
+      CommandEnvelope::ReadMapData(read_elevations_command) => {
         let resp = self.handle_read_elevations_command(*read_elevations_command);
-        return ReadElevationsCmd::embed_response(resp);
+        return ReadMapDataCmd::embed_response(resp);
       },
       CommandEnvelope::MiniElevations(mini_elevations_command) => {
         let resp = self.handle_mini_elevations_command(*mini_elevations_command);
@@ -300,14 +213,14 @@ impl GameServerInner {
   }
 
   fn handle_read_elevations_command(&mut self,
-    read_elevations_cmd: ReadElevationsCmd
-  ) -> ReadElevationsRsp {
+    read_elevations_cmd: ReadMapDataCmd
+  ) -> ReadMapDataRsp {
 
     // Validate command.
     let mut validation_errors = Vec::new();
     if !read_elevations_cmd.validate(&mut validation_errors) {
       log::warn!("GameServerInner::handle_new_command: Invalid command: {:?}", validation_errors);
-      return ReadElevationsRsp::Failed(FailedResponse::new_vec(validation_errors));
+      return ReadMapDataRsp::Failed(FailedResponse::new_vec(validation_errors));
     }
 
     let game = match self.game {
@@ -316,25 +229,38 @@ impl GameServerInner {
         log::warn!(
           "GameServerInner::handle_read_elevations_command: No game to read elevations from"
         );
-        return ReadElevationsRsp::Failed(
+        return ReadMapDataRsp::Failed(
           FailedResponse::new("No game to read elevations from")
         );
       }
     };
 
-    let ReadElevationsCmd { top_left, area } = read_elevations_cmd;
+    let ReadMapDataCmd { top_left, area, kinds } = read_elevations_cmd;
 
     if (top_left.col_usize() + area.columns_usize() > u16::MAX as usize)
     || (top_left.row_usize() + area.rows_usize() > u16::MAX as usize)
     {
-      return ReadElevationsRsp::Failed(
+      return ReadMapDataRsp::Failed(
         FailedResponse::new("Slice out of bounds")
       );
     }
 
-    let elevs = game.world().read_elevation_values(top_left, area);
-    ReadElevationsRsp::Ok(ElevationsResponse {
-      elevations: elevs.to_vec_of_vecs(),
+    let mut elevations: Option<Vec<Vec<TerrainElevationValueType>>> = None;
+    if kinds.contains(&ReadMapDataKind::Elevation) {
+      elevations = Some(
+        game.world().read_elevation_values(top_left, area).to_vec_of_vecs()
+      );
+    }
+
+    let mut animal_ids: Option<Vec<Vec<AnimalId>>> = None;
+    if kinds.contains(&ReadMapDataKind::AnimalId) {
+      animal_ids = Some(
+        game.world().read_animal_ids(top_left, area).to_vec_of_vecs()
+      );
+    }
+    ReadMapDataRsp::Ok(MapDataResponse {
+      elevations,
+      animal_ids,
     })
   }
 

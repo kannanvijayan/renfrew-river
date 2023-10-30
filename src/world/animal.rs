@@ -6,6 +6,7 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct AnimalId(u32);
 impl AnimalId {
   pub(crate) const INVALID: AnimalId = AnimalId(0xffff_ffff);

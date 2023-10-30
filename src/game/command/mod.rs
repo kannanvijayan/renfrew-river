@@ -5,7 +5,7 @@ mod default_settings_cmd;
 mod has_game_cmd;
 mod new_game_cmd;
 mod stop_game_cmd;
-mod read_elevations_cmd;
+mod read_map_data_cmd;
 mod mini_elevations_cmd;
 mod read_animals_cmd;
 
@@ -20,10 +20,11 @@ pub(crate) use self::{
   has_game_cmd::{HasGameCmd, HasGameRsp, GameExistsResponse},
   new_game_cmd::{NewGameCmd, NewGameRsp},
   stop_game_cmd::{StopGameCmd, StopGameRsp},
-  read_elevations_cmd::{
-    ReadElevationsCmd,
-    ReadElevationsRsp,
-    ElevationsResponse,
+  read_map_data_cmd::{
+    ReadMapDataCmd,
+    ReadMapDataKind,
+    ReadMapDataRsp,
+    MapDataResponse,
   },
   mini_elevations_cmd::{
     MiniElevationsCmd,

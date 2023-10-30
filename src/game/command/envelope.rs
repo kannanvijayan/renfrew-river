@@ -5,7 +5,7 @@ use crate::game::command::{
   HasGameCmd,
   NewGameCmd,
   StopGameCmd,
-  ReadElevationsCmd,
+  ReadMapDataCmd,
   MiniElevationsCmd,
   ReadAnimalsCmd,
 };
@@ -19,7 +19,7 @@ pub(crate) enum CommandEnvelope {
   HasGame(Box<HasGameCmd>),
   NewGame(Box<NewGameCmd>),
   StopGame(Box<StopGameCmd>),
-  ReadElevations(Box<ReadElevationsCmd>),
+  ReadMapData(Box<ReadMapDataCmd>),
   MiniElevations(Box<MiniElevationsCmd>),
   ReadAnimals(Box<ReadAnimalsCmd>),
 }

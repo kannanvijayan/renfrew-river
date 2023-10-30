@@ -133,6 +133,19 @@ impl GpuWorld {
     })
   }
 
+  pub(crate) fn read_animal_ids(&self, top_left: CellCoord, area: WorldDims)
+    -> VecMap<AnimalId>
+  {
+    futures::executor::block_on(async {
+      let out_buf = self.animals_map.read_mappable_area_copy(
+        &self.device,
+        top_left,
+        area,
+      ).await;
+      out_buf.to_vec_map().await
+    })
+  }
+
   pub(crate) fn mini_elevation_values(&self, mini_area: WorldDims)
     -> VecMap<TerrainElevationValueType>
   {

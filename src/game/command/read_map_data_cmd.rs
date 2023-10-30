@@ -4,16 +4,24 @@ use crate::{
     response::{ResponseEnvelope, FailedResponse},
     command::{Command, CommandEnvelope},
   },
-  world::{ CellCoord, WorldDims, TerrainElevationValueType },
+  world::{ CellCoord, WorldDims, TerrainElevationValueType, AnimalId },
 };
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) enum ReadMapDataKind {
+  Elevation,
+  AnimalId,
+}
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct ReadElevationsCmd {
+pub(crate) struct ReadMapDataCmd {
   pub(crate) top_left: CellCoord,
   pub(crate) area: WorldDims,
+  pub(crate) kinds: Vec<ReadMapDataKind>,
 }
-impl ReadElevationsCmd {
+impl ReadMapDataCmd {
   const TOP_LEFT_COL_MULTIPLE: u16 = 4;
   const TOP_LEFT_ROW_MULTIPLE: u16 = 4;
   const AREA_COLUMNS_MULTIPLE: u16 = 4;
@@ -22,40 +30,41 @@ impl ReadElevationsCmd {
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) enum ReadElevationsRsp {
-  Ok(ElevationsResponse),
+pub(crate) enum ReadMapDataRsp {
+  Ok(MapDataResponse),
   Failed(FailedResponse),
 }
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct ElevationsResponse {
-  pub(crate) elevations: Vec<Vec<TerrainElevationValueType>>,
+pub(crate) struct MapDataResponse {
+  pub(crate) elevations: Option<Vec<Vec<TerrainElevationValueType>>>,
+  pub(crate) animal_ids: Option<Vec<Vec<AnimalId>>>,
 }
 
-impl Command for ReadElevationsCmd {
-  type Response = ReadElevationsRsp;
+impl Command for ReadMapDataCmd {
+  type Response = ReadMapDataRsp;
   fn name() -> &'static str {
-    "ReadElevations"
+    "ReadMapData"
   }
   fn description() -> &'static str {
-    "Read elevations from a segment of the map."
+    "Read data from a segment of the map."
   }
   fn to_queue_command(&self) -> CommandEnvelope {
-    CommandEnvelope::ReadElevations(Box::new(self.clone()))
+    CommandEnvelope::ReadMapData(Box::new(self.clone()))
   }
   fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response> {
     match response {
-      ResponseEnvelope::Elevations(read_elevations_response) =>
-        Some(ReadElevationsRsp::Ok(*read_elevations_response.clone())),
+      ResponseEnvelope::MapData(read_elevations_response) =>
+        Some(ReadMapDataRsp::Ok(*read_elevations_response.clone())),
       _ => None,
     }
   }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     match response {
-      ReadElevationsRsp::Ok(response) =>
-        ResponseEnvelope::Elevations(Box::new(response)),
-      ReadElevationsRsp::Failed(failure) =>
+      ReadMapDataRsp::Ok(response) =>
+        ResponseEnvelope::MapData(Box::new(response)),
+      ReadMapDataRsp::Failed(failure) =>
         ResponseEnvelope::Error(Box::new(failure)),
     }
   }
@@ -91,28 +100,60 @@ impl Command for ReadElevationsCmd {
     }
     !errored
   }
+
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>) {
-    let read_elevations_example = ReadElevationsCmd {
-      top_left: CellCoord::new(0, 0),
+    let read_elevations_example = ReadMapDataCmd {
+      top_left: CellCoord::new(40, 12),
       area: WorldDims::new(4, 4),
+      kinds: vec![ReadMapDataKind::Elevation],
+    };
+    let read_elevations_animals_example = ReadMapDataCmd {
+      top_left: CellCoord::new(8, 4),
+      area: WorldDims::new(4, 4),
+      kinds: vec![ReadMapDataKind::Elevation, ReadMapDataKind::AnimalId],
     };
 
-    let elevations_rsp_example = ReadElevationsRsp::Ok(
-      ElevationsResponse {
-        elevations: vec![
+    let elevations_rsp_example = ReadMapDataRsp::Ok(
+      MapDataResponse {
+        elevations: Some(vec![
           vec![1, 2, 3, 4],
           vec![2, 1, 9, 3],
           vec![6, 5, 1, 1],
           vec![7, 8, 2, 4],
-        ]
+        ]),
+        animal_ids: None,
       }
     );
-    let failed_response_example = ReadElevationsRsp::Failed(
+
+    let elevations_animals_rsp_example = ReadMapDataRsp::Ok(
+      MapDataResponse {
+        elevations: Some(vec![
+          vec![1, 2, 3, 4],
+          vec![2, 1, 9, 3],
+          vec![6, 5, 1, 1],
+          vec![7, 8, 2, 4],
+        ]),
+        animal_ids: Some(vec![
+          vec![100, 29, 3, 404].iter().copied().map(AnimalId::new).collect(),
+          vec![22, 1006, 95, 332].iter().copied().map(AnimalId::new).collect(),
+          vec![65, 5, 152, 10091].iter().copied().map(AnimalId::new).collect(),
+          vec![78, 88, 252, 491].iter().copied().map(AnimalId::new).collect(),
+        ]),
+      }
+    );
+    let failed_response_example = ReadMapDataRsp::Failed(
       FailedResponse::new("Failed to read elevations")
     );
     (
-      vec![read_elevations_example],
-      vec![elevations_rsp_example, failed_response_example],
+      vec![
+        read_elevations_example,
+        read_elevations_animals_example,
+      ],
+      vec![
+        elevations_rsp_example,
+        elevations_animals_rsp_example,
+        failed_response_example,
+      ],
     )
   }
   fn protocol_notes() -> Vec<String> {

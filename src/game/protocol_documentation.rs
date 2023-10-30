@@ -6,7 +6,7 @@ use crate::game::command::{
   HasGameCmd,
   NewGameCmd,
   StopGameCmd,
-  ReadElevationsCmd,
+  ReadMapDataCmd,
   MiniElevationsCmd,
   ReadAnimalsCmd,
 };
@@ -28,7 +28,7 @@ pub fn get_protocol_docs() -> Vec<ProtocolDocumentation> {
   result.push(make_example::<DefaultSettingsCmd>());
   result.push(make_example::<NewGameCmd>());
   result.push(make_example::<StopGameCmd>());
-  result.push(make_example::<ReadElevationsCmd>());
+  result.push(make_example::<ReadMapDataCmd>());
   result.push(make_example::<MiniElevationsCmd>());
   result.push(make_example::<ReadAnimalsCmd>());
   return result;
