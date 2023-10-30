@@ -8,6 +8,7 @@ import { Constants } from "./protocol/types/constants";
 import { AnimalData } from "../game/types/animal_data";
 import { GameSettings } from "./protocol/types/settings";
 import { WorldDims } from "../game/types/world_dims";
+import { ReadMapDataKind, ReadMapDataKindResultType } from "./protocol/commands/read_map_data_cmd";
 
 export type GameClientArgs = {
   url: string;
@@ -104,16 +105,21 @@ export default class GameClient {
     }
   }
 
-  public async readElevations(opts: {
+  public async readMapData(opts: {
     topLeft: CellCoord,
     area: WorldDims,
-  }): Promise<number[][]> {
-    const result = await this.sendCommand("ReadElevations", {
+    kinds: ReadMapDataKind[],
+  }): Promise<{
+    elevations: ReadMapDataKindResultType<"Elevation">[][] | null,
+    animal_ids: ReadMapDataKindResultType<"AnimalId">[][] | null,
+  }> {
+    const result = await this.sendCommand("ReadMapData", {
       top_left: opts.topLeft,
       area: opts.area,
+      kinds: opts.kinds,
     });
-    if ("Elevations" in result) {
-      return result.Elevations.elevations;
+    if ("MapData" in result) {
+      return { ... result.MapData };
     } else {
       throw new Error(result.Error.messages.join(", "));
     }

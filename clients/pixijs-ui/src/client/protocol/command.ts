@@ -3,7 +3,7 @@ import { GetConstantsCmd } from "./commands/get_constants_cmd";
 import { DefaultSettingsCmd } from "./commands/default_settings_cmd";
 import { NewGameCmd } from "./commands/new_game_cmd";
 import { StopGameCmd } from "./commands/stop_game_cmd";
-import { ReadElevationsCmd } from "./commands/read_elevations_cmd";
+import { ReadMapDataCmd } from "./commands/read_map_data_cmd";
 import { MiniElevationsCmd } from "./commands/mini_elevations_cmd";
 import { ReadAnimalsCmd } from "./commands/read_animals_cmd";
 
@@ -16,7 +16,7 @@ export type ProtocolCommand = {
   DefaultSettings: DefaultSettingsCmd,
   NewGame: NewGameCmd,
   StopGame: StopGameCmd,
-  ReadElevations: ReadElevationsCmd,
+  ReadMapData: ReadMapDataCmd,
   MiniElevations: MiniElevationsCmd,
   ReadAnimals: ReadAnimalsCmd,
 };
