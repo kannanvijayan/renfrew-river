@@ -8,7 +8,7 @@ export interface PlayStageCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
   addTickCallback(callback: (delta: number, absTime: number) => void): void;
   newWorldObserver(): WorldObserver;
-  ensureElevationsLoaded: (
+  ensureMapDataLoaded: (
     topleft: { col: number, row: number },
     area: { columns: number, rows: number }
   ) => Promise<{

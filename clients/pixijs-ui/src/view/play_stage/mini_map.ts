@@ -183,7 +183,7 @@ export default class MiniMap extends PIXI.Container {
     rectangle.addIndex([0, 1, 2, 0, 2, 3]);
 
     const elevTex = PIXI.Texture.fromBuffer(
-      this.minimapData.elevations.array(),
+      this.minimapData.elevations.array,
       this.minimapData.miniDims.columns,
       this.minimapData.miniDims.rows,
       {

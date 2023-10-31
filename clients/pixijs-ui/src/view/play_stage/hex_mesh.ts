@@ -6,20 +6,22 @@ import {
   normalOffsetYForTile
 } from './hex';
 import Deferred from '../../util/deferred';
+import WorldMapTiledData from '../../game/world_map_tiled_data';
 
 export default class HexMesh {
   public readonly elevationsTexture: PIXI.Texture;
+  public readonly animalKindsTexture: PIXI.Texture;
   public readonly mesh: PIXI.Mesh<PIXI.Shader>;
   private dispatchedUpdateListeners: Deferred<void>[];
   private pendingUpdateListeners: Deferred<void>[];
-  private updateInProgress: boolean;
+  private updateInProgress: number;
 
   public constructor(opts: {
     columns: number,
     rows: number,
     worldColumns: number,
     worldRows: number,
-    elevations: Uint8Array,
+    mapData: WorldMapTiledData,
     topLeftWorldColumn: number,
     topLeftWorldRow: number,
   }) {
@@ -28,12 +30,14 @@ export default class HexMesh {
       rows,
       worldColumns,
       worldRows,
-      elevations,
+      mapData,
       topLeftWorldColumn,
       topLeftWorldRow,
     } = opts;
+
+    // Create elevations texture.
     const elevationsTexture = PIXI.Texture.fromBuffer(
-      elevations,
+      mapData.elevations.array,
       worldColumns,
       worldRows,
       {
@@ -45,25 +49,43 @@ export default class HexMesh {
       "update",
       this.handleTextureUpdated.bind(this)
     );
+
+    // Create animal kinds texture.
+    const animalKindsTexture = PIXI.Texture.fromBuffer(
+      mapData.animalKinds.array,
+      worldColumns,
+      worldRows,
+      {
+        format: PIXI.FORMATS.RED,
+        type: PIXI.TYPES.UNSIGNED_BYTE,
+      }
+    );
+    animalKindsTexture.baseTexture.addListener(
+      "update",
+      this.handleTextureUpdated.bind(this)
+    );
+
     const geometry = makeGeometry({ columns, rows });
     const shader = makeShader({
       columns,
       rows,
       worldColumns,
       worldRows,
-      elevationsTexture,
       topLeftWorldColumn,
       topLeftWorldRow,
+      elevationsTexture,
+      animalKindsTexture,
     });
 
     this.elevationsTexture = elevationsTexture;
+    this.animalKindsTexture = animalKindsTexture;
     this.mesh = new PIXI.Mesh(geometry, shader);
     this.dispatchedUpdateListeners = [];
     this.pendingUpdateListeners = [];
-    this.updateInProgress = false;
+    this.updateInProgress = 0;
   }
 
-  public updateElevationsTexture(): Promise<void> {
+  public updateTextures(): Promise<void> {
     const deferred = new Deferred<void>();
     if (this.updateInProgress) {
       // If update in progress, add the current request to the list of
@@ -72,33 +94,41 @@ export default class HexMesh {
     } else {
       // Otherwise, invoke an update, and add the current request to the list
       // of dispatched update listeners.
-      this.updateInProgress = true;
+      this.updateInProgress = 2;
       // ASSERT: this.dispatchedUpdateListeners.length === 0
       this.dispatchedUpdateListeners.push(deferred);
 
       this.elevationsTexture.update();
+      this.animalKindsTexture.update();
     }
     return deferred.getPromise();
   }
 
   private handleTextureUpdated() {
-    // ASSERT: this.updateInProgress === true
+    // ASSERT: this.updateInProgress > 0
     // ASSERT: this.dispatchedUpdateListeners.length > 0
+    this.updateInProgress--;
+    if (this.updateInProgress > 0) {
+      // Still waiting for texture updates to finish.
+      return;
+    }
+
     const invokeListeners = this.dispatchedUpdateListeners;
 
     if (this.pendingUpdateListeners.length > 0) {
       // Schedule another update and make the pending listeners the dispatched.
+      this.updateInProgress = 2;
       this.elevationsTexture.update();
+      this.animalKindsTexture.update();
       this.dispatchedUpdateListeners = this.pendingUpdateListeners;
       this.pendingUpdateListeners = [];
       // Leave updateInProgress as true.
     } else {
       // No more pending listeners, so clear the dispatched listeners.
       this.dispatchedUpdateListeners = [];
-      this.updateInProgress = false;
     }
 
-    // Invoke the prior set of dispatched listeners.
+    // Resolve the prior set of dispatched listeners.
     for (const deferred of invokeListeners) {
       deferred.resolvePromise();
     }
@@ -228,27 +258,30 @@ function makeShader(opts: {
   rows: number,
   worldColumns: number,
   worldRows: number,
-  elevationsTexture: PIXI.Texture,
   topLeftWorldColumn: number,
   topLeftWorldRow: number,
+  elevationsTexture: PIXI.Texture,
+  animalKindsTexture: PIXI.Texture,
 }) {
   const {
     columns,
     rows,
     worldColumns,
     worldRows,
-    elevationsTexture,
     topLeftWorldColumn,
     topLeftWorldRow,
+    animalKindsTexture,
+    elevationsTexture,
   } = opts;
   const uniforms = {
     columns,
     rows,
     worldColumns,
     worldRows,
-    elevTex: elevationsTexture,
     topLeftWorldColumn,
     topLeftWorldRow,
+    elevationTex: elevationsTexture,
+    animalKindTex: opts.animalKindsTexture,
   };
 
   const adjX = NORMAL_SCALE_TILE.width / 2;
@@ -293,7 +326,8 @@ function makeShader(opts: {
     uniform float rows;
     uniform float worldColumns;
     uniform float worldRows;
-    uniform sampler2D elevTex;
+    uniform sampler2D elevationTex;
+    uniform sampler2D animalKindTex;
     uniform float topLeftWorldColumn;
     uniform float topLeftWorldRow;
 
@@ -306,22 +340,18 @@ function makeShader(opts: {
       float textureX = worldX / worldColumns;
       float textureY = (worldRows - (worldY + 1.0)) / worldRows;
 
-      float elevation = texture2D(elevTex, vec2(textureX, 1.0 - textureY)).r;
-      if (elevation < 0.5) {
+      float elevation = texture2D(elevationTex, vec2(textureX, 1.0 - textureY)).r;
+      float animalKind = texture2D(animalKindTex, vec2(textureX, 1.0 - textureY)).r;
+      if (animalKind > 0.0) {
+        // color red
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+      } else if (elevation < 0.5) {
         // color blue, lower elevation is darker blue.
-        gl_FragColor = vec4(
-          0.1,
-          0.1,
-          elevation * 1.2,
-          1.0
-        );
+        float blue = elevation * 1.2;
+        gl_FragColor = vec4(0.1, 0.1, blue, 1.0);
       } else {
-        gl_FragColor = vec4(
-          (elevation - 0.5) * 2.0,
-          (elevation - 0.5) * 2.0,
-          (elevation - 0.5) * 2.0,
-          1.0
-        );
+        float level = (elevation - 0.5) * 2.0;
+        gl_FragColor = vec4(level, level, level, 1.0);
       }
     }
     `,

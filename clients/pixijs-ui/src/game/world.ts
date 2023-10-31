@@ -7,10 +7,13 @@ import WorldObserver from "./world_observer";
 import WorldMinimapData from "./world_minimap_data";
 
 export type GameWorldLoaderApi = {
-  readElevations: (opts: {
+  readMapArea: (opts: {
     topLeft: CellCoord,
     area: WorldDims
-  }) => Promise<number[][]>,
+  }) => Promise<{
+    elevations: number[][],
+    animalIds: number[][],
+  }>;
 };
 
 /** The game world. */

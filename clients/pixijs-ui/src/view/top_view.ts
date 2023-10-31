@@ -23,7 +23,7 @@ export interface TopViewCallbackApi {
   };
   playStage: {
     newWorldObserver(): WorldObserver;
-    ensureElevationsLoaded: (
+    ensureMapDataLoaded: (
       topleft: { col: number, row: number },
       area: { columns: number, rows: number }
     ) => Promise<{
@@ -136,8 +136,7 @@ export default class TopView {
         addTickCallback: (callback: (delta: number, absTime: number) => void) => {
           this.tickCallbacks.push(callback);
         },
-        newWorldObserver: this.callbackApi.playStage.newWorldObserver,
-        ensureElevationsLoaded: this.callbackApi.playStage.ensureElevationsLoaded,
+        ...this.callbackApi.playStage,
       },
     });
     this.playStageView.x = 0;

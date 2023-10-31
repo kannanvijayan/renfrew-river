@@ -7,7 +7,7 @@ import MiniMap from './mini_map';
 export interface MapViewCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
   addTickCallback(callback: (delta: number, absTime: number) => void): void;
-  ensureElevationsLoaded: (
+  ensureMapDataLoaded: (
     topleft: { col: number, row: number },
     area: { columns: number, rows: number }
   ) => Promise<{
@@ -40,8 +40,8 @@ export default class MapView extends PIXI.Container {
       worldRows: dimensions.rows,
       areaWidth: window.innerWidth,
       areaHeight: window.innerHeight,
-      elevations: this.worldObserver.elevationValues(),
-      callbackApi: { ensureElevationsLoaded: this.callbackApi.ensureElevationsLoaded }
+      mapData: this.worldObserver.mapData(),
+      callbackApi: { ensureMapDataLoaded: this.callbackApi.ensureMapDataLoaded }
     });
 
     this.callbackApi.addTickCallback((delta: number, absTime: number) => {

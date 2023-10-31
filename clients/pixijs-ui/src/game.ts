@@ -88,7 +88,7 @@ export default class Game {
             }
             return this.world.newObserver();
           },
-          ensureElevationsLoaded: this.ensureElevationsLoaded.bind(this),
+          ensureMapDataLoaded: this.ensureMapDataLoaded.bind(this),
         },
       },
     });
@@ -240,14 +240,15 @@ export default class Game {
       worldDims: this.currentGameSettings.world_dims,
       miniDims,
       loaderApi: {
-        readElevations: async ({topLeft, area}) => {
+        readMapArea: async ({topLeft, area}) => {
           let result = await this.client!.readMapData({
             topLeft,
             area,
-            kinds: ["Elevation"] as ["Elevation"],
+            kinds: ["Elevation", "AnimalId"] as ["Elevation", "AnimalId"],
           });
           // TODO: assert(result.elevations !== null);
-          return result.elevations;
+          let { elevations, animal_ids } = result;
+          return { elevations, animalIds: animal_ids };
         },
       },
     });
@@ -260,7 +261,7 @@ export default class Game {
     this.world.addAnimals(animals);
   }
 
-  private ensureElevationsLoaded(topLeft: CellCoord, area: WorldDims)
+  private ensureMapDataLoaded(topLeft: CellCoord, area: WorldDims)
     : Promise<{
         newTilesWritten: boolean,
         surroundingsLoaded: Promise<{ newTilesWritten: boolean }>

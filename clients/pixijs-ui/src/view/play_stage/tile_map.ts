@@ -6,9 +6,10 @@ import {
   tileFromNormalOffset,
 } from './hex';
 import HexMesh from './hex_mesh';
+import WorldMapTiledData from '../../game/world_map_tiled_data';
 
 export type TileMapCallbackApi = {
-  ensureElevationsLoaded: (
+  ensureMapDataLoaded: (
     topleft: { col: number, row: number },
     area: { columns: number, rows: number },
   ) => Promise<{
@@ -22,7 +23,7 @@ export type TileMapOptions = {
   worldRows: number;
   areaWidth: number;
   areaHeight: number;
-  elevations: Uint8Array;
+  mapData: WorldMapTiledData;
   callbackApi: TileMapCallbackApi;
 };
 
@@ -33,7 +34,7 @@ const MESH_SURPLUS = { cols: 4, rows: 4 };
 export default class TileMap extends PIXI.Container {
   private readonly worldColumns: number;
   private readonly worldRows: number;
-  private readonly elevations: Uint8Array;
+  private readonly mapData: WorldMapTiledData;
   private readonly callbackApi: TileMapCallbackApi;
 
   private readonly maxWorldX: number;
@@ -99,7 +100,7 @@ export default class TileMap extends PIXI.Container {
     super();
     this.worldColumns = opts.worldColumns;
     this.worldRows = opts.worldRows;
-    this.elevations = opts.elevations;
+    this.mapData = opts.mapData;
     this.callbackApi = opts.callbackApi;
 
     this.maxWorldX = (
@@ -140,7 +141,7 @@ export default class TileMap extends PIXI.Container {
       rows: this.meshRows,
       worldColumns: this.worldColumns,
       worldRows: this.worldRows,
-      elevations: this.elevations,
+      mapData: this.mapData,
       topLeftWorldColumn: this.topLeftWorldColumn,
       topLeftWorldRow: this.topLeftWorldRow,
     });
@@ -319,7 +320,7 @@ export default class TileMap extends PIXI.Container {
         rows: meshRows,
         worldColumns: this.worldColumns,
         worldRows: this.worldRows,
-        elevations: this.elevations,
+        mapData: this.mapData,
         topLeftWorldColumn: this.topLeftWorldColumn,
         topLeftWorldRow: this.topLeftWorldRow,
       });
@@ -346,7 +347,7 @@ export default class TileMap extends PIXI.Container {
     const updateCounter = ++this.updateCounter;
 
     // STAGE 2: Ensure that view is loaded.
-    return this.callbackApi.ensureElevationsLoaded(
+    return this.callbackApi.ensureMapDataLoaded(
       { col: this.topLeftWorldColumn, row: this.topLeftWorldRow },
       { columns: this.meshColumns, rows: this.meshRows },
     ).then(async ({ newTilesWritten, surroundingsLoaded }) => {
@@ -363,7 +364,7 @@ export default class TileMap extends PIXI.Container {
       // the new data.  Don't update the mesh until after the texture
       // update completes.
       if (newTilesWritten) {
-        await this.hexMesh.updateElevationsTexture();
+        await this.hexMesh.updateTextures();
       }
 
       let mesh = this.hexMesh.mesh;
@@ -385,7 +386,7 @@ export default class TileMap extends PIXI.Container {
       // waiters of the `updateMeshPosition`'s promise to wait for this.
       surroundingsLoaded.then(({ newTilesWritten }) => {
         if (newTilesWritten) {
-          this.hexMesh.updateElevationsTexture();
+          this.hexMesh.updateTextures();
         }
       });
     });

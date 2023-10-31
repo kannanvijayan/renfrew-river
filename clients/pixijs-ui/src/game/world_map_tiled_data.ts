@@ -3,12 +3,16 @@ import { Constants } from "../client/protocol/types/constants";
 import { WorldDims } from "./types/world_dims";
 import Deferred from "../util/deferred";
 import MapData from "./map_data";
+import { INVALID_ANIMAL_ID } from "./types/animal_data";
 
 export type WorldMapTiledDataCallbackApi = {
-  readElevations: (opts: {
+  readMapArea: (opts: {
     topLeft: CellCoord,
     area: WorldDims
-  }) => Promise<number[][]>,
+  }) => Promise<{
+    elevations: number[][],
+    animalIds: number[][],
+  }>,
 };
 
 const PER_TILE_DIMS: WorldDims = { columns: 256, rows: 256 };
@@ -24,6 +28,7 @@ export default class WorldMapTiledData {
   public readonly constants: Constants;
   public readonly worldDims: WorldDims;
   public readonly elevations: MapData<"uint8">;
+  public readonly animalKinds: MapData<"uint8">;
 
   private readonly loaderApi: WorldMapTiledDataCallbackApi;
   private readonly totalTileRows: number;
@@ -47,6 +52,7 @@ export default class WorldMapTiledData {
     this.constants = opts.constants;
     this.worldDims = opts.worldDims;
     this.elevations = new MapData("uint8", this.worldDims);
+    this.animalKinds = new MapData("uint8", this.worldDims);
 
     this.loaderApi = loaderApi;
 
@@ -77,13 +83,6 @@ export default class WorldMapTiledData {
     const { tlTileColumn, tlTileRow, brTileColumn, brTileRow } =
       this.computeTileCoverage(topLeft, area);
 
-    console.log("ensureViewAndQueueSurroundings", {
-      tlTileColumn,
-      tlTileRow,
-      brTileColumn,
-      brTileRow,
-    });
-
     const viewLoadIndexes = [];
     for (let i = tlTileColumn; i <= brTileColumn; i++) {
       for (let j = tlTileRow; j <= brTileRow; j++) {
@@ -95,6 +94,11 @@ export default class WorldMapTiledData {
         }
         viewLoadIndexes.push(tileIndex);
       }
+    }
+    if (viewLoadIndexes.length > 0) {
+      console.log("ensureViewAndQueueSurroundings viewLoadIndexes", viewLoadIndexes);
+    } else {
+      console.log("ensureViewAndQueueSurroundings viewLoadIndexes=[]");
     }
 
     let newViewTilesWritten = false;
@@ -282,12 +286,18 @@ export default class WorldMapTiledData {
         PER_TILE_DIMS.rows
       ),
     };
-    const elevations = await this.loaderApi.readElevations({ topLeft, area });
+    const areaData = await this.loaderApi.readMapArea({ topLeft, area });
     const shift_bits = this.constants.elevation_bits - 8;
     this.elevations.write2D({
       topLeft,
       area,
-      genValue: (x, y) => (elevations[y][x] >> shift_bits),
+      genValue: (x, y) => (areaData.elevations[y][x] >> shift_bits),
+    });
+    console.log("performTileLoad animalIds", areaData.animalIds);
+    this.animalKinds.write2D({
+      topLeft,
+      area,
+      genValue: (x, y) => (areaData.animalIds[y][x] == INVALID_ANIMAL_ID ? 0 : 1),
     });
     this.tileLoadStates[tileIndex] = "Loaded";
   }
