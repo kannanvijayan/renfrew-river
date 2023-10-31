@@ -6,12 +6,8 @@ use crate::{
     GpuSeqBuffer,
     GpuBufferOptions,
     compute::{
-      InitializeElevationsParams,
       initialize_elevations,
-
-      mini_elevations,
-
-      InitializeAnimalsParams,
+      elevations_minimap,
       initialize_animals,
     },
   },
@@ -41,7 +37,7 @@ pub(crate) struct GpuWorldParams {
 pub(crate) struct GpuWorld {
   device: GpuDevice,
 
-  world_dims: WorldDims,
+  _world_dims: WorldDims,
   rand_seed: u64,
 
   // The terrain map.
@@ -83,7 +79,7 @@ impl GpuWorld {
     );
     GpuWorld {
       device,
-      world_dims,
+      _world_dims: world_dims,
       rand_seed,
       elevation_map,
       animals_list,
@@ -92,28 +88,20 @@ impl GpuWorld {
   }
 
   pub(crate) fn init_elevations(&self) {
-    let params = InitializeElevationsParams {
-      world_dims: self.world_dims,
-      seed: self.rand_seed as u32,
-    };
     futures::executor::block_on(async {
       initialize_elevations(
         &self.device,
-        params,
+        self.rand_seed as u32,
         &self.elevation_map
       ).await
     });
   }
 
   pub(crate) fn init_animals(&self) {
-    let params = InitializeAnimalsParams {
-      world_dims: self.world_dims,
-      rand_seed: self.rand_seed as u32,
-    };
     futures::executor::block_on(async {
       initialize_animals(
         &self.device,
-        params,
+        self.rand_seed as u32,
         &self.animals_list,
         &self.animals_map,
       ).await
@@ -158,7 +146,7 @@ impl GpuWorld {
         .with_map_read(true)
     );
     futures::executor::block_on(async {
-      mini_elevations(
+      elevations_minimap(
         &self.device,
         &self.elevation_map,
         &mini_buffer,

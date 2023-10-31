@@ -24,7 +24,7 @@ var<storage, write> surface: Buffer2D;
 
 const PI: f32 = 3.1415926535897932384626;
 
-// LIBRARY("xxhash.wgsl")
+// LIBRARY("xxhash")
 fn rot_left(val: vec4<u32>, rot: vec4<u32>) -> vec4<u32> {
   return (val << rot) | (val >> (32u - rot));
 }
@@ -50,7 +50,7 @@ fn xxhash(seed: u32, values: vec4<u32>) -> u32 {
   res = (res ^ (res >> 13u)) * XXHASH_PRIME_3;
   return res ^ (res >> 16u);
 }
-// END_LIBRARY("xxhash.wgsl")
+// END_LIBRARY("xxhash")
 
 fn swizzle(seed: u32, adjust: u32, x: u32, y: u32) -> f32 {
   let a = xxhash(seed, vec4<u32>(adjust, x, y, 0u));
