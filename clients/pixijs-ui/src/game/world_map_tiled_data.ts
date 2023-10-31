@@ -2,9 +2,9 @@ import { CellCoord } from "./types/cell_coord";
 import { Constants } from "../client/protocol/types/constants";
 import { WorldDims } from "./types/world_dims";
 import Deferred from "../util/deferred";
-import GameWorldElevations from "./world_elevations";
+import MapData from "./map_data";
 
-export type GameWorldElevationsTiledLoaderApi = {
+export type WorldMapTiledDataCallbackApi = {
   readElevations: (opts: {
     topLeft: CellCoord,
     area: WorldDims
@@ -20,8 +20,12 @@ const PER_TILE_DIMS: WorldDims = { columns: 256, rows: 256 };
  * This is done by splitting the world into tiles, and loading each
  * tile as needed.
  */
-export default class GameWorldElevationsTiled extends GameWorldElevations {
-  private readonly loaderApi: GameWorldElevationsTiledLoaderApi;
+export default class WorldMapTiledData {
+  public readonly constants: Constants;
+  public readonly worldDims: WorldDims;
+  public readonly elevations: MapData<"uint8">;
+
+  private readonly loaderApi: WorldMapTiledDataCallbackApi;
   private readonly totalTileRows: number;
   private readonly totalTileColumns: number;
 
@@ -36,10 +40,14 @@ export default class GameWorldElevationsTiled extends GameWorldElevations {
   constructor(opts: {
     constants: Constants,
     worldDims: WorldDims,
-    loaderApi: GameWorldElevationsTiledLoaderApi,
+    loaderApi: WorldMapTiledDataCallbackApi,
   }) {
     let { worldDims, constants, loaderApi } = opts;
-    super({ constants, worldDims });
+
+    this.constants = opts.constants;
+    this.worldDims = opts.worldDims;
+    this.elevations = new MapData("uint8", this.worldDims);
+
     this.loaderApi = loaderApi;
 
     this.totalTileRows = Math.ceil(this.worldDims.rows / PER_TILE_DIMS.rows);
@@ -275,7 +283,12 @@ export default class GameWorldElevationsTiled extends GameWorldElevations {
       ),
     };
     const elevations = await this.loaderApi.readElevations({ topLeft, area });
-    this.writeElevations({ topLeft, area, elevations });
+    const shift_bits = this.constants.elevation_bits - 8;
+    this.elevations.write2D({
+      topLeft,
+      area,
+      genValue: (x, y) => (elevations[y][x] >> shift_bits),
+    });
     this.tileLoadStates[tileIndex] = "Loaded";
   }
 

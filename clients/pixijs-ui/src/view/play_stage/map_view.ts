@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import GameWorldObserver from '../../game/world_observer';
+import WorldObserver from '../../game/world_observer';
 import TopViewAttributes from '../top_view_attributes';
 import TileMap from './tile_map';
 import MiniMap from './mini_map';
@@ -18,14 +18,14 @@ export interface MapViewCallbackApi {
 
 export default class MapView extends PIXI.Container {
   private readonly topViewAttributes: TopViewAttributes;
-  private readonly worldObserver: GameWorldObserver;
+  private readonly worldObserver: WorldObserver;
   private readonly callbackApi: MapViewCallbackApi;
   private readonly tileMap: TileMap;
   private readonly miniMap: MiniMap;
 
   constructor(opts: {
     topViewAttributes: TopViewAttributes,
-    worldObserver: GameWorldObserver,
+    worldObserver: WorldObserver,
     callbackApi: MapViewCallbackApi
   }) {
     super();
@@ -61,7 +61,7 @@ export default class MapView extends PIXI.Container {
       worldColumns: dimensions.columns,
       worldRows: dimensions.rows,
       miniWidth,
-      elevations: this.worldObserver.miniElevations(),
+      minimapData: this.worldObserver.minimapData(),
     });
     this.miniMap.x =
       this.topViewAttributes.areaWidth - this.miniMap.width;

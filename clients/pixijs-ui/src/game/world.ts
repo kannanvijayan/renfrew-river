@@ -2,9 +2,9 @@ import { CellCoord } from "./types/cell_coord";
 import { Constants } from "../client/protocol/types/constants";
 import { AnimalData } from "./types/animal_data";
 import { WorldDims } from "./types/world_dims";
-import GameWorldElevations from "./world_elevations";
-import GameWorldElevationsTiled from "./world_elevations_tiled";
-import GameWorldObserver from "./world_observer";
+import WorldMapTiledData from "./world_map_tiled_data";
+import WorldObserver from "./world_observer";
+import WorldMinimapData from "./world_minimap_data";
 
 export type GameWorldLoaderApi = {
   readElevations: (opts: {
@@ -17,8 +17,8 @@ export type GameWorldLoaderApi = {
 export default class GameWorld {
   public readonly worldDims: WorldDims;
   public readonly miniDims: WorldDims;
-  public readonly elevations: GameWorldElevationsTiled;
-  public readonly miniElevations: GameWorldElevations;
+  public readonly mapData: WorldMapTiledData;
+  public readonly minimapData: WorldMinimapData;
   public readonly animals: AnimalData[];
 
   constructor(opts: {
@@ -30,20 +30,17 @@ export default class GameWorld {
     const { constants, worldDims, miniDims, loaderApi } = opts;
     this.worldDims = worldDims;
     this.miniDims = miniDims;
-    this.elevations = new GameWorldElevationsTiled({
+    this.mapData = new WorldMapTiledData({
       constants,
       worldDims,
       loaderApi,
     });
-    this.miniElevations = new GameWorldElevations({
-      constants,
-      worldDims: miniDims,
-    });
+    this.minimapData = new WorldMinimapData({ constants, miniDims });
     this.animals = [];
   }
 
-  public newObserver(): GameWorldObserver {
-    return new GameWorldObserver({ world: this });
+  public newObserver(): WorldObserver {
+    return new WorldObserver({ world: this });
   }
 
   public addAnimals(animals: AnimalData[]): void {

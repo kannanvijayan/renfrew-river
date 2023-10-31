@@ -233,8 +233,6 @@ export default class Game {
     const miniColumns = 500;
     const miniRows = Math.floor(rows * (miniColumns / columns));
     const miniDims = { columns: 500, rows: miniRows };
-    const miniElevs = await this.client!.miniElevations({ miniDims });
-    console.log("Loaded mini-elevations", {miniColumns, miniRows, miniElevs, })
 
     // Initialize the game world.
     this.world = new GameWorld({
@@ -246,18 +244,16 @@ export default class Game {
           let result = await this.client!.readMapData({
             topLeft,
             area,
-            kinds: ["Elevation"],
+            kinds: ["Elevation"] as ["Elevation"],
           });
           // TODO: assert(result.elevations !== null);
-          return result.elevations!;
+          return result.elevations;
         },
       },
     });
-    this.world.miniElevations.writeElevations({
-      topLeft: { col: 0, row: 0 },
-      area: miniDims,
-      elevations: miniElevs,
-    });
+
+    const miniElevs = await this.client!.miniElevations({ miniDims });
+    this.world.minimapData.writeElevations(miniElevs);
 
     // Read animals.
     const animals = await this.client!.readAnimals();
@@ -273,6 +269,6 @@ export default class Game {
     if (!this.world) {
       throw new Error("Game.ensureElevationsLoaded: No world");
     }
-    return this.world.elevations.ensureViewAndQueueSurroundings(topLeft, area);
+    return this.world.mapData.ensureViewAndQueueSurroundings(topLeft, area);
   }
 }

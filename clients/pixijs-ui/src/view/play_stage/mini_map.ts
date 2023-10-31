@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import TopViewAttributes from '../top_view_attributes';
 import { TileMapObserver, TileMapCommander } from './tile_map';
 import { NORMAL_SCALE_TILE } from './hex';
-import GameWorldElevations from '../../game/world_elevations';
+import WorldMinimapData from '../../game/world_minimap_data';
 
 export type MiniMapOptions = {
   topViewAttributes: TopViewAttributes;
@@ -12,7 +12,7 @@ export type MiniMapOptions = {
   worldRows: number;
   miniWidth: number;
   // height is calculated from world column/row aspect ratio.
-  elevations: GameWorldElevations;
+  minimapData: WorldMinimapData;
 };
 
 export default class MiniMap extends PIXI.Container {
@@ -23,7 +23,7 @@ export default class MiniMap extends PIXI.Container {
   private readonly worldRows: number;
   readonly miniWidth: number;
   readonly miniHeight: number;
-  private readonly elevations: GameWorldElevations;
+  private readonly minimapData: WorldMinimapData;
 
   // The PIXI mesh object.
   private backingGraphics: PIXI.Graphics;
@@ -42,7 +42,7 @@ export default class MiniMap extends PIXI.Container {
       worldColumns,
       worldRows,
       miniWidth,
-      elevations,
+      minimapData,
     } = opts;
 
     this.topViewAttributes = topViewAttributes;
@@ -58,10 +58,7 @@ export default class MiniMap extends PIXI.Container {
     this.miniWidth = miniWidth;
     this.miniHeight = miniHeight;
 
-    this.elevations = elevations;
-
-    console.log("Minimap", { miniWidth, miniHeight });
-    console.log("Minimap world", { worldColumns, worldRows });
+    this.minimapData = minimapData;
 
     this.backingGraphics = this.makeBackingGraphics();
     this.addChild(this.backingGraphics);
@@ -186,9 +183,9 @@ export default class MiniMap extends PIXI.Container {
     rectangle.addIndex([0, 1, 2, 0, 2, 3]);
 
     const elevTex = PIXI.Texture.fromBuffer(
-      this.elevations.values,
-      this.elevations.worldDims.columns,
-      this.elevations.worldDims.rows,
+      this.minimapData.elevations.array(),
+      this.minimapData.miniDims.columns,
+      this.minimapData.miniDims.rows,
       {
         format: PIXI.FORMATS.RED,
         type: PIXI.TYPES.UNSIGNED_BYTE,

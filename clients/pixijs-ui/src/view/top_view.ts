@@ -5,7 +5,7 @@ import StartStageView from './start_stage/start_stage_view';
 import PlayStageView from './play_stage/play_stage_view';
 import { GameSettings } from '../client/protocol/types/settings';
 import { ProgressCallback } from '../util/progress_tracking';
-import GameWorldObserver from '../game/world_observer';
+import WorldObserver from '../game/world_observer';
 
 export interface TopViewCallbackApi {
   startStage: {
@@ -22,7 +22,7 @@ export interface TopViewCallbackApi {
     loadGame(): Promise<void>;
   };
   playStage: {
-    newWorldObserver(): GameWorldObserver;
+    newWorldObserver(): WorldObserver;
     ensureElevationsLoaded: (
       topleft: { col: number, row: number },
       area: { columns: number, rows: number }

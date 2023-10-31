@@ -2,12 +2,12 @@ import * as PIXI from 'pixi.js';
 import TopViewAttributes from '../top_view_attributes';
 import StageView from '../common/stage_view';
 import MapView from './map_view';
-import GameWorldObserver from '../../game/world_observer';
+import WorldObserver from '../../game/world_observer';
 
 export interface PlayStageCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
   addTickCallback(callback: (delta: number, absTime: number) => void): void;
-  newWorldObserver(): GameWorldObserver;
+  newWorldObserver(): WorldObserver;
   ensureElevationsLoaded: (
     topleft: { col: number, row: number },
     area: { columns: number, rows: number }
@@ -22,7 +22,7 @@ export interface PlayStageCallbackApi {
  */
 export default class PlayStageView extends StageView {
   private callbackApi: PlayStageCallbackApi;
-  private worldObserver: GameWorldObserver;
+  private worldObserver: WorldObserver;
 
   private mapView: MapView | null;
 

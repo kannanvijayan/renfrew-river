@@ -8,7 +8,7 @@ import { Constants } from "./protocol/types/constants";
 import { AnimalData } from "../game/types/animal_data";
 import { GameSettings } from "./protocol/types/settings";
 import { WorldDims } from "../game/types/world_dims";
-import { ReadMapDataKind, ReadMapDataKindResultType } from "./protocol/commands/read_map_data_cmd";
+import { ReadMapDataKind, ReadMapDataKindsToOutput, ReadMapDataOutputNameMap } from "./protocol/commands/read_map_data_cmd";
 
 export type GameClientArgs = {
   url: string;
@@ -105,21 +105,23 @@ export default class GameClient {
     }
   }
 
-  public async readMapData(opts: {
+  public async readMapData<Kinds extends ReadMapDataKind[]>(opts: {
     topLeft: CellCoord,
     area: WorldDims,
-    kinds: ReadMapDataKind[],
-  }): Promise<{
-    elevations: ReadMapDataKindResultType<"Elevation">[][] | null,
-    animal_ids: ReadMapDataKindResultType<"AnimalId">[][] | null,
-  }> {
+    kinds: Kinds,
+  }): Promise<ReadMapDataKindsToOutput<Kinds>> {
     const result = await this.sendCommand("ReadMapData", {
       top_left: opts.topLeft,
       area: opts.area,
       kinds: opts.kinds,
     });
     if ("MapData" in result) {
-      return { ... result.MapData };
+      const retval = {} as any;
+      for (const kind of opts.kinds) {
+        const name = ReadMapDataOutputNameMap[kind];
+        retval[name] = result.MapData[name];
+      }
+      return retval;
     } else {
       throw new Error(result.Error.messages.join(", "));
     }

@@ -3,13 +3,13 @@ import { WorldDims } from "../../../game/types/world_dims";
 
 export type ReadMapDataKind = "Elevation" | "AnimalId";
 
-export type ReadMapDataKindResultTypeMap = {
+export type ReadMapDataResultTypeMap = {
   Elevation: number;
   AnimalId: number;
 };
 
-export type ReadMapDataKindResultType<K extends ReadMapDataKind> =
-  ReadMapDataKindResultTypeMap[K];
+export type ReadMapDataResultType<K extends ReadMapDataKind> =
+  ReadMapDataResultTypeMap[K];
 
 export type ReadMapDataCmd = {
   params: {
@@ -19,8 +19,23 @@ export type ReadMapDataCmd = {
   };
   response: {
     MapData: {
-      elevations: ReadMapDataKindResultType<"Elevation">[][] | null,
-      animal_ids: ReadMapDataKindResultType<"AnimalId">[][] | null,
+      elevations: ReadMapDataResultType<"Elevation">[][] | null,
+      animal_ids: ReadMapDataResultType<"AnimalId">[][] | null,
     },
   };
 };
+
+export const ReadMapDataOutputNameMap = {
+  Elevation: "elevations" as "elevations",
+  AnimalId: "animal_ids" as "animal_ids",
+};
+
+export type ReadMapDataKindsToOutput<Ks> =
+  Ks extends [infer K, ...infer KsRest] ?
+    ReadMapDataKindToOutputSinglet<K> & ReadMapDataKindsToOutput<KsRest> :
+    {};
+
+type ReadMapDataKindToOutputSinglet<K> =
+  K extends ReadMapDataKind
+    ? { [N in typeof ReadMapDataOutputNameMap[K]]: ReadMapDataResultType<K>[][] }
+    : never;
