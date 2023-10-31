@@ -89,15 +89,6 @@ fn fill_animals_map_command(
     config_uniforms_u8, Some("FillAnimalsMapUniforms")
   );
 
-  // Create the conflicts buffer.
-  let conflicts_buffer = GpuMapBuffer::<u32>::new(
-    device,
-    world_dims,
-    GpuBufferOptions::empty()
-      .with_label("FillAnimalsMapConflictsMap")
-      .with_storage(true),
-  );
-
   // Load the shader.
   let source = include_str!("./wgsl/fill_map_u32.wgsl");
   let shader = device.create_shader_module(source, "FillAnimalsMapShader");

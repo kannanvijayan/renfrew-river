@@ -14,7 +14,7 @@ var<uniform> uniforms: Uniforms;
 var<storage, write> map: MapBuffer;
 
 @compute
-@workgroup_size(64)
+@workgroup_size(8, 8)
 fn fill_map_u32(
   @builtin(global_invocation_id) global_id: vec3<u32>
 ) {
