@@ -31,7 +31,7 @@ module.exports = (env, argv) => {
 
     performance: { hints: false },
 
-    devtool: argv.mode === 'development' ? 'eval-source-map' : false,
+    devtool: argv.mode === 'development' ? 'inline-source-map' : false,
 
     // Minify for final build.
     optimization: {
