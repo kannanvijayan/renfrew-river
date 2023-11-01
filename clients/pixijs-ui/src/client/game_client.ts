@@ -28,9 +28,9 @@ export enum GameClientConnectError {
 
 type ResponseAwaiter = {
   command: ProtocolCommandName;
-  resolve: (value: any) => void;
-  reject: (reason?: any) => void;
-  promise: Promise<any>;
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
+  promise: Promise<unknown>;
 };
 
 export default class GameClient {
@@ -54,7 +54,7 @@ export default class GameClient {
     this.responseAwaiters_ = [];
     this.ws_.addEventListener("open", this.onOpen.bind(this));
     this.ws_.addEventListener("close", this.onClose.bind(this));
-    this.ws_.addEventListener("error", e => this.onError("Connection failed"));
+    this.ws_.addEventListener("error", e => this.onError("Connection failed", e));
     this.ws_.addEventListener("message", this.onMessage.bind(this));
   }
 
@@ -80,9 +80,9 @@ export default class GameClient {
   {
     const result = await this.sendCommand("DefaultSettings", {});
     if ("DefaultSettings" in result) {
-      let settings = result.DefaultSettings.settings;
-      let min_world_dims = result.DefaultSettings.min_world_dims;
-      let max_world_dims = result.DefaultSettings.max_world_dims;
+      const settings = result.DefaultSettings.settings;
+      const min_world_dims = result.DefaultSettings.min_world_dims;
+      const max_world_dims = result.DefaultSettings.max_world_dims;
       return { settings, min_world_dims, max_world_dims };
     }
     console.error("DefaultSettings: unexpected response", result);
@@ -116,12 +116,12 @@ export default class GameClient {
       kinds: opts.kinds,
     });
     if ("MapData" in result) {
-      const retval = {} as any;
+      const retval = {} as Record<string, unknown[][] | null>;
       for (const kind of opts.kinds) {
         const name = ReadMapDataOutputNameMap[kind];
         retval[name] = result.MapData[name];
       }
-      return retval;
+      return retval as ReadMapDataKindsToOutput<Kinds>;
     } else {
       throw new Error(result.Error.messages.join(", "));
     }
@@ -169,14 +169,14 @@ export default class GameClient {
     }
 
     // Create and push an awaiter for the response.
-    let resolve: any;
-    let reject: any;
-    let promise = new Promise<ProtocolCommandResponse<T>>((res, rej) => {
+    let resolve: unknown;
+    let reject: unknown;
+    const promise = new Promise<ProtocolCommandResponse<T>>((res, rej) => {
       console.debug("GameClient.sendCommand: awaiter created");
       resolve = res;
       reject = rej;
     });
-    let awaiter = { command, resolve, reject, promise } as ResponseAwaiter;
+    const awaiter = { command, resolve, reject, promise } as ResponseAwaiter;
     this.responseAwaiters_.push(awaiter);
 
     return promise;
@@ -196,8 +196,8 @@ export default class GameClient {
     this.callbacks_.onClose?.();
   }
 
-  private onError(msg: string): void {
-    console.debug("GameClient.onError");
+  private onError(msg: string, err?: unknown): void {
+    console.debug("GameClient.onError", err);
     for (const awaiter of this.responseAwaiters_) {
       awaiter.reject(`Connection errored: ${msg}`);
     }

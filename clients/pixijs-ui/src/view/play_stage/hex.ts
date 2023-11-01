@@ -12,7 +12,7 @@ export const NORMAL_SCALE_TILE = {
   mulHeight: 200,
 };
 
-export function normalOffsetXForTile(column: number, row: number): number {
+export function normalOffsetXForTile(column: number, _row: number): number {
   return (column * NORMAL_SCALE_TILE.mulWidth);
 }
 export function normalOffsetYForTile(column: number, row: number): number {

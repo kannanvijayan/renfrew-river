@@ -254,7 +254,7 @@ class OkButton extends MenuButton {
     onClick: () => void,
     data: SpecifyGameSettingsData,
   }) {
-    const { onClick, data } = opts;
+    const { onClick } = opts;
     super({
       name: "SpecifyGameSettings.Ok",
       text: "Ok",

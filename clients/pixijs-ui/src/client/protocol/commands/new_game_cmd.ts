@@ -1,3 +1,4 @@
+import { EmptyObject } from "../../../util/empty_object";
 import { GameSettings } from "../types/settings";
 
 export type NewGameCmd = {
@@ -5,6 +6,6 @@ export type NewGameCmd = {
     settings: GameSettings,
   };
   response: {
-    Ok: {};
+    Ok: EmptyObject;
   }
 };

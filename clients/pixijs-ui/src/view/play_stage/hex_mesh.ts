@@ -281,7 +281,7 @@ function makeShader(opts: {
     topLeftWorldColumn,
     topLeftWorldRow,
     elevationTex: elevationsTexture,
-    animalKindTex: opts.animalKindsTexture,
+    animalKindTex: animalKindsTexture,
   };
 
   const adjX = NORMAL_SCALE_TILE.width / 2;

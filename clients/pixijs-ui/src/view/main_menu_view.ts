@@ -8,7 +8,7 @@ export default class MainMenuView extends PIXI.Container {
   private title: MainMenuTitle;
   private connectButton: MainMenuButton;
 
-  constructor(gameView: TopView, app: PIXI.Application) {
+  constructor(gameView: TopView) {
     super();
     this.gameView = gameView;
     this.pixiApp = gameView.pixiApp;
@@ -38,7 +38,7 @@ export default class MainMenuView extends PIXI.Container {
     this.centerInScreen();
   }
 
-  public handleResize(width: number, height: number): void {
+  public handleResize(_width: number, _height: number): void {
     this.centerInScreen();
   }
 

@@ -26,14 +26,14 @@ export type ReadMapDataCmd = {
 };
 
 export const ReadMapDataOutputNameMap = {
-  Elevation: "elevations" as "elevations",
-  AnimalId: "animal_ids" as "animal_ids",
+  Elevation: "elevations" as const,
+  AnimalId: "animal_ids" as const,
 };
 
 export type ReadMapDataKindsToOutput<Ks> =
   Ks extends [infer K, ...infer KsRest] ?
     ReadMapDataKindToOutputSinglet<K> & ReadMapDataKindsToOutput<KsRest> :
-    {};
+    Record<string, never>;
 
 type ReadMapDataKindToOutputSinglet<K> =
   K extends ReadMapDataKind

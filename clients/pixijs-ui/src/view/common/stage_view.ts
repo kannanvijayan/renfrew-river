@@ -41,8 +41,8 @@ export default class StageView extends PIXI.Container {
 
   // Override these in subclasses to do shutdown before and setup after
   // base class redraws.
-  protected preResize(width: number, height: number) {}
-  protected postResize(width: number, height: number) {}
+  protected preResize(_width: number, _height: number) {}
+  protected postResize(_width: number, _height: number) {}
 
   private initBackplane(): void {
     this.backplane.beginFill(0x000000);

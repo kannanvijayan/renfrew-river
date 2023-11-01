@@ -36,7 +36,7 @@ export interface TopViewCallbackApi {
 export enum TopViewStage {
   Start = "Start",
   Play = "Play",
-};
+}
 
 export default class TopView {
   private readonly callbackApi: TopViewCallbackApi;

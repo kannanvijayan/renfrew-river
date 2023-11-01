@@ -218,7 +218,7 @@ export default class TileMap extends PIXI.Container {
     this.startDragPoint = {...point};
   }
 
-  private checkDragStop(point: Readonly<PIXI.IPointData>): boolean {
+  private checkDragStop(_point: Readonly<PIXI.IPointData>): boolean {
     if (this.beingDragged || this.startingDrag) {
       this.startDragTopLeftWorld = undefined;
       this.startDragPoint = undefined;
@@ -367,7 +367,7 @@ export default class TileMap extends PIXI.Container {
         await this.hexMesh.updateTextures();
       }
 
-      let mesh = this.hexMesh.mesh;
+      const mesh = this.hexMesh.mesh;
 
       const clampedZoom = this.clampedZoomLevel();
       mesh.scale.set(clampedZoom);

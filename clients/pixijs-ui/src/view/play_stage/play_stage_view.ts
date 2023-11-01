@@ -44,7 +44,7 @@ export default class PlayStageView extends StageView {
     super.shutdown();
   }
 
-  protected preResize(width: number, height: number): void {
+  protected preResize(_width: number, _height: number): void {
     this.detachMapView();
   }
   protected postResize(width: number, height: number): void {

@@ -47,10 +47,10 @@ export default class WorldMapTiledData {
     worldDims: WorldDims,
     loaderApi: WorldMapTiledDataCallbackApi,
   }) {
-    let { worldDims, constants, loaderApi } = opts;
+    const { worldDims, constants, loaderApi } = opts;
 
-    this.constants = opts.constants;
-    this.worldDims = opts.worldDims;
+    this.constants = constants;
+    this.worldDims = worldDims;
     this.elevations = new MapData("uint8", this.worldDims);
     this.animalKinds = new MapData("uint8", this.worldDims);
 
@@ -86,7 +86,7 @@ export default class WorldMapTiledData {
     const viewLoadIndexes = [];
     for (let i = tlTileColumn; i <= brTileColumn; i++) {
       for (let j = tlTileRow; j <= brTileRow; j++) {
-        let tileIndex = this.tileIndex(i, j);
+        const tileIndex = this.tileIndex(i, j);
         // Early skip if tile is already loaded.  Avoids creating
         // unnecessary promises.
         if (this.tileLoadStates[tileIndex] === "Loaded") {
@@ -104,7 +104,7 @@ export default class WorldMapTiledData {
     let newViewTilesWritten = false;
     if (viewLoadIndexes.length > 0) {
       const viewLoadWatcher = new TileLoadWatcher(viewLoadIndexes);
-      for (let tileIndex of viewLoadIndexes) {
+      for (const tileIndex of viewLoadIndexes) {
         this.loadTile(tileIndex, "high", viewLoadWatcher)
       }
       newViewTilesWritten = true;
@@ -114,7 +114,7 @@ export default class WorldMapTiledData {
     // Load the surrounding tiles in the background.
     const surroundingsLoadedPromise = (async () => {
 
-      let surroundingLoadIndexes = [];
+      const surroundingLoadIndexes = [];
       for (let i = tlTileColumn - 1; i <= brTileColumn + 1; i++) {
         for (let j = tlTileRow - 1; j <= brTileRow + 1; j++) {
           // Don't load the immediate view again.
@@ -131,7 +131,7 @@ export default class WorldMapTiledData {
           ) {
             continue;
           }
-          let tileIndex = this.tileIndex(i, j);
+          const tileIndex = this.tileIndex(i, j);
           // Don't create load promises for tiles that are already loaded.
           if (this.tileLoadStates[tileIndex] === "Loaded") {
             continue;
@@ -144,7 +144,7 @@ export default class WorldMapTiledData {
       if (surroundingLoadIndexes.length > 0) {
         const surroundingLoadWatcher =
           new TileLoadWatcher(surroundingLoadIndexes);
-        for (let tileIndex of surroundingLoadIndexes) {
+        for (const tileIndex of surroundingLoadIndexes) {
           this.loadTile(tileIndex, "low", surroundingLoadWatcher)
         }
         newSurroundingTilesWritten = true;
@@ -361,7 +361,7 @@ class TileLoadRequest {
 
   notifyCompleted(): void {
     this.complete = true;
-    for (let watcher of this.watchers) {
+    for (const watcher of this.watchers) {
       watcher.notifyWatchedTileCompleted(this.tileIndex);
     }
   }

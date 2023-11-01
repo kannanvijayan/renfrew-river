@@ -1,7 +1,7 @@
 import { Constants } from "../types/constants";
 
 export type GetConstantsCmd = {
-  params: {};
+  params: Record<string, never>;
   response: {
     Constants: Constants;
   }

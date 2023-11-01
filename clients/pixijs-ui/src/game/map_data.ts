@@ -1,13 +1,18 @@
 import { CellCoord } from "./types/cell_coord";
 import { WorldDims } from "./types/world_dims";
 
+type TypedArrayConstructor = 
+  | Uint8ArrayConstructor
+  | Uint16ArrayConstructor
+  | Uint32ArrayConstructor;
+
+type TypedArray =
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array;
+
 export type MapDataArrayType = "uint8" | "uint16" | "uint32";
-const MapDataArrayClass: Record<MapDataArrayType, any> = {
-  uint8: Uint8Array,
-  uint16: Uint16Array,
-  uint32: Uint32Array,
-};
-type MapDataArrayClassType = {
+const MapDataArrayClass: Record<MapDataArrayType, TypedArrayConstructor> = {
   uint8: Uint8Array,
   uint16: Uint16Array,
   uint32: Uint32Array,
@@ -18,7 +23,7 @@ type MapDataArrayClassType = {
  */
 export default class MapData<T extends MapDataArrayType> {
   public readonly dims: WorldDims;
-  public readonly array: typeof MapDataArrayClass[T];
+  public readonly array: TypedArray;
 
   constructor(dataType: T, dims: WorldDims) {
     this.dims = dims;
@@ -37,7 +42,7 @@ export default class MapData<T extends MapDataArrayType> {
   }): void {
     const { topLeft, area, genValue } = opts;
     for (let j = 0; j < area.rows; j++) {
-      let yj = (topLeft.row + j) * this.dims.columns;
+      const yj = (topLeft.row + j) * this.dims.columns;
       for (let i = 0; i < area.columns; i++) {
         this.array[yj + topLeft.col + i] = genValue(i, j)
       }

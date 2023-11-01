@@ -82,7 +82,7 @@ export default class MiniMap extends PIXI.Container {
 
     // This is to handle window resizing, which changes the size of
     // the viewport.
-    this.topViewAttributes.addResizeListener((width, height) => {
+    this.topViewAttributes.addResizeListener((_width, _height) => {
       this.handleResize();
     });
   }

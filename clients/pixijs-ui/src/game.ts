@@ -6,7 +6,6 @@ import { WorldDims } from "./game/types/world_dims";
 import GameWorld from "./game/world";
 import { ProgressCallback } from "./util/progress_tracking";
 import TopView from "./view/top_view";
-import { ReadMapDataKind } from "./client/protocol/commands/read_map_data_cmd";
 
 /**
  * Top-level manager of game.
@@ -241,13 +240,13 @@ export default class Game {
       miniDims,
       loaderApi: {
         readMapArea: async ({topLeft, area}) => {
-          let result = await this.client!.readMapData({
+          const result = await this.client!.readMapData({
             topLeft,
             area,
             kinds: ["Elevation", "AnimalId"] as ["Elevation", "AnimalId"],
           });
           // TODO: assert(result.elevations !== null);
-          let { elevations, animal_ids } = result;
+          const { elevations, animal_ids } = result;
           return { elevations, animalIds: animal_ids };
         },
       },

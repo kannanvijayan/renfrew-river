@@ -1,7 +1,8 @@
+import { EmptyObject } from "../../../util/empty_object";
 
 export type StopGameCmd = {
-  params: {};
+  params: EmptyObject;
   response: {
-    Ok: {};
+    Ok: EmptyObject;
   };
 };

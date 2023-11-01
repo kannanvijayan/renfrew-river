@@ -80,7 +80,7 @@ export default class StartStageView extends StageView {
     super.shutdown();
   }
 
-  protected preResize(width: number, height: number): void {
+  protected preResize(_width: number, _height: number): void {
     switch (this.substage) {
       case StartSubstage.UnconnectedMainMenu:
         this.destroyUnconnectedMainMenuView();
@@ -105,7 +105,7 @@ export default class StartStageView extends StageView {
         break;
     }
   }
-  protected postResize(width: number, height: number): void {
+  protected postResize(_width: number, _height: number): void {
     switch (this.substage) {
       case StartSubstage.UnconnectedMainMenu:
         this.initUnconnectedMainMenuView();
