@@ -30,7 +30,7 @@ var<storage, write> animals_map: AnimalsMapBuffer;
 var<storage, read_write> conflicts: ConflictsMapBuffer;
 
 
-// LIBRARY("xxhash.wgsl")
+// LIBRARY("xxhash")
 fn rot_left(val: vec4<u32>, rot: vec4<u32>) -> vec4<u32> {
   return (val << rot) | (val >> (32u - rot));
 }
@@ -56,7 +56,7 @@ fn xxhash(seed: u32, values: vec4<u32>) -> u32 {
   res = (res ^ (res >> 13u)) * XXHASH_PRIME_3;
   return res ^ (res >> 16u);
 }
-// END_LIBRARY("xxhash.wgsl")
+// END_LIBRARY("xxhash")
 
 @compute
 @workgroup_size(64)

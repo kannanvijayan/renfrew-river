@@ -48,6 +48,47 @@ impl<T: GpuBufferDataType> GpuMapBuffer<T> {
   }
 
   /**
+   * Get a cpu-memory mappable copy of this buffer.
+   */
+  pub(crate) async fn read_mappable_full_copy(&self, device: &GpuDevice)
+    -> GpuMapBuffer<T>
+  {
+    let target_buffer = GpuMapBuffer::<T>::new(
+      device,
+      self.dims,
+      GpuBufferOptions::empty()
+        .with_label("ReadMappableFullCopyTargetBuffer")
+        .with_copy_dst(true)
+        .with_map_read(true)
+    );
+
+    // Encode the commands.
+    let mut encoder = device.device().create_command_encoder(
+      &wgpu::CommandEncoderDescriptor {
+        label: Some("ReadMappableFullCopyEncoder"),
+      }
+    );
+
+    let native_size = T::NativeType::SIZE as u64;
+
+    encoder.copy_buffer_to_buffer(
+      self.wgpu_buffer(),
+      0,
+      &target_buffer.wgpu_buffer(),
+      0,
+      self.dims.area() as u64 * native_size,
+    );
+
+    // Submit the commands.
+    let submission_index = device.queue().submit(Some(encoder.finish()));
+
+    // Wait for the commands to finish.
+    device.device().poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
+
+    target_buffer
+  }
+
+  /**
    * Copy a 2D slice of this Map into a new Map.
    */
   pub(crate) async fn read_mappable_area_copy(&self,

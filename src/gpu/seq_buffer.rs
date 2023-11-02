@@ -48,6 +48,47 @@ impl<T: GpuBufferDataType> GpuSeqBuffer<T> {
   }
 
   /**
+   * Get a cpu-memory mappable copy of this buffer.
+   */
+  pub(crate) async fn read_mappable_full_copy(&self, device: &GpuDevice)
+    -> GpuSeqBuffer<T>
+  {
+    let target_buffer = GpuSeqBuffer::<T>::new(
+      device,
+      self.length,
+      GpuBufferOptions::empty()
+        .with_label("ReadMappableFullCopyTargetBuffer")
+        .with_copy_dst(true)
+        .with_map_read(true)
+    );
+
+    // Encode the commands.
+    let mut encoder = device.device().create_command_encoder(
+      &wgpu::CommandEncoderDescriptor {
+        label: Some("ReadMappableFullCopyEncoder"),
+      }
+    );
+
+    let native_size = T::NativeType::SIZE as u64;
+
+    encoder.copy_buffer_to_buffer(
+      self.wgpu_buffer(),
+      0,
+      &target_buffer.wgpu_buffer(),
+      0,
+      self.length as u64 * native_size,
+    );
+
+    // Submit the commands.
+    let submission_index = device.queue().submit(Some(encoder.finish()));
+
+    // Wait for the commands to finish.
+    device.device().poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
+
+    target_buffer
+  }
+
+  /**
    * Copy a slice of this Seq into a new, mappable seq buffer.
    */
   pub(crate) async fn read_mappable_subseq_copy(&self,

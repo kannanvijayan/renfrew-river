@@ -9,6 +9,7 @@ use crate::{
       initialize_elevations,
       elevations_minimap,
       initialize_animals,
+      compute_animal_moves,
     },
   },
   world::{
@@ -106,6 +107,28 @@ impl GpuWorld {
         &self.animals_map,
       ).await
     });
+  }
+
+  pub(crate) fn move_animals(&self) {
+    let buf = futures::executor::block_on(async {
+      compute_animal_moves(
+        &self.device,
+        &self.elevation_map,
+        &self.animals_list,
+      ).await
+        .read_mappable_full_copy(&self.device).await
+        .to_vec().await
+    });
+    let mut i = 0;
+    for target_posn in buf {
+      let x = target_posn & 0xffff;
+      let y = target_posn >> 16;
+      log::info!("XXXXX target_posn={},{}", x, y);
+      i += 1;
+      if i >= 10 {
+        break;
+      }
+    }
   }
 
   pub(crate) fn read_elevation_values(&self, top_left: CellCoord, area: WorldDims)
