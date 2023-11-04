@@ -40,7 +40,12 @@ export default class WorldMapTiledData {
   private readonly highPriorityTileLoadQueue: TileLoadRequest[];
   private readonly lowPriorityTileLoadQueue: TileLoadRequest[];
 
+  // To prevent multiple simultaneous load requests in flight.
   private isTileLoadInProgress: boolean;
+
+  // To handle invalidations.
+  private generation: number;
+  private invalidationListeners: (() => void)[];
 
   constructor(opts: {
     constants: Constants,
@@ -66,16 +71,21 @@ export default class WorldMapTiledData {
     this.lowPriorityTileLoadQueue = [];
 
     this.isTileLoadInProgress = false;
+    this.generation = 0;
+    this.invalidationListeners = [];
   }
 
   public async ensureViewAndQueueSurroundings(
     topLeft: CellCoord,
     area: WorldDims,
   ): Promise<{
-       newTilesWritten: boolean,
-       surroundingsLoaded: Promise<{ newTilesWritten: boolean }>
-     }>
-  {
+    tilesUpdated: number,
+    tilesInvalidated: number,
+    surroundingsLoaded: Promise<{
+      tilesUpdated: number,
+      tilesInvalidated: number,
+    }>
+  }> {
     this.demoteExistingHighPriorityLoads();
 
     // Wait only until the immediate view is loaded, and then return.
@@ -101,14 +111,16 @@ export default class WorldMapTiledData {
       console.log("ensureViewAndQueueSurroundings viewLoadIndexes=[]");
     }
 
-    let newViewTilesWritten = false;
+    let tilesUpdated = 0;
+    let tilesInvalidated = 0;
     if (viewLoadIndexes.length > 0) {
       const viewLoadWatcher = new TileLoadWatcher(viewLoadIndexes);
       for (const tileIndex of viewLoadIndexes) {
         this.loadTile(tileIndex, "high", viewLoadWatcher)
       }
-      newViewTilesWritten = true;
-      await viewLoadWatcher.waitForCompletion();
+      const { updated, invalidated } = await viewLoadWatcher.waitForCompletion();
+      tilesUpdated += updated;
+      tilesInvalidated += invalidated;
     }
 
     // Load the surrounding tiles in the background.
@@ -140,24 +152,60 @@ export default class WorldMapTiledData {
         }
       }
 
-      let newSurroundingTilesWritten = false;
+      let surroundingTilesUpdated = 0;
+      let surroundingTilesInvalidated = 0;
       if (surroundingLoadIndexes.length > 0) {
         const surroundingLoadWatcher =
           new TileLoadWatcher(surroundingLoadIndexes);
         for (const tileIndex of surroundingLoadIndexes) {
           this.loadTile(tileIndex, "low", surroundingLoadWatcher)
         }
-        newSurroundingTilesWritten = true;
-        await surroundingLoadWatcher.waitForCompletion();
+        const { updated, invalidated } =
+          await surroundingLoadWatcher.waitForCompletion();
+        surroundingTilesUpdated += updated;
+        surroundingTilesInvalidated += invalidated;
       }
 
-      return { newTilesWritten: newSurroundingTilesWritten };
+      return {
+        tilesUpdated: surroundingTilesUpdated,
+        tilesInvalidated: surroundingTilesInvalidated
+      };
     })();
 
     return {
-      newTilesWritten: newViewTilesWritten,
+      tilesUpdated,
+      tilesInvalidated,
       surroundingsLoaded: surroundingsLoadedPromise,
     };
+  }
+
+  public invalidate() {
+    // Reset the tile load states.
+    this.tileLoadStates.fill("NotLoaded");
+
+    // We don't need to clear out the request queues since requests
+    // dispatched after the invalidation will get the latest map data.
+    // However, we should increment the generation so that any in-flight
+    // requests will know that they are stale and not bother writing-back
+    // the map-data they receive, or updating the tile status to loaded.
+    // This is checked in `performTileLoad` below.
+    this.generation++;
+
+    for (const listener of this.invalidationListeners) {
+      listener();
+    }
+  }
+
+  public addInvalidationListener(listener: () => void): void {
+    this.invalidationListeners.push(listener);
+  }
+
+  public removeInvalidationListener(listener: () => void): void {
+    const index = this.invalidationListeners.indexOf(listener);
+    if (index === -1) {
+      throw new Error("WorldElevationsTiled.removeInvalidationListener: listener not found");
+    }
+    this.invalidationListeners.splice(index, 1);
   }
 
   private demoteExistingHighPriorityLoads(): void {
@@ -187,7 +235,12 @@ export default class WorldMapTiledData {
     let tileLoadRequest: TileLoadRequest;
     let freshLoadRequest: boolean;
     if (loadState === "NotLoaded") {
-      tileLoadRequest = new TileLoadRequest(tileIndex, priority, watcher);
+      tileLoadRequest = new TileLoadRequest({
+        tileIndex,
+        priority,
+        watcher,
+        generation: this.generation,
+      });
       this.tileLoadStates[tileIndex] = tileLoadRequest;
       freshLoadRequest = true;
     } else {
@@ -248,9 +301,8 @@ export default class WorldMapTiledData {
     ) {
       const highPriorityLoadRequest = this.highPriorityTileLoadQueue.pop();
       if (highPriorityLoadRequest) {
-        // ASSERT: !highPriorityLoadRequest.complete
-        await this.performTileLoad(highPriorityLoadRequest.tileIndex);
-        highPriorityLoadRequest.notifyCompleted();
+        // ASSERT: !highPriorityLoadRequest.isComplete()
+        this.dispatchLoadRequest(highPriorityLoadRequest);
         continue;
       }
 
@@ -261,15 +313,26 @@ export default class WorldMapTiledData {
         if (lowPriorityLoadRequest.isComplete()) {
           continue;
         }
-        await this.performTileLoad(lowPriorityLoadRequest.tileIndex);
-        lowPriorityLoadRequest.notifyCompleted();
+        this.dispatchLoadRequest(lowPriorityLoadRequest);
         continue;
       }
     }
     this.isTileLoadInProgress = false;
   }
 
-  private async performTileLoad(tileIndex: number): Promise<void> {
+  private async dispatchLoadRequest(request: TileLoadRequest) {
+    // ASSERT: !request.isComplete()
+    const loadCompletion = await this.performTileLoad(
+      request.tileIndex,
+      this.generation
+    );
+    request.notifyCompleted(loadCompletion);
+  }
+
+  private async performTileLoad(
+    tileIndex: number,
+    generation: number
+  ): Promise<TileLoadCompletion> {
     const { tileColumn, tileRow } = this.tileColumnAndRow(tileIndex);
     // Get or create a tile load request.
     const topLeft: CellCoord = {
@@ -287,6 +350,13 @@ export default class WorldMapTiledData {
       ),
     };
     const areaData = await this.loaderApi.readMapArea({ topLeft, area });
+
+    // If the generation has changed since the request was made, then
+    // the data is stale and we should not write it.
+    if (generation !== this.generation) {
+      return "invalidated";
+    }
+
     const shift_bits = this.constants.elevation_bits - 8;
     this.elevations.write2D({
       topLeft,
@@ -300,6 +370,8 @@ export default class WorldMapTiledData {
       genValue: (x, y) => (areaData.animalIds[y][x] == INVALID_ANIMAL_ID ? 0 : 1),
     });
     this.tileLoadStates[tileIndex] = "Loaded";
+
+    return "updated";
   }
 
   private tileIndex(tileColumn: number, tileRow: number): number {
@@ -341,6 +413,7 @@ type TileLoadState =
   | "Loaded"          // Already loaded.
   | TileLoadRequest;  // Has request to load.
 
+type TileLoadCompletion = "updated" | "invalidated";
 
 class TileLoadRequest {
   readonly tileIndex: number;
@@ -348,21 +421,22 @@ class TileLoadRequest {
   private complete: boolean;
   private readonly watchers: TileLoadWatcher[];
 
-  constructor(
+  constructor(args: {
     tileIndex: number,
     priority: "high" | "low",
-    watcher: TileLoadWatcher
-  ) {
-    this.tileIndex = tileIndex;
-    this.priority = priority;
+    watcher: TileLoadWatcher,
+    generation: number,
+  }) {
+    this.tileIndex = args.tileIndex;
+    this.priority = args.priority;
     this.complete = false;
-    this.watchers = [watcher];
+    this.watchers = [args.watcher];
   }
 
-  notifyCompleted(): void {
+  notifyCompleted(completion: TileLoadCompletion): void {
     this.complete = true;
     for (const watcher of this.watchers) {
-      watcher.notifyWatchedTileCompleted(this.tileIndex);
+      watcher.notifyWatchedTileCompleted(this.tileIndex, completion);
     }
   }
 
@@ -381,21 +455,41 @@ class TileLoadWatcher {
   private readonly indexesWatched: Set<number>;
 
   // The deferred to resolve when all tiles are loaded.
-  private readonly deferred: Deferred<void>;
+  private readonly deferred: Deferred<{ updated: number, invalidated: number }>;
+
+  // The number of tiles updated / invalidated
+  private tilesUpdated: number;
+  private tilesInvalidated: number;
 
   constructor(indexesWatched: number[]) {
     this.indexesWatched = new Set(indexesWatched);
-    this.deferred = new Deferred<void>();
+    this.deferred = new Deferred();
+    this.tilesUpdated = 0;
+    this.tilesInvalidated = 0;
   }
 
-  notifyWatchedTileCompleted(tileIndex: number): void {
+  notifyWatchedTileCompleted(
+    tileIndex: number,
+    completion: TileLoadCompletion,
+  ): void {
+    switch (completion) {
+      case "updated":
+        this.tilesUpdated++;
+        break;
+      case "invalidated":
+        this.tilesInvalidated++;
+        break;
+    }
     this.indexesWatched.delete(tileIndex);
     if (this.indexesWatched.size === 0) {
-      this.deferred.resolvePromise();
+      this.deferred.resolvePromise({
+        updated: this.tilesUpdated,
+        invalidated: this.tilesInvalidated,
+      });
     }
   }
 
-  waitForCompletion(): Promise<void> {
+  waitForCompletion(): Promise<{ updated: number, invalidated: number }> {
     return this.deferred.getPromise();
   }
 }

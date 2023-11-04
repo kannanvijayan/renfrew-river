@@ -262,8 +262,12 @@ export default class Game {
 
   private ensureMapDataLoaded(topLeft: CellCoord, area: WorldDims)
     : Promise<{
-        newTilesWritten: boolean,
-        surroundingsLoaded: Promise<{ newTilesWritten: boolean }>
+        tilesUpdated: number,
+        tilesInvalidated: number,
+        surroundingsLoaded: Promise<{
+          tilesUpdated: number,
+          tilesInvalidated: number,
+        }>,
       }>
   {
     if (!this.world) {

@@ -31,4 +31,11 @@ export default class WorldObserver {
   public minimapData(): WorldMinimapData {
     return this.world.minimapData;
   }
+
+  public addMapInvalidationListener(listener: () => void): () => void {
+    this.world.mapData.addInvalidationListener(listener);
+    return () => {
+      this.world.mapData.removeInvalidationListener(listener);
+    };
+  }
 }

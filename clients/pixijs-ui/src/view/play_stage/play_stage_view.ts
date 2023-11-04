@@ -12,8 +12,12 @@ export interface PlayStageCallbackApi {
     topleft: { col: number, row: number },
     area: { columns: number, rows: number }
   ) => Promise<{
-    newTilesWritten: boolean,
-    surroundingsLoaded: Promise<{ newTilesWritten: boolean }>
+    tilesUpdated: number,
+    tilesInvalidated: number,
+    surroundingsLoaded: Promise<{
+      tilesUpdated: number,
+      tilesInvalidated: number,
+    }>
   }>,
 }
 

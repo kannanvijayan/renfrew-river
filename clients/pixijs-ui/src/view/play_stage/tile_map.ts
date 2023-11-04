@@ -13,8 +13,12 @@ export type TileMapCallbackApi = {
     topleft: { col: number, row: number },
     area: { columns: number, rows: number },
   ) => Promise<{
-    newTilesWritten: boolean,
-    surroundingsLoaded : Promise<{ newTilesWritten: boolean }>
+    tilesUpdated: number,
+    tilesInvalidated: number,
+    surroundingsLoaded : Promise<{
+      tilesUpdated: number,
+      tilesInvalidated: number,
+    }>,
   }>,
 };
 
@@ -155,6 +159,13 @@ export default class TileMap extends PIXI.Container {
     });
   }
 
+  public getObserver(): TileMapObserver {
+    return this.observer;
+  }
+  public getCommander(): TileMapCommander {
+    return this.commander;
+  }
+
   public centerOnNormalScaleWorldPoint(
     point: Readonly<PIXI.IPointData>
   ): void {
@@ -199,11 +210,9 @@ export default class TileMap extends PIXI.Container {
     this.updateMeshPosition();
   }
 
-  public getObserver(): TileMapObserver {
-    return this.observer;
-  }
-  public getCommander(): TileMapCommander {
-    return this.commander;
+  public handleMapInvalidated(): void {
+    console.log("Map invalidated");
+    this.updateMeshPosition();
   }
 
   private dragStart(point: Readonly<PIXI.IPointData>): void {
@@ -350,7 +359,7 @@ export default class TileMap extends PIXI.Container {
     return this.callbackApi.ensureMapDataLoaded(
       { col: this.topLeftWorldColumn, row: this.topLeftWorldRow },
       { columns: this.meshColumns, rows: this.meshRows },
-    ).then(async ({ newTilesWritten, surroundingsLoaded }) => {
+    ).then(async ({ tilesUpdated: immediateTilesUpdated, surroundingsLoaded }) => {
       // If the update counter has changed, then this update is stale.
       // Don't update the mesh position.
       if (updateCounter !== this.updateCounter) {
@@ -363,7 +372,7 @@ export default class TileMap extends PIXI.Container {
       // Tell pixi to update the elevations texture in the GPU to reflect
       // the new data.  Don't update the mesh until after the texture
       // update completes.
-      if (newTilesWritten) {
+      if (immediateTilesUpdated > 0) {
         await this.hexMesh.updateTextures();
       }
 
@@ -384,8 +393,8 @@ export default class TileMap extends PIXI.Container {
       // loaded, then make sure to update the elevations texture again.
       // NOTE: We do NOT return this promise, because we don't want to
       // waiters of the `updateMeshPosition`'s promise to wait for this.
-      surroundingsLoaded.then(({ newTilesWritten }) => {
-        if (newTilesWritten) {
+      surroundingsLoaded.then(({ tilesUpdated: surroundingTilesUpdated }) => {
+        if (surroundingTilesUpdated > 0) {
           this.hexMesh.updateTextures();
         }
       });

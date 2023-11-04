@@ -11,8 +11,12 @@ export interface MapViewCallbackApi {
     topleft: { col: number, row: number },
     area: { columns: number, rows: number }
   ) => Promise<{
-    newTilesWritten: boolean,
-    surroundingsLoaded: Promise<{ newTilesWritten: boolean }>
+    tilesUpdated: number,
+    tilesInvalidated: number,
+    surroundingsLoaded: Promise<{
+      tilesUpdated: number,
+      tilesInvalidated: number,
+    }>
   }>,
 }
 
@@ -47,6 +51,10 @@ export default class MapView extends PIXI.Container {
     this.callbackApi.addTickCallback((delta: number, absTime: number) => {
       this.tileMap.updateTime(absTime);
     });
+
+    this.worldObserver.addMapInvalidationListener(
+      this.handleMapInvalidated.bind(this)
+    );
 
     // Add the tile map to the stage.
     this.tileMap.x = 0;
@@ -93,6 +101,10 @@ export default class MapView extends PIXI.Container {
   public handleWheel(ev: PIXI.FederatedWheelEvent): void {
     const point = this.callbackApi.localizePointerPosition(ev.global);
     this.tileMap.handleWheel(ev.deltaY, point);
+  }
+
+  private handleMapInvalidated(): void {
+    this.tileMap.handleMapInvalidated();
   }
 
   public shutdown(): void {
