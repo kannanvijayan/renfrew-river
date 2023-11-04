@@ -21,7 +21,7 @@ const WORKGROUP_Y: u32 = 8;
 /*
  * Compute a mini-map of elevations
  */
-pub(crate) fn mini_elevations_command(
+pub(crate) fn minify_elevations_command(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
   src_buffer: &GpuMapBuffer<Elevation>,

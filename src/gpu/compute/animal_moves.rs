@@ -1,17 +1,17 @@
 use crate::{
-  world::{ AnimalData, Elevation },
+  world::{ AnimalData, Elevation, CellCoord },
   gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer }
 };
-use super::look_and_move::look_and_move_command;
+use super::commands::look_and_move_command;
 
 /**
- * Initialize animals.
+ * Compute moves for animals.
  */
 pub(crate) async fn compute_animal_moves(
   device: &GpuDevice,
   elevations_map_buffer: &GpuMapBuffer<Elevation>,
   animals_list_buffer: &GpuSeqBuffer<AnimalData>,
-) -> GpuSeqBuffer<u32> {
+) -> GpuSeqBuffer<CellCoord> {
 
   let mut encoder = device.device().create_command_encoder(
     &wgpu::CommandEncoderDescriptor {

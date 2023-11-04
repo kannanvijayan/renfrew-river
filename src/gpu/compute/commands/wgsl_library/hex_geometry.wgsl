@@ -6,7 +6,10 @@ const HEX_DIR_S: u32 = 3u;
 const HEX_DIR_SW: u32 = 4u;
 const HEX_DIR_NW: u32 = 5u;
 
-const HEX_INVALID_TILE: vec2<u32> = vec2<u32>(0xFFFFFFFFu, 0xFFFFFFFFu);
+const MIN_HEX_DIR: u32 = 0u;
+const MAX_HEX_DIR: u32 = 5u;
+
+const HEXCELL_INVALID: vec2<u32> = vec2<u32>(0xFFFFFFFFu, 0xFFFFFFFFu);
 
 /*
  *          0   1   2   3   4   5   6
@@ -27,12 +30,12 @@ const HEX_INVALID_TILE: vec2<u32> = vec2<u32>(0xFFFFFFFFu, 0xFFFFFFFFu);
  */
 
 // Check if a tile is valid.
-fn hex_tile_is_invalid(tile: vec2<u32>) -> bool {
-  return tile.x == HEX_INVALID_TILE.x && tile.y == HEX_INVALID_TILE.y;
+fn hexcell_is_invalid(tile: vec2<u32>) -> bool {
+  return tile.x == HEXCELL_INVALID.x && tile.y == HEXCELL_INVALID.y;
 }
 
 // The index of a hex tile, given a set of dimensions
-fn hex_tile_index(
+fn hexcell_index(
   dims: vec2<u32>,
   tile: vec2<u32>
 ) -> u32 {
@@ -40,19 +43,19 @@ fn hex_tile_index(
 }
 
 // Check if a tile is within bounds
-fn hex_tile_checked(
+fn hexcell_checked(
   dims: vec2<u32>,
   tile: vec2<u32>
 ) -> vec2<u32> {
   if (tile.x >= dims.x || tile.y >= dims.y) {
-    return HEX_INVALID_TILE;
+    return HEXCELL_INVALID;
   } else {
     return tile;
   }
 }
  
 // Calculate tile in given direction
-fn hex_adjacent_tile_unchecked(
+fn hexcell_adjacent_unchecked(
   tile: vec2<u32>,
   dir: u32
 ) -> vec2<u32> {
@@ -72,27 +75,27 @@ fn hex_adjacent_tile_unchecked(
 }
 
 // Calculate tile N units out in a given direction.
-fn hex_adjacent_tile_n_unchecked(
+fn hexcell_adjacent_n_unchecked(
   tile: vec2<u32>,
   dir: u32,
   n: u32
 ) -> vec2<u32> {
   var out_tile = tile;
   for (var i = 0u; i < n; i++) {
-    out_tile = hex_adjacent_tile_unchecked(tile, dir);
+    out_tile = hexcell_adjacent_unchecked(tile, dir);
   }
   return out_tile;
 }
 
 // Calculate tile in given direction
-fn hex_adjacent_tile_checked(
+fn hexcell_adjacent_checked(
   dims: vec2<u32>,
   tile: vec2<u32>,
   dir: u32
 ) -> vec2<u32> {
-  var adj = hex_adjacent_tile_unchecked(tile, dir);
+  var adj = hexcell_adjacent_unchecked(tile, dir);
   if (adj.x >= dims.x || adj.y >= dims.y) {
-    adj = HEX_INVALID_TILE;
+    adj = HEXCELL_INVALID;
   }
   return adj;
 }

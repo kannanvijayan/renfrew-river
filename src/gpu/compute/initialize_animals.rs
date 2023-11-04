@@ -2,10 +2,7 @@ use crate::{
   world::{ AnimalId, AnimalData },
   gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer }
 };
-use super::{
-  fill_map_u32::fill_map_u32_command,
-  init_animals::init_animals_command,
-};
+use super::commands::{ fill_map_u32_command, init_animals_command };
 
 /**
  * Initialize animals.

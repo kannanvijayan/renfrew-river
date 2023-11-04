@@ -121,10 +121,8 @@ impl GpuWorld {
         .to_vec().await
     });
     let mut i = 0;
-    for target_posn in buf {
-      let x = target_posn & 0xffff;
-      let y = target_posn >> 16;
-      log::info!("XXXXX target_posn={},{}", x, y);
+    for coord in buf {
+      log::info!("XXXXX target_posn={:?}", coord);
       i += 1;
       if i >= 10 {
         break;

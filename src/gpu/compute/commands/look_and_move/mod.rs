@@ -1,5 +1,5 @@
 use crate::{
-  world::{ AnimalData, Elevation },
+  world::{ AnimalData, Elevation, CellCoord },
   gpu::{
     GpuDevice,
     GpuSeqBuffer,
@@ -16,7 +16,7 @@ pub(crate) fn look_and_move_command(
   encoder: &mut wgpu::CommandEncoder,
   elevations_map_buffer: &GpuMapBuffer<Elevation>,
   animals_list_buffer: &GpuSeqBuffer<AnimalData>,
-) -> GpuSeqBuffer<u32> {
+) -> GpuSeqBuffer<CellCoord> {
   let world_dims = elevations_map_buffer.dims();
   let world_columns = world_dims.columns_u32();
   let world_rows = world_dims.rows_u32();
@@ -33,7 +33,7 @@ pub(crate) fn look_and_move_command(
   );
 
   // Create the output buffer.
-  let output_buffer = GpuSeqBuffer::<u32>::new(
+  let output_buffer = GpuSeqBuffer::<CellCoord>::new(
     device,
     animals_list_buffer.length(),
     GpuBufferOptions::empty()

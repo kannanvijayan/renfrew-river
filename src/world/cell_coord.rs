@@ -1,4 +1,5 @@
 use serde;
+use crate::gpu::GpuBufferDataType;
 
 /**
  * The coordinate of a single cell.
@@ -29,10 +30,9 @@ impl CellCoord {
     (self.row_u32() << 16) | self.col_u32()
   }
   pub(crate) const fn decode_u32(encoded: u32) -> CellCoord {
-    CellCoord::new(
-      (encoded & 0x0000_ffff) as u16,
-      (encoded >> 16) as u16,
-    )
+    let col = (encoded & 0x0000_ffff) as u16;
+    let row = (encoded >> 16) as u16;
+    CellCoord { col, row }
   }
 }
 /**
@@ -50,5 +50,18 @@ impl PartialOrd for CellCoord {
     } else {
       None
     }
+  }
+}
+
+/**
+ * GPU-mapping for cell coordinates.
+ */
+impl GpuBufferDataType for CellCoord {
+  type NativeType = u32;
+  fn to_native(&self) -> Self::NativeType {
+    self.encode_u32()
+  }
+  fn from_native(native: Self::NativeType) -> Self {
+    CellCoord::decode_u32(native)
   }
 }

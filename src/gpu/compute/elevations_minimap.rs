@@ -10,7 +10,7 @@ use crate::{
   world::Elevation,
   game::constants::ELEVATION_BITS,
 };
-use super::minify_elevations::mini_elevations_command;
+use super::commands::minify_elevations_command;
 
 /**
  * Compute a mini-map of elevations
@@ -34,7 +34,7 @@ pub(crate) async fn elevations_minimap(
     }
   );
 
-  mini_elevations_command(device, &mut encoder, src_buffer, dst_buffer);
+  minify_elevations_command(device, &mut encoder, src_buffer, dst_buffer);
 
   // Submit the commands.
   let submission_index = device.queue().submit(Some(encoder.finish()));

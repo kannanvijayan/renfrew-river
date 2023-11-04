@@ -8,7 +8,7 @@ use crate::{
   },
   world::Elevation,
 };
-use super::init_elevations::init_elevations_command;
+use super::commands::init_elevations_command;
 
 /**
  * Initialize an elevation map.
