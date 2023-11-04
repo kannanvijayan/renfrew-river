@@ -47,3 +47,4 @@ pub(crate) async fn elevations_minimap(
   let elapsed = prior_time.elapsed();
   log::info!("mini_elevations(elapsed_ms={})", elapsed.as_millis());
 }
+

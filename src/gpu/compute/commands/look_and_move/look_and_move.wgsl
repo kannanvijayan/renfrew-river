@@ -1,5 +1,5 @@
 
-// LIBRARY("hex_geometry")
+// LIBRARY(hex_geometry)
 // Hexagon directions
 const HEX_DIR_N: u32 = 0u;
 const HEX_DIR_NE: u32 = 1u;
@@ -101,9 +101,9 @@ fn hexcell_adjacent_checked(
   }
   return adj;
 }
-// END_LIBRARY("hex_geometry")
+// END_LIBRARY(hex_geometry)
 
-// LIBRARY("game_types")
+// LIBRARY(game_types)
 // ElevationX2
 ////////////////////////////////////////////////////////////
 
@@ -217,7 +217,7 @@ struct AnimalData {
 fn animal_data_get_position(animal_data: AnimalData) -> PackedCellCoord {
   return animal_data.position;
 }
-// END_LIBRARY("game_types")
+// END_LIBRARY(game_types)
 
 struct Uniforms {
   world_dims: vec2<u32>,

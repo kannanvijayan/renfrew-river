@@ -1,5 +1,3 @@
-
-
 fn rot_left(val: vec4<u32>, rot: vec4<u32>) -> vec4<u32> {
   return (val << rot) | (val >> (32u - rot));
 }
