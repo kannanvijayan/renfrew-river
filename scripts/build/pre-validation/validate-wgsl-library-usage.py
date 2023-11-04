@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 # Script to validate that WGSL files within the repository correctly
 # embed the code defined in the `wgsl_library` dir.
@@ -7,13 +8,15 @@ import os
 
 from pre_validation import (
   GPU_COMMANDS_DIR,
+  GPU_COMMANDS_SUBPATH,
   WGSL_LIBRARY_DIRNAME,
   WGSL_LIBRARY_PATH,
 )
 
 
 def main():
-  print("Validating wgsl usage within {:s}".format(GPU_COMMANDS_DIR))
+  print("Validating wgsl usage within {:s}".format(GPU_COMMANDS_SUBPATH))
+  print("")
   # List subdirs in commands dir
   subdirs = [
     { "dirname": d, "dirpath": os.path.join(GPU_COMMANDS_DIR, d) }
@@ -23,20 +26,30 @@ def main():
   ]
 
   # Validate each subdir
+  num_failed = 0
   for subdir in subdirs:
-    validate_subdir(subdir)
+    if not validate_subdir(subdir):
+      num_failed += 1
+  if num_failed > 0:
+    print("")
+    print("ERROR: {:d} subdirs failed validation".format(num_failed))
+    exit(1)
 
 def validate_subdir(subdir):
   print("Checking `{:s}`".format(subdir["dirname"]))
   subdirpath = subdir["dirpath"]
   # Walk the entire tree under subdirpath, and validate each wgsl file
+  num_failed = 0
   for root, dirs, files in os.walk(subdirpath):
     for filename in files:
       if filename.endswith(".wgsl"):
-        validate_wgsl_file(
+        file_succeeded = validate_wgsl_file(
           os.path.join(root, filename),
           os.path.join(filename)
         )
+        if not file_succeeded:
+          num_failed += 1
+  return num_failed == 0
 
 def validate_wgsl_file(filepath, subpath):
   print("  * {:s}".format(subpath))
@@ -44,6 +57,7 @@ def validate_wgsl_file(filepath, subpath):
 
   cur_library = None
   cur_library_lines = None
+  num_failed = 0
   for line in filedata:
     (libline_type, libname) = parse_library_line(line)
     if libline_type == "none":
@@ -66,9 +80,11 @@ def validate_wgsl_file(filepath, subpath):
           libname, cur_library
         ))
       # Validate the library
-      validate_library(cur_library, cur_library_lines)
+      if not validate_library(cur_library, cur_library_lines):
+        num_failed += 1
       cur_library = None
       cur_library_lines = None
+  return num_failed == 0
 
 def validate_library(libname, used_lines):
   orig_lines = read_library_file(libname)
@@ -78,6 +94,7 @@ def validate_library(libname, used_lines):
     print("    - Library ok: {:s}".format(libname))
   else:
     print("    - Library FAILED: {:s}".format(libname))
+  return matched
 
 
 LIBRARY_REGEX = r"// LIBRARY\((\w+)\)"

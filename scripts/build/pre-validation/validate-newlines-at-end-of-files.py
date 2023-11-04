@@ -19,9 +19,17 @@ def find_nonewline_files(path):
 
 def main():
   root_path = RUST_SRC_PATH
-  print("Files in {} that do not end with a newline character:".format(root_path))
-  for filename in find_nonewline_files(root_path):
-    print("  {}".format(filename))
+  print("Files that do not end with a newline character:")
+  no_newline_files = find_nonewline_files(root_path)
+  for filename in no_newline_files:
+    stripped_filepath = filename[len(root_path) + 1:]
+    print("  {}".format(stripped_filepath))
+  if len(no_newline_files) > 0:
+    print(
+      "ERROR: {} files do not end with a newline character"
+        .format(len(no_newline_files))
+    )
+    exit(1)
 
 if __name__ == '__main__':
   main()
