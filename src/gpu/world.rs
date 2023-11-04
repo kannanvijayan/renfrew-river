@@ -16,8 +16,8 @@ use crate::{
     CellCoord,
     WorldDims,
     VecMap,
-    TerrainElevation,
-    TerrainElevationValueType,
+    Elevation,
+    ElevationValueType,
     AnimalId,
     AnimalData,
   },
@@ -42,7 +42,7 @@ pub(crate) struct GpuWorld {
   rand_seed: u64,
 
   // The terrain map.
-  elevation_map: GpuMapBuffer<TerrainElevation>,
+  elevation_map: GpuMapBuffer<Elevation>,
 
   // The list of animal entities.
   animals_list: GpuSeqBuffer<AnimalData>,
@@ -105,8 +105,9 @@ impl GpuWorld {
         self.rand_seed as u32,
         &self.animals_list,
         &self.animals_map,
-      ).await
+      ).await;
     });
+    self.move_animals();
   }
 
   pub(crate) fn move_animals(&self) {
@@ -132,7 +133,7 @@ impl GpuWorld {
   }
 
   pub(crate) fn read_elevation_values(&self, top_left: CellCoord, area: WorldDims)
-    -> VecMap<TerrainElevationValueType>
+    -> VecMap<ElevationValueType>
   {
     futures::executor::block_on(async {
       let out_buf = self.elevation_map.read_mappable_area_copy(
@@ -158,7 +159,7 @@ impl GpuWorld {
   }
 
   pub(crate) fn mini_elevation_values(&self, mini_area: WorldDims)
-    -> VecMap<TerrainElevationValueType>
+    -> VecMap<ElevationValueType>
   {
     let mini_buffer = GpuMapBuffer::new(
       &self.device,

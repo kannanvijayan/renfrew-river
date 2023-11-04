@@ -4,7 +4,7 @@ use crate::{
     response::{ResponseEnvelope, FailedResponse},
     command::{Command, CommandEnvelope},
   },
-  world::{ WorldDims, TerrainElevationValueType },
+  world::{ WorldDims, ElevationValueType },
 };
 
 #[derive(Debug, Clone)]
@@ -27,7 +27,7 @@ pub(crate) enum MiniElevationsRsp {
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct MiniElevationsResponse {
-  pub(crate) elevations: Vec<Vec<TerrainElevationValueType>>,
+  pub(crate) elevations: Vec<Vec<ElevationValueType>>,
 }
 
 impl Command for MiniElevationsCmd {

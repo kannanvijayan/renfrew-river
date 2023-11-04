@@ -1,11 +1,8 @@
 use serde;
 use crate::{
-  world::InitParams,
-  world::WorldDims,
+  game::constants::{ MIN_WORLD_DIMS, MAX_WORLD_DIMS },
+  world::{ WorldDims, InitParams },
 };
-
-pub(crate) const MIN_WORLD_DIMS: WorldDims = WorldDims::new(500, 500);
-pub(crate) const MAX_WORLD_DIMS: WorldDims = WorldDims::new(8000, 8000);
 
 #[derive(Clone, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]

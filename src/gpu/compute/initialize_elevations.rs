@@ -1,11 +1,12 @@
 use log;
 use crate::{
+  game::constants::ELEVATION_BITS,
   gpu::{
     GpuDevice,
     GpuBufferDataType,
     GpuMapBuffer,
   },
-  world::{ TerrainElevation, TERRAIN_ELEVATION_BITS },
+  world::Elevation,
 };
 use super::init_elevations::init_elevations_command;
 
@@ -15,14 +16,14 @@ use super::init_elevations::init_elevations_command;
 pub(crate) async fn initialize_elevations(
   device: &GpuDevice,
   seed: u32,
-  target_buffer: &GpuMapBuffer<TerrainElevation>
+  target_buffer: &GpuMapBuffer<Elevation>
 ) {
   debug_assert!(
     std::mem::size_of::<
-      <TerrainElevation as GpuBufferDataType>::NativeType
+      <Elevation as GpuBufferDataType>::NativeType
     >() == 2
   );
-  debug_assert!(TERRAIN_ELEVATION_BITS <= 16);
+  debug_assert!(ELEVATION_BITS <= 16);
 
   // Encode the commands.
   let mut encoder = device.device().create_command_encoder(

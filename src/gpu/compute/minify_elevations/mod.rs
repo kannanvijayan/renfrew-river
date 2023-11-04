@@ -3,6 +3,7 @@ use log;
 use wgpu;
 
 use crate::{
+  game::constants::ELEVATION_BITS,
   gpu::{
     GpuDevice,
     GpuBufferDataType,
@@ -10,7 +11,7 @@ use crate::{
     GpuMapBuffer,
     GpuBufferOptions
   },
-  world::{ TerrainElevation, TERRAIN_ELEVATION_BITS },
+  world::Elevation,
 };
 
 // The size of the workgroups.
@@ -23,21 +24,19 @@ const WORKGROUP_Y: u32 = 8;
 pub(crate) fn mini_elevations_command(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
-  src_buffer: &GpuMapBuffer<TerrainElevation>,
-  dst_buffer: &GpuMapBuffer<TerrainElevation>,
+  src_buffer: &GpuMapBuffer<Elevation>,
+  dst_buffer: &GpuMapBuffer<Elevation>,
 ) {
   debug_assert!(
-    std::mem::size_of::<
-      <TerrainElevation as GpuBufferDataType>::NativeType
-    >() == 2
+    std::mem::size_of::<<Elevation as GpuBufferDataType>::NativeType >() == 2
   );
-  debug_assert!(TERRAIN_ELEVATION_BITS <= 16);
+  debug_assert!(ELEVATION_BITS <= 16);
 
   let src_dims = src_buffer.dims();
   let src_columns = src_dims.columns_u32();
   let src_rows = src_dims.rows_u32();
 
-  let mid_buffer = GpuMapBuffer::<TerrainElevation>::new(
+  let mid_buffer = GpuMapBuffer::<Elevation>::new(
     device,
     dst_buffer.dims(),
     GpuBufferOptions::empty()
@@ -54,7 +53,7 @@ pub(crate) fn mini_elevations_command(
   let config_uniforms_u32: [u32; 6] = [
     src_columns, src_rows,
     dst_columns, dst_rows,
-    TERRAIN_ELEVATION_BITS as u32,
+    ELEVATION_BITS as u32,
     0,
   ];
   let config_uniforms_u8: &[u8] = bytemuck::cast_slice(&config_uniforms_u32);
@@ -112,11 +111,9 @@ pub(crate) fn mini_elevations_command(
     // us write u32, we use a single shader invocation to compute 2 values
     // at a time.
     debug_assert!(
-      std::mem::size_of::<
-        <TerrainElevation as GpuBufferDataType>::NativeType
-      >() == 2
+      std::mem::size_of::<<Elevation as GpuBufferDataType>::NativeType >() == 2
     );
-    debug_assert!(TERRAIN_ELEVATION_BITS <= 16);
+    debug_assert!(ELEVATION_BITS <= 16);
     let dispatch_x = (dst_columns + (2*WORKGROUP_X - 1)) / (2*WORKGROUP_X);
     let dispatch_y = (dst_rows + WORKGROUP_Y - 1) / WORKGROUP_Y;
     cpass.dispatch_workgroups(dispatch_x, dispatch_y, 1);
@@ -127,7 +124,7 @@ pub(crate) fn mini_elevations_command(
     let size =
       dst_dims.columns_u64() *
       dst_dims.rows_u64() *
-      <TerrainElevation as GpuBufferDataType>::NativeType::SIZE as u64;
+      <Elevation as GpuBufferDataType>::NativeType::SIZE as u64;
     encoder.copy_buffer_to_buffer(
       &mid_buffer.wgpu_buffer(), 0,
       &dst_buffer.wgpu_buffer(), 0,

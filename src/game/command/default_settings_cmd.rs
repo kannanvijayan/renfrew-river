@@ -1,10 +1,10 @@
 use serde;
 use crate::{
   game::{
+    constants::{ MIN_WORLD_DIMS, MAX_WORLD_DIMS },
     response::ResponseEnvelope,
     command::{Command, CommandEnvelope},
     GameSettings,
-    settings::{ MIN_WORLD_DIMS, MAX_WORLD_DIMS },
   },
   world::WorldDims,
 };

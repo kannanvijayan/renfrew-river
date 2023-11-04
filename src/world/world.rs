@@ -5,7 +5,7 @@ use crate::{
     WorldDims,
     InitParams,
     VecMap,
-    TerrainElevationValueType,
+    ElevationValueType,
     AnimalId,
     AnimalData,
   },
@@ -39,7 +39,7 @@ impl World {
   }
 
   pub(crate) fn read_elevation_values(&self, top_left: CellCoord, area: WorldDims)
-    -> VecMap<TerrainElevationValueType>
+    -> VecMap<ElevationValueType>
   {
     self.gpu_world.read_elevation_values(top_left, area)
   }
@@ -50,7 +50,7 @@ impl World {
   }
 
   pub(crate) fn mini_elevation_values(&self, mini_dims: WorldDims)
-    -> VecMap<TerrainElevationValueType>
+    -> VecMap<ElevationValueType>
   {
     self.gpu_world.mini_elevation_values(mini_dims)
   }

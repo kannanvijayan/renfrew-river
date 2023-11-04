@@ -7,7 +7,8 @@ use crate::{
     GpuBufferDataType,
     GpuMapBuffer,
   },
-  world::{ TerrainElevation, TERRAIN_ELEVATION_BITS },
+  world::Elevation,
+  game::constants::ELEVATION_BITS,
 };
 use super::minify_elevations::mini_elevations_command;
 
@@ -16,15 +17,15 @@ use super::minify_elevations::mini_elevations_command;
  */
 pub(crate) async fn elevations_minimap(
   device: &GpuDevice,
-  src_buffer: &GpuMapBuffer<TerrainElevation>,
-  dst_buffer: &GpuMapBuffer<TerrainElevation>,
+  src_buffer: &GpuMapBuffer<Elevation>,
+  dst_buffer: &GpuMapBuffer<Elevation>,
 ) {
   debug_assert!(
     std::mem::size_of::<
-      <TerrainElevation as GpuBufferDataType>::NativeType
+      <Elevation as GpuBufferDataType>::NativeType
     >() == 2
   );
-  debug_assert!(TERRAIN_ELEVATION_BITS <= 16);
+  debug_assert!(ELEVATION_BITS <= 16);
 
   // Encode the commands.
   let mut encoder = device.device().create_command_encoder(

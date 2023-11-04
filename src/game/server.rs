@@ -7,6 +7,7 @@ use crate::{
   game::{
     GameSettings,
     Game,
+    constants::{ ELEVATION_BITS, MIN_WORLD_DIMS, MAX_WORLD_DIMS },
     command::{
       Command, CommandEnvelope,
       NewGameCmd, NewGameRsp,
@@ -22,12 +23,9 @@ use crate::{
       ResponseEnvelope,
       FailedResponse,
     },
-    settings::{ MAX_WORLD_DIMS, MIN_WORLD_DIMS }
   },
   world::{
-    TerrainElevationValueType,
-    TERRAIN_ELEVATION_BITS,
-
+    ElevationValueType,
     AnimalId,
   },
 };
@@ -154,7 +152,7 @@ impl GameServerInner {
   ) -> GetConstantsRsp {
     log::debug!("GameServerInner::handle_get_constants_command");
     GetConstantsRsp {
-      elevation_bits: TERRAIN_ELEVATION_BITS,
+      elevation_bits: ELEVATION_BITS,
       min_world_dims: MIN_WORLD_DIMS,
       max_world_dims: MAX_WORLD_DIMS,
     }
@@ -245,7 +243,7 @@ impl GameServerInner {
       );
     }
 
-    let mut elevations: Option<Vec<Vec<TerrainElevationValueType>>> = None;
+    let mut elevations: Option<Vec<Vec<ElevationValueType>>> = None;
     if kinds.contains(&ReadMapDataKind::Elevation) {
       elevations = Some(
         game.world().read_elevation_values(top_left, area).to_vec_of_vecs()

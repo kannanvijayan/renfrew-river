@@ -299,7 +299,7 @@ fn look_and_move(
   }
 
   var sum_elevs = vec2<u32>(0u, 0u);
-  for (var dist: u32 = 1u; dist <= 5u; dist = dist + 1u) {
+  for (var dist: u32 = 1u; dist <= 2u; dist = dist + 1u) {
     let start_posn = hex_adjacent_tile_n_unchecked(
       packed_tile_coord_to_tile_coord(animal_data.position).col_row,
       HEX_DIR_N,

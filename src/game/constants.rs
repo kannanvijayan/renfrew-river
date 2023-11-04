@@ -1,3 +1,4 @@
+use crate::world::WorldDims;
 
 /**
  * Limits for the game.
@@ -18,7 +19,14 @@ impl RandGenCategory {
   }
 }
 
-/**
- * The maximum number of animals in the game.
- */
+/** The maximum number of animals in the game. */
 pub(crate) const MAX_ANIMALS: usize = 1_000_000;
+
+/** The number of bits used to represent terrain elevation. */
+pub(crate) const ELEVATION_BITS: u32 = 12;
+
+/** Minimum world dimensions. */
+pub(crate) const MIN_WORLD_DIMS: WorldDims = WorldDims::new(500, 500);
+
+/** Maximum world dimensions. */
+pub(crate) const MAX_WORLD_DIMS: WorldDims = WorldDims::new(8000, 8000);

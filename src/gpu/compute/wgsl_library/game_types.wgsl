@@ -9,16 +9,16 @@ struct ElevationX2 {
   elevation_u16x2: u32,
 }
 /** The number of significant bits in each elevation value. */
-const ELEVATION_BITS: u32 = 10u;
+const ELEVATION_BITS: u32 = 12u;
 
 /** Bit mask for extracting elevation values. */
-const ELEVATION_MASK: u32 = 0x3FFu;
+const ELEVATION_MASK: u32 = 0xFFFu;
 
 /** Read one of the elevation values from an ElevationX2.
  * The low bit of idx selects the value.
  */
 fn elevation_x2_read_value(elevation: ElevationX2, idx: u32) -> u32 {
-  return (elevation.elevation_u16x2 >> ((idx & 1u) * 16u)) & ELEVATION_MASK;
+  return (elevation.elevation_u16x2 >> ((idx & 1u) << 4u)) & ELEVATION_MASK;
 }
 
 // WorldDims

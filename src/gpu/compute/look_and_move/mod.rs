@@ -1,8 +1,5 @@
 use crate::{
-  world::{
-    AnimalData,
-    TerrainElevation,
-  },
+  world::{ AnimalData, Elevation },
   gpu::{
     GpuDevice,
     GpuSeqBuffer,
@@ -17,7 +14,7 @@ const LOOK_AND_MOVE_WORKGROUP: u32 = 64;
 pub(crate) fn look_and_move_command(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
-  elevations_map_buffer: &GpuMapBuffer<TerrainElevation>,
+  elevations_map_buffer: &GpuMapBuffer<Elevation>,
   animals_list_buffer: &GpuSeqBuffer<AnimalData>,
 ) -> GpuSeqBuffer<u32> {
   let world_dims = elevations_map_buffer.dims();

@@ -20,8 +20,8 @@ impl WorldDims {
 
   pub(crate) const fn default() -> WorldDims {
     WorldDims {
-      columns: 1000,
-      rows: 1000,
+      columns: 8000,
+      rows: 8000,
     }
   }
 

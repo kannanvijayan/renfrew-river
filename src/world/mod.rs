@@ -3,6 +3,7 @@ mod cell_coord;
 mod world_dims;
 mod init_params;
 mod world;
+mod elevation;
 mod terrain;
 mod vec_map;
 mod entity;
@@ -14,13 +15,8 @@ pub(crate) use self::{
   init_params::InitParams,
   world::World,
   vec_map::VecMap,
-  terrain::{
-    TerrainKind,
-    TerrainElevation,
-    TerrainElevationValueType,
-
-    TERRAIN_ELEVATION_BITS,
-  },
+  elevation::{ Elevation, ElevationValueType },
+  terrain::TerrainKind,
   entity::{ EntityId, EntityData },
   animal::{ AnimalId, AnimalData },
 };

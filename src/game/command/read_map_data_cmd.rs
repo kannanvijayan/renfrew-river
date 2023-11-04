@@ -4,7 +4,7 @@ use crate::{
     response::{ResponseEnvelope, FailedResponse},
     command::{Command, CommandEnvelope},
   },
-  world::{ CellCoord, WorldDims, TerrainElevationValueType, AnimalId },
+  world::{ CellCoord, WorldDims, ElevationValueType, AnimalId },
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -38,7 +38,7 @@ pub(crate) enum ReadMapDataRsp {
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct MapDataResponse {
-  pub(crate) elevations: Option<Vec<Vec<TerrainElevationValueType>>>,
+  pub(crate) elevations: Option<Vec<Vec<ElevationValueType>>>,
   pub(crate) animal_ids: Option<Vec<Vec<AnimalId>>>,
 }
 

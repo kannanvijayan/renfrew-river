@@ -1,11 +1,11 @@
 use serde;
 use crate::{
   game::{
-    response::ResponseEnvelope,
+    constants::{ ELEVATION_BITS, MIN_WORLD_DIMS, MAX_WORLD_DIMS },
     command::{Command, CommandEnvelope},
-    settings::{ MIN_WORLD_DIMS, MAX_WORLD_DIMS },
+    response::ResponseEnvelope,
   },
-  world::{ WorldDims, TERRAIN_ELEVATION_BITS },
+  world::WorldDims,
 };
 
 #[derive(Debug, Clone)]
@@ -45,7 +45,7 @@ impl Command for GetConstantsCmd {
     let default_settings_example = GetConstantsCmd {};
 
     let response_example = GetConstantsRsp {
-      elevation_bits: TERRAIN_ELEVATION_BITS,
+      elevation_bits: ELEVATION_BITS,
       min_world_dims: MIN_WORLD_DIMS,
       max_world_dims: MAX_WORLD_DIMS,
     };

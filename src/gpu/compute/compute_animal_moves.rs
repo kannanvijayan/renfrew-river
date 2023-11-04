@@ -1,5 +1,5 @@
 use crate::{
-  world::{ AnimalData, TerrainElevation },
+  world::{ AnimalData, Elevation },
   gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer }
 };
 use super::look_and_move::look_and_move_command;
@@ -9,7 +9,7 @@ use super::look_and_move::look_and_move_command;
  */
 pub(crate) async fn compute_animal_moves(
   device: &GpuDevice,
-  elevations_map_buffer: &GpuMapBuffer<TerrainElevation>,
+  elevations_map_buffer: &GpuMapBuffer<Elevation>,
   animals_list_buffer: &GpuSeqBuffer<AnimalData>,
 ) -> GpuSeqBuffer<u32> {
 
