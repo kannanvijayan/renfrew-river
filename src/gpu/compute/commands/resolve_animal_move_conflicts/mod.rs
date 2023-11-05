@@ -1,11 +1,6 @@
 use crate::{
   world::{ AnimalId, AnimalData, CellCoord },
-  gpu::{
-    GpuDevice,
-    GpuSeqBuffer,
-    GpuMapBuffer,
-    GpuBufferOptions,
-  }
+  gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer }
 };
 
 // The size of the workgroups.

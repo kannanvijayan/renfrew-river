@@ -18,6 +18,7 @@ use crate::{
       ReadMapDataCmd, ReadMapDataKind, ReadMapDataRsp, MapDataResponse,
       MiniElevationsCmd, MiniElevationsRsp, MiniElevationsResponse,
       ReadAnimalsCmd, ReadAnimalsRsp, AnimalsResponse,
+      TakeTurnStepCmd, TakeTurnStepRsp, TurnTakenResponse,
     },
     response::{
       ResponseEnvelope,
@@ -27,6 +28,7 @@ use crate::{
   world::{
     ElevationValueType,
     AnimalId,
+    TakeTurnStepResult,
   },
 };
 
@@ -144,6 +146,10 @@ impl GameServerInner {
         let resp = self.handle_read_animals_command(*read_animals_command);
         return ReadAnimalsCmd::embed_response(resp);
       },
+      CommandEnvelope::TakeTurnStep(take_turn_step_command) => {
+        let resp = self.handle_take_turn_step_command(*take_turn_step_command);
+        return TakeTurnStepCmd::embed_response(resp);
+      }
     };
   }
 
@@ -201,7 +207,7 @@ impl GameServerInner {
     let mut game = match self.game.take() {
       Some(game) => game,
       None => {
-        log::warn!("GameServerInner::handle_stop_command: No game to stop");
+        log::warn!("GameServerInner::handle_stop_command: No game");
         return StopGameRsp::Failed(FailedResponse::new("No game to stop"));
       }
     };
@@ -225,7 +231,7 @@ impl GameServerInner {
       Some(ref game) => game,
       None => {
         log::warn!(
-          "GameServerInner::handle_read_elevations_command: No game to read elevations from"
+          "GameServerInner::handle_read_elevations_command: No game"
         );
         return ReadMapDataRsp::Failed(
           FailedResponse::new("No game to read elevations from")
@@ -276,9 +282,7 @@ impl GameServerInner {
     let game = match self.game {
       Some(ref game) => game,
       None => {
-        log::warn!(
-          "GameServerInner::handle_read_elevations_command: No game to read elevations from"
-        );
+        log::warn!("GameServerInner::handle_mini_elevations_command: No game");
         return MiniElevationsRsp::Failed(
           FailedResponse::new("No game to minify elevations from")
         );
@@ -311,9 +315,7 @@ impl GameServerInner {
     let game = match self.game {
       Some(ref game) => game,
       None => {
-        log::warn!(
-          "GameServerInner::handle_read_animals_command: No game to read animals from"
-        );
+        log::warn!("GameServerInner::handle_read_animals_command: No game");
         return ReadAnimalsRsp::Failed(
           FailedResponse::new("No game to read animals from")
         );
@@ -322,5 +324,36 @@ impl GameServerInner {
 
     let animals = game.world().read_animals_entity_data();
     ReadAnimalsRsp::Ok(AnimalsResponse { animals })
+  }
+
+  fn handle_take_turn_step_command(&mut self,
+    take_turn_step_cmd: TakeTurnStepCmd,
+  ) -> TakeTurnStepRsp {
+
+    // Validate command.
+    let mut validation_errors = Vec::new();
+    if !take_turn_step_cmd.validate(&mut validation_errors) {
+      log::warn!("GameServerInner::take_turn_step: Invalid command: {:?}",
+        validation_errors
+      );
+      return TakeTurnStepRsp::Failed(FailedResponse::new_vec(validation_errors));
+    }
+
+    let mut game = match self.game {
+      Some(ref mut game) => game,
+      None => {
+        log::warn!("GameServerInner::handle_take_turn_step_command: No game");
+        return TakeTurnStepRsp::Failed(
+          FailedResponse::new("No game to take turn step")
+        );
+      }
+    };
+
+    let TakeTurnStepResult { turn_no_after, elapsed_ms } =
+      game.world_mut().take_turn_step();
+
+    TakeTurnStepRsp::TurnTaken(
+      TurnTakenResponse { turn_no_after, elapsed_ms }
+    )
   }
 }

@@ -8,6 +8,7 @@ use super::command::{
   MapDataResponse,
   MiniElevationsResponse,
   AnimalsResponse,
+  TurnTakenResponse,
 };
 
 #[derive(Debug, Clone)]
@@ -22,6 +23,7 @@ pub(crate) enum ResponseEnvelope {
   MapData(Box<MapDataResponse>),
   MiniElevations(Box<MiniElevationsResponse>),
   Animals(Box<AnimalsResponse>),
+  TurnTaken(Box<TurnTakenResponse>),
 }
 
 #[derive(Debug, Clone)]

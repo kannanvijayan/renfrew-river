@@ -8,6 +8,7 @@ use crate::{
     ElevationValueType,
     AnimalId,
     AnimalData,
+    TurnNo,
   },
   gpu::{ GpuWorld, GpuWorldParams },
 };
@@ -16,7 +17,11 @@ pub(crate) struct World {
   // Dimensions of the world.
   world_dims: WorldDims,
 
+  // The world state inside the GPU.
   gpu_world: GpuWorld,
+
+  // The current turn number.
+  turn_no: TurnNo,
 }
 impl World {
   pub(crate) fn new(init_params: InitParams) -> World {
@@ -26,9 +31,11 @@ impl World {
       world_dims,
       rand_seed,
     });
+    let turn_no = TurnNo(0);
     World {
       world_dims,
       gpu_world,
+      turn_no,
     }
   }
 
@@ -58,4 +65,20 @@ impl World {
   pub(crate) fn read_animals_entity_data(&self) -> Vec<AnimalData> {
     self.gpu_world.read_animals_entity_data()
   }
+
+  pub(crate) fn take_turn_step(&mut self) -> TakeTurnStepResult {
+    let prior_time = std::time::Instant::now();
+    self.gpu_world.move_animals();
+    let elapsed_ms =
+      prior_time.elapsed().as_millis()
+        .clamp(0 as u128, u32::MAX as u128) as u32;
+    let turn_no_after = self.turn_no.next();
+    self.turn_no = turn_no_after;
+    TakeTurnStepResult { turn_no_after, elapsed_ms }
+  }
+}
+
+pub(crate) struct TakeTurnStepResult {
+  pub(crate) turn_no_after: TurnNo,
+  pub(crate) elapsed_ms: u32,
 }

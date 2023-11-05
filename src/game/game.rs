@@ -12,10 +12,7 @@ impl Game {
   pub(crate) fn new(settings: GameSettings) -> Game {
     log::debug!("Game::new");
     let world = World::new(settings.world_init_params());
-    Game {
-      settings,
-      world
-    }
+    Game { settings, world }
   }
 
   pub(crate) fn settings(&self) -> &GameSettings {
@@ -33,5 +30,8 @@ impl Game {
 
   pub(crate) fn world(&self) -> &World {
     &self.world
+  }
+  pub(crate) fn world_mut(&mut self) -> &mut World {
+    &mut self.world
   }
 }
