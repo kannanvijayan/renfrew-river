@@ -9,6 +9,7 @@ import { AnimalData } from "../game/types/animal_data";
 import { GameSettings } from "./protocol/types/settings";
 import { WorldDims } from "../game/types/world_dims";
 import { ReadMapDataKind, ReadMapDataKindsToOutput, ReadMapDataOutputNameMap } from "./protocol/commands/read_map_data_cmd";
+import { TurnNo } from "../game/types/turn_no";
 
 export type GameClientArgs = {
   url: string;
@@ -144,6 +145,18 @@ export default class GameClient {
     const result = await this.sendCommand("ReadAnimals", {});
     if ("Animals" in result) {
       return result.Animals.animals;
+    } else {
+      throw new Error(result.Error.messages.join(", "));
+    }
+  }
+
+  public async takeTurnStep(): Promise<{
+    turn_no_after: TurnNo,
+    elapsed_ms: number,
+  }> {
+    const result = await this.sendCommand("TakeTurnStep", {});
+    if ("TurnTaken" in result) {
+      return result.TurnTaken;
     } else {
       throw new Error(result.Error.messages.join(", "));
     }

@@ -258,6 +258,13 @@ export default class Game {
     // Read animals.
     const animals = await this.client!.readAnimals();
     this.world.addAnimals(animals);
+
+    // Take a turn once a second.
+    setInterval(async () => {
+      const result = await this.client!.takeTurnStep();
+      console.log("Turn taken", result);
+      this.world?.mapData.invalidate();
+    }, 1000);
   }
 
   private ensureMapDataLoaded(topLeft: CellCoord, area: WorldDims)

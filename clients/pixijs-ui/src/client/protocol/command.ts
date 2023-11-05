@@ -6,6 +6,7 @@ import { StopGameCmd } from "./commands/stop_game_cmd";
 import { ReadMapDataCmd } from "./commands/read_map_data_cmd";
 import { MiniElevationsCmd } from "./commands/mini_elevations_cmd";
 import { ReadAnimalsCmd } from "./commands/read_animals_cmd";
+import { TakeTurnStepCmd } from "./commands/take_turn_step_cmd";
 
 /**
  * Protocol commands.
@@ -19,6 +20,7 @@ export type ProtocolCommand = {
   ReadMapData: ReadMapDataCmd,
   MiniElevations: MiniElevationsCmd,
   ReadAnimals: ReadAnimalsCmd,
+  TakeTurnStep: TakeTurnStepCmd,
 };
 
 export type ProtocolCommandName = keyof ProtocolCommand;
