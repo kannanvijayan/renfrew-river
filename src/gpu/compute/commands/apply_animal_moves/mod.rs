@@ -1,23 +1,20 @@
 use crate::{
-  world::{ AnimalData, Elevation, CellCoord },
-  gpu::{
-    GpuDevice,
-    GpuSeqBuffer,
-    GpuMapBuffer,
-    GpuBufferOptions,
-  }
+  world::{ AnimalId, AnimalData, CellCoord },
+  gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer }
 };
 
 // The size of the workgroups.
-const LOOK_AND_MOVE_WORKGROUP: u32 = 64;
+const APPLY_ANIMAL_MOVES_WORKGROUP: u32 = 64;
 
-pub(crate) fn look_and_move_command(
+pub(crate) fn apply_animal_moves_command(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
-  elevations_map_buffer: &GpuMapBuffer<Elevation>,
+  target_positions_buffer: &GpuSeqBuffer<CellCoord>,
+  conflicts_map_buffer: &GpuMapBuffer<AnimalId>,
   animals_list_buffer: &GpuSeqBuffer<AnimalData>,
-) -> GpuSeqBuffer<CellCoord> {
-  let world_dims = elevations_map_buffer.dims();
+  animal_position_map_buffer: &GpuMapBuffer<AnimalId>,
+) {
+  let world_dims = conflicts_map_buffer.dims();
   let world_columns = world_dims.columns_u32();
   let world_rows = world_dims.rows_u32();
   let num_animals = animals_list_buffer.length() as u32;
@@ -29,30 +26,20 @@ pub(crate) fn look_and_move_command(
   ];
   let config_uniforms_u8: &[u8] = bytemuck::cast_slice(&config_uniforms_u32);
   let uniform_buffer = device.create_uniform_buffer(
-    config_uniforms_u8, Some("LookAndMoveUniforms")
-  );
-
-  // Create the output buffer.
-  let output_buffer = GpuSeqBuffer::<CellCoord>::new(
-    device,
-    animals_list_buffer.length(),
-    GpuBufferOptions::empty()
-      .with_label("InitializeAnimalsConflictsMap")
-      .with_storage(true)
-      .with_copy_src(true),
+    config_uniforms_u8, Some("ApplyAnimalMovesUniforms")
   );
 
   // Load the shader.
-  let source = include_str!("./look_and_move.wgsl");
-  let shader = device.create_shader_module(source, "LookAndMoveShader");
+  let source = include_str!("./apply_animal_moves.wgsl");
+  let shader = device.create_shader_module(source, "ApplyAnimalMovesShader");
 
   // Create the compute pipeline.
   let compute_pipeline = device.device().create_compute_pipeline(
     &wgpu::ComputePipelineDescriptor {
-      label: Some("LookAndMovePipeline"),
+      label: Some("ApplyAnimalMovesPipeline"),
       layout: None,
       module: &shader,
-      entry_point: "look_and_move",
+      entry_point: "resolve_animal_moves",
     }
   );
 
@@ -60,7 +47,7 @@ pub(crate) fn look_and_move_command(
   let bind_group_layout = compute_pipeline.get_bind_group_layout(0);
   let bind_group = device.device().create_bind_group(
     &wgpu::BindGroupDescriptor {
-      label: Some("InitializeAnimalsBindGroup"),
+      label: Some("ApplyAnimalMovesBindGroup"),
       layout: &bind_group_layout,
       entries: &[
         wgpu::BindGroupEntry {
@@ -69,32 +56,35 @@ pub(crate) fn look_and_move_command(
         },
         wgpu::BindGroupEntry {
           binding: 1,
-          resource: elevations_map_buffer.wgpu_buffer().as_entire_binding(),
+          resource: target_positions_buffer.wgpu_buffer().as_entire_binding(),
         },
         wgpu::BindGroupEntry {
           binding: 2,
-          resource: animals_list_buffer.wgpu_buffer().as_entire_binding(),
+          resource: conflicts_map_buffer.wgpu_buffer().as_entire_binding(),
         },
         wgpu::BindGroupEntry {
           binding: 3,
-          resource: output_buffer.wgpu_buffer().as_entire_binding(),
+          resource: animals_list_buffer.wgpu_buffer().as_entire_binding(),
+        },
+        wgpu::BindGroupEntry {
+          binding: 4,
+          resource: animal_position_map_buffer.wgpu_buffer().as_entire_binding(),
         },
       ],
     }
   );
 
-  // Run the compute pass.
+  // Add the compute pass.
   {
     let mut cpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-      label: Some("LookAndMoveComputePass"),
+      label: Some("ApplyAnimalMovesComputePass"),
     });
     cpass.set_pipeline(&compute_pipeline);
     cpass.set_bind_group(0, &bind_group, &[]);
 
     let dispatch_x =
-      (num_animals + (LOOK_AND_MOVE_WORKGROUP - 1)) / LOOK_AND_MOVE_WORKGROUP;
+      (num_animals + (APPLY_ANIMAL_MOVES_WORKGROUP - 1))
+        / APPLY_ANIMAL_MOVES_WORKGROUP;
     cpass.dispatch_workgroups(dispatch_x, 1, 1);
   }
-
-  output_buffer
 }

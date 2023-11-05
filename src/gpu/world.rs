@@ -9,7 +9,9 @@ use crate::{
       initialize_elevations,
       elevations_minimap,
       initialize_animals,
-      compute_animal_moves,
+      compute_downhill_movement,
+      resolve_animal_move_conflicts,
+      apply_animal_moves,
     },
   },
   world::{
@@ -112,22 +114,59 @@ impl GpuWorld {
 
   pub(crate) fn move_animals(&self) {
     let buf = futures::executor::block_on(async {
-      compute_animal_moves(
+      let target_positions_buffer = compute_downhill_movement(
         &self.device,
         &self.elevation_map,
         &self.animals_list,
-      ).await
-        .read_mappable_full_copy(&self.device).await
-        .to_vec().await
-    });
-    let mut i = 0;
-    for coord in buf {
-      log::info!("XXXXX target_posn={:?}", coord);
-      i += 1;
-      if i >= 10 {
-        break;
+      ).await;
+
+      let cur_animal_data =
+        self.animals_list
+          .read_mappable_subseq_copy(&self.device, 0, 16).await
+          .to_vec().await;
+      for animal in cur_animal_data {
+        log::info!("XXXXX animal current={:?}", animal.position);
       }
-    }
+
+      let animal_target_data =
+        target_positions_buffer
+          .read_mappable_subseq_copy(&self.device, 0, 16).await
+          .to_vec().await;
+      for target in animal_target_data {
+        log::info!("XXXXX animal target={:?}", target);
+      }
+
+      let conflicts_map_buffer = resolve_animal_move_conflicts(
+        &self.device,
+        &self.animals_list,
+        &self.animals_map,
+        &target_positions_buffer,
+      ).await;
+
+      let animal_target_data =
+        target_positions_buffer
+          .read_mappable_subseq_copy(&self.device, 0, 16).await
+          .to_vec().await;
+      for target in animal_target_data {
+        log::info!("XXXXX animal resolved={:?}", target);
+      }
+
+      apply_animal_moves(
+        &self.device,
+        &target_positions_buffer,
+        &conflicts_map_buffer,
+        &self.animals_list,
+        &self.animals_map,
+      ).await;
+
+      let cur_animal_data =
+        self.animals_list
+          .read_mappable_subseq_copy(&self.device, 0, 16).await
+          .to_vec().await;
+      for animal in cur_animal_data {
+        log::info!("XXXXX animal after={:?}", animal.position);
+      }
+    });
   }
 
   pub(crate) fn read_elevation_values(&self, top_left: CellCoord, area: WorldDims)

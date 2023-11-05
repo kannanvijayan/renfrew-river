@@ -2,12 +2,16 @@ mod fill_map_u32;
 mod init_elevations;
 mod minify_elevations;
 mod init_animals;
-mod look_and_move;
+mod move_animals_downhill;
+mod resolve_animal_move_conflicts;
+mod apply_animal_moves;
 
 pub(crate) use self::{
   fill_map_u32::fill_map_u32_command,
   init_elevations::init_elevations_command,
   minify_elevations::minify_elevations_command,
   init_animals::init_animals_command,
-  look_and_move::look_and_move_command,
+  move_animals_downhill::move_animals_downhill_command,
+  resolve_animal_move_conflicts::resolve_animal_move_conflicts_command,
+  apply_animal_moves::apply_animal_moves_command,
 };
