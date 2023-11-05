@@ -254,6 +254,11 @@ fn animal_id_new_invalid() -> AnimalId {
 fn animal_id_from_u32(value: u32) -> AnimalId {
   return AnimalId(value);
 }
+
+/** Get the animal id value. */
+fn animal_id_get_value(animal_id: AnimalId) -> u32 {
+  return animal_id.value;
+}
 // END_LIBRARY(game_types)
 
 struct Uniforms {
@@ -334,5 +339,5 @@ fn move_animals_downhill(
   }
 
   out_animal_positions.values[animal_id] =
-    packed_cell_coord_from_cell_coord(my_cell);
+    packed_cell_coord_from_cell_coord(min_cell);
 }

@@ -17,7 +17,8 @@ pub(crate) fn resolve_animal_move_conflicts_command(
   animals_list_buffer: &GpuSeqBuffer<AnimalData>,
   animal_positions_map_buffer: &GpuMapBuffer<AnimalId>,
   target_positions_buffer: &GpuSeqBuffer<CellCoord>,
-) -> GpuMapBuffer<AnimalId> {
+  conflicts_buffer: &GpuMapBuffer<AnimalId>,
+) {
   let world_dims = animal_positions_map_buffer.dims();
   let world_columns = world_dims.columns_u32();
   let world_rows = world_dims.rows_u32();
@@ -31,16 +32,6 @@ pub(crate) fn resolve_animal_move_conflicts_command(
   let config_uniforms_u8: &[u8] = bytemuck::cast_slice(&config_uniforms_u32);
   let uniform_buffer = device.create_uniform_buffer(
     config_uniforms_u8, Some("ResolveAnimalMovesUniforms")
-  );
-
-  // Create the output buffer.
-  let conflicts_buffer = GpuMapBuffer::<AnimalId>::new(
-    device,
-    world_dims,
-    GpuBufferOptions::empty()
-      .with_label("ResolveAnimalMovesConflictsMap")
-      .with_storage(true)
-      .with_copy_src(true),
   );
 
   // Load the shader.
@@ -101,6 +92,4 @@ pub(crate) fn resolve_animal_move_conflicts_command(
         / RESOLVE_ANIMAL_MOVE_CONFLICTS_WORKGROUP;
     cpass.dispatch_workgroups(dispatch_x, 1, 1);
   }
-
-  conflicts_buffer
 }

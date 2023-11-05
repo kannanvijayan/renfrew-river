@@ -254,6 +254,11 @@ fn animal_id_new_invalid() -> AnimalId {
 fn animal_id_from_u32(value: u32) -> AnimalId {
   return AnimalId(value);
 }
+
+/** Get the animal id value. */
+fn animal_id_get_value(animal_id: AnimalId) -> u32 {
+  return animal_id.value;
+}
 // END_LIBRARY(game_types)
 
 struct Uniforms {
@@ -273,6 +278,14 @@ struct CurrentPositionMap {
 struct ResolvedConflictsMap {
   values: array<AnimalId>,
 }
+struct WhyList {
+  values: array<u32>,
+}
+
+const WHY_DOES_NOT_EXIST: u32 = 0x10000000u;
+const WHY_DOES_STAY_PUT: u32 = 0x20000000u;
+const WHY_HAD_CONFLICT: u32 = 0x40000000u;
+const WHY_OK: u32 = 0x80000000u;
 
 @group(0) @binding(0)
 var<uniform> uniforms: Uniforms;
@@ -289,6 +302,9 @@ var<storage, read_write> inout_animal_data: AnimalDataList;
 @group(0) @binding(4)
 var<storage, read_write> out_animal_position_map: CurrentPositionMap;
 
+@group(0) @binding(5)
+var<storage, read_write> out_why_list: WhyList;
+
 @compute
 @workgroup_size(64)
 fn apply_animal_moves(
@@ -302,13 +318,15 @@ fn apply_animal_moves(
   // Skip animals that don't exist.
   let animal_data = inout_animal_data.values[animal_id];
   if (packed_cell_coord_is_invalid(animal_data.position)) {
+    out_why_list.values[animal_id] = WHY_DOES_NOT_EXIST;
     return;
   }
 
   let current_position = animal_data.position;
   let target_position = in_target_positions.values[animal_id];
-  if (!packed_cell_coord_equal(current_position, target_position)) {
+  if (packed_cell_coord_equal(current_position, target_position)) {
     // Animal is already at target position.
+    out_why_list.values[animal_id] = WHY_DOES_STAY_PUT;
     return;
   }
 
@@ -328,8 +346,11 @@ fn apply_animal_moves(
     )
   ) {
     // Animal lost the conflict.
+    out_why_list.values[animal_id] = WHY_HAD_CONFLICT | animal_id;
     return;
   }
+
+  out_why_list.values[animal_id] = WHY_OK;
 
   // Update the animal data to reflect the new position.
   inout_animal_data.values[animal_id].position = target_position;

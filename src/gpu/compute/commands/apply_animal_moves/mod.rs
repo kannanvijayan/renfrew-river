@@ -13,6 +13,7 @@ pub(crate) fn apply_animal_moves_command(
   conflicts_map_buffer: &GpuMapBuffer<AnimalId>,
   animals_list_buffer: &GpuSeqBuffer<AnimalData>,
   animal_position_map_buffer: &GpuMapBuffer<AnimalId>,
+  why_list_buffer: &GpuSeqBuffer<u32>,
 ) {
   let world_dims = conflicts_map_buffer.dims();
   let world_columns = world_dims.columns_u32();
@@ -39,7 +40,7 @@ pub(crate) fn apply_animal_moves_command(
       label: Some("ApplyAnimalMovesPipeline"),
       layout: None,
       module: &shader,
-      entry_point: "resolve_animal_moves",
+      entry_point: "apply_animal_moves",
     }
   );
 
@@ -69,6 +70,10 @@ pub(crate) fn apply_animal_moves_command(
         wgpu::BindGroupEntry {
           binding: 4,
           resource: animal_position_map_buffer.wgpu_buffer().as_entire_binding(),
+        },
+        wgpu::BindGroupEntry {
+          binding: 5,
+          resource: why_list_buffer.wgpu_buffer().as_entire_binding(),
         },
       ],
     }

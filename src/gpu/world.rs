@@ -120,6 +120,8 @@ impl GpuWorld {
         &self.animals_list,
       ).await;
 
+      // KVIJ TODO: Remove this.
+      /*
       let cur_animal_data =
         self.animals_list
           .read_mappable_subseq_copy(&self.device, 0, 16).await
@@ -135,6 +137,7 @@ impl GpuWorld {
       for target in animal_target_data {
         log::info!("XXXXX animal target={:?}", target);
       }
+      */
 
       let conflicts_map_buffer = resolve_animal_move_conflicts(
         &self.device,
@@ -143,6 +146,8 @@ impl GpuWorld {
         &target_positions_buffer,
       ).await;
 
+      // KVIJ TODO: Remove this.
+      /*
       let animal_target_data =
         target_positions_buffer
           .read_mappable_subseq_copy(&self.device, 0, 16).await
@@ -150,6 +155,7 @@ impl GpuWorld {
       for target in animal_target_data {
         log::info!("XXXXX animal resolved={:?}", target);
       }
+      */
 
       apply_animal_moves(
         &self.device,
@@ -159,6 +165,10 @@ impl GpuWorld {
         &self.animals_map,
       ).await;
 
+      // KVIJ TODO: Remove this.
+      /*
+       * Dump the state of the animals after the move.
+       *
       let cur_animal_data =
         self.animals_list
           .read_mappable_subseq_copy(&self.device, 0, 16).await
@@ -166,6 +176,7 @@ impl GpuWorld {
       for animal in cur_animal_data {
         log::info!("XXXXX animal after={:?}", animal.position);
       }
+      */
     });
   }
 

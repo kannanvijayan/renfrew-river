@@ -1,8 +1,9 @@
 use crate::{
   world::{ AnimalId, AnimalData, Elevation, CellCoord },
-  gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer }
+  gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer, GpuBufferOptions }
 };
 use super::commands::{
+  fill_map_u32_command,
   move_animals_downhill_command,
   resolve_animal_move_conflicts_command,
   apply_animal_moves_command,
@@ -46,6 +47,8 @@ pub(crate) async fn resolve_animal_move_conflicts(
   animal_positions_map_buffer: &GpuMapBuffer<AnimalId>,
   target_positions_buffer: &GpuSeqBuffer<CellCoord>,
 ) -> GpuMapBuffer<AnimalId> {
+  let world_dims = animal_positions_map_buffer.dims();
+
   let mut encoder = device.device().create_command_encoder(
     &wgpu::CommandEncoderDescriptor {
       label: Some("ResolveAnimalMoveConflictsEncoder"),
@@ -54,12 +57,28 @@ pub(crate) async fn resolve_animal_move_conflicts(
 
   let prior_time = std::time::Instant::now();
 
-  let conflicts_buffer = resolve_animal_move_conflicts_command(
+  let conflicts_buffer = GpuMapBuffer::<AnimalId>::new(
+    device,
+    world_dims,
+    GpuBufferOptions::empty()
+      .with_label("ComputeDownhillMovementConflicts")
+      .with_storage(true)
+  );
+
+  fill_map_u32_command(
+    device,
+    &mut encoder,
+    conflicts_buffer.cast_as_native_type(),
+    AnimalId::INVALID.to_u32(),
+  );
+
+  resolve_animal_move_conflicts_command(
     device,
     &mut encoder,
     animals_list_buffer,
     animal_positions_map_buffer,
     target_positions_buffer,
+    &conflicts_buffer,
   );
 
   // Submit the commands.
@@ -89,6 +108,15 @@ pub(crate) async fn apply_animal_moves(
 
   let prior_time = std::time::Instant::now();
 
+  let why_buffer = GpuSeqBuffer::<u32>::new(
+    device,
+    animals_list_buffer.length(),
+    GpuBufferOptions::empty()
+      .with_copy_src(true)
+      .with_storage(true),
+  );
+
+
   apply_animal_moves_command(
     device,
     &mut encoder,
@@ -96,6 +124,7 @@ pub(crate) async fn apply_animal_moves(
     conflicts_map_buffer,
     animals_list_buffer,
     animal_positions_map_buffer,
+    &why_buffer,
   );
 
   // Submit the commands.
@@ -106,4 +135,18 @@ pub(crate) async fn apply_animal_moves(
 
   let elapsed = prior_time.elapsed();
   log::info!("apply_animal_moves(elapsed_ms={})", elapsed.as_millis());
+
+  // Dump the why buffer.
+  // KVIJ TODO: Remove this.
+  /*
+  if (false) {
+    let whys = why_buffer
+      .read_mappable_subseq_copy(device, 0, 16).await
+      .to_vec().await;
+
+    for why in whys {
+      log::info!("XXXXX why={:x}", why);
+    }
+  }
+  */
 }

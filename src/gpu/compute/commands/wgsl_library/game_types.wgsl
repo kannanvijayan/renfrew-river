@@ -148,3 +148,8 @@ fn animal_id_new_invalid() -> AnimalId {
 fn animal_id_from_u32(value: u32) -> AnimalId {
   return AnimalId(value);
 }
+
+/** Get the animal id value. */
+fn animal_id_get_value(animal_id: AnimalId) -> u32 {
+  return animal_id.value;
+}

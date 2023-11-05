@@ -6,10 +6,10 @@ const FILL_MAP_U32_WORKGROUP_Y: u32 = 8;
 pub(crate) fn fill_map_u32_command(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
-  animals_map_buffer: &GpuMapBuffer<u32>,
+  out_buffer: &GpuMapBuffer<u32>,
   value: u32,
 ) {
-  let world_dims = animals_map_buffer.dims();
+  let world_dims = out_buffer.dims();
   let world_columns = world_dims.columns_u32();
   let world_rows = world_dims.rows_u32();
 
@@ -50,7 +50,7 @@ pub(crate) fn fill_map_u32_command(
         },
         wgpu::BindGroupEntry {
           binding: 1,
-          resource: animals_map_buffer.wgpu_buffer().as_entire_binding(),
+          resource: out_buffer.wgpu_buffer().as_entire_binding(),
         },
       ],
     }
