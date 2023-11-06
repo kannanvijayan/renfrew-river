@@ -7,11 +7,13 @@ import {
 } from './hex';
 import HexMesh from './hex_mesh';
 import WorldMapTiledData from '../../game/world_map_tiled_data';
+import { CellCoord } from '../../game/types/cell_coord';
+import { WorldDims } from '../../game/types/world_dims';
 
 export type TileMapCallbackApi = {
   ensureMapDataLoaded: (
-    topleft: { col: number, row: number },
-    area: { columns: number, rows: number },
+    topleft: CellCoord,
+    area: WorldDims,
   ) => Promise<{
     tilesUpdated: number,
     tilesInvalidated: number,
@@ -84,6 +86,9 @@ export default class TileMap extends PIXI.Container {
 
   // The hover point.
   private hoverPoint: PIXI.IPointData | undefined;
+
+  // The cell coordinate of the hover point.
+  private hoverCellCoord: CellCoord | undefined;
 
   // The PIXI mesh object.
   private hexMesh: HexMesh;
@@ -283,6 +288,29 @@ export default class TileMap extends PIXI.Container {
     } else {
       this.hoverPoint = {...point};
     }
+
+    // Compute the cell coordinate of the hover point.
+    const zoom = this.clampedZoomLevel();
+    const worldX = this.topLeftWorld.x + (point.x / zoom);
+    const worldY = this.topLeftWorld.y + (point.y / zoom);
+    const { col, row } = tileFromNormalOffset(worldX, worldY);
+    if (
+      !this.hoverCellCoord ||
+      this.hoverCellCoord.col !== col ||
+      this.hoverCellCoord.row !== row
+    ) {
+      if (this.hoverCellCoord) {
+        this.hoverCellCoord.col = col;
+        this.hoverCellCoord.row = row;
+      } else {
+        this.hoverCellCoord = { col, row };
+      }
+      this.handleHoverCellCoordChange();
+    }
+  }
+
+  private handleHoverCellCoordChange(): void {
+    console.log("Hover cell coord changed: ", this.hoverCellCoord);
   }
 
   private adjustZoom(
@@ -435,8 +463,8 @@ export default class TileMap extends PIXI.Container {
     const dx = this.topLeftWorld.x - this.topLeftMesh.x;
     const dy = this.topLeftWorld.y - this.topLeftMesh.y;
 
-    const { column, row } = tileFromNormalOffset(dx, dy);
-    this.topLeftWorldColumn = column;
+    const { col, row } = tileFromNormalOffset(dx, dy);
+    this.topLeftWorldColumn = col;
     this.topLeftWorldRow = row;
   }
 

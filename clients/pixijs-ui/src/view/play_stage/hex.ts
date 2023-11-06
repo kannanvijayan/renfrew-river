@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import { CellCoord } from '../../game/types/cell_coord';
 
 /**
  * The normalized scale of a tile that we base all calculations on.
@@ -23,14 +24,14 @@ export function normalOffsetYForTile(column: number, row: number): number {
 }
 
 export function tileFromNormalOffset(x: number, y: number)
-  : { column: number, row: number }
+  : CellCoord
 {
-  const column = Math.floor(x / NORMAL_SCALE_TILE.mulWidth);
+  const col = Math.floor(x / NORMAL_SCALE_TILE.mulWidth);
   const row = Math.floor(
-    (y - ((column % 2) * (NORMAL_SCALE_TILE.height / 2))) /
-    NORMAL_SCALE_TILE.mulHeight
+    (y - ((col % 2) * (NORMAL_SCALE_TILE.height / 2)))
+      / NORMAL_SCALE_TILE.mulHeight
   );
-  return { column, row };
+  return { col, row };
 }
 
 /**
