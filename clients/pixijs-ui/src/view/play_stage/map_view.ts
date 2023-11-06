@@ -64,7 +64,7 @@ export default class MapView extends PIXI.Container {
     this.tileMap.y = 0;
     this.addChild(this.tileMap);
 
-    const miniWidth = this.topViewAttributes.areaWidth / 4;
+    const miniWidth = 400;
     this.miniMap = new MiniMap({
       topViewAttributes: this.topViewAttributes,
       tileMapObserver: this.tileMap.getObserver(),
