@@ -4,6 +4,7 @@ import TopViewAttributes from '../top_view_attributes';
 import TileMap from './tile_map';
 import MiniMap from './mini_map';
 import NextTurnButton from './next_turn_button';
+import CellInfoPanel from './cell_info_panel';
 
 export interface MapViewCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
@@ -29,6 +30,7 @@ export default class MapView extends PIXI.Container {
   private readonly tileMap: TileMap;
   private readonly miniMap: MiniMap;
   private readonly nextTurnButton: NextTurnButton;
+  private readonly cellInfoPanel: CellInfoPanel;
 
   constructor(opts: {
     topViewAttributes: TopViewAttributes,
@@ -92,6 +94,16 @@ export default class MapView extends PIXI.Container {
     this.nextTurnButton.y =
       this.topViewAttributes.areaHeight - this.nextTurnButton.height;
     this.addChild(this.nextTurnButton);
+
+    // Add a cell-info panel to the stage.
+    // Position it at the bottom left corner.
+    this.cellInfoPanel = new CellInfoPanel({
+      tileMapObserver: this.tileMap.getObserver(),
+    });
+    this.cellInfoPanel.x = 0;
+    this.cellInfoPanel.y =
+      this.topViewAttributes.areaHeight - this.cellInfoPanel.height;
+    this.addChild(this.cellInfoPanel);
   }
 
   public handleResize(width: number, height: number): void {
@@ -107,6 +119,11 @@ export default class MapView extends PIXI.Container {
       this.topViewAttributes.areaWidth - this.nextTurnButton.width;
     this.nextTurnButton.y =
       this.topViewAttributes.areaHeight - this.nextTurnButton.height;
+
+    // Reposition the cell info panel.
+    this.cellInfoPanel.x = 0;
+    this.cellInfoPanel.y =
+      this.topViewAttributes.areaHeight - this.cellInfoPanel.height;
   }
 
   public handleMouseDown(ev: PIXI.FederatedMouseEvent): void {

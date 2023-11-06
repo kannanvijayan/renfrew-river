@@ -305,12 +305,8 @@ export default class TileMap extends PIXI.Container {
       } else {
         this.hoverCellCoord = { col, row };
       }
-      this.handleHoverCellCoordChange();
+      this.observer.invokeHoverCellChangedListeners({...this.hoverCellCoord});
     }
-  }
-
-  private handleHoverCellCoordChange(): void {
-    console.log("Hover cell coord changed: ", this.hoverCellCoord);
   }
 
   private adjustZoom(
@@ -517,10 +513,12 @@ export default class TileMap extends PIXI.Container {
 export class TileMapObserver {
   private tileMap: TileMap;
   private changeListeners: Array<TileMapChangeListener>;
+  private hoverCellChangedListeners: Array<TileMapHoverCellChangedListener>;
 
   constructor(tileMap: TileMap) {
     this.tileMap = tileMap;
     this.changeListeners = [];
+    this.hoverCellChangedListeners = [];
   }
 
   public addChangeListener(listener: TileMapChangeListener)
@@ -535,9 +533,27 @@ export class TileMapObserver {
     };
   }
 
+  public addHoverCellChangedListener(listener: TileMapHoverCellChangedListener)
+    : RemoveListener<TileMapHoverCellChangedListener>
+  {
+    this.hoverCellChangedListeners.push(listener);
+    return () => {
+      this.hoverCellChangedListeners = this.hoverCellChangedListeners.filter(
+        l => l !== listener
+      );
+      return listener;
+    };
+  }
+
   public invokeChangeListeners(): void {
     this.changeListeners.forEach(listener => {
       listener(this);
+    });
+  }
+
+  public invokeHoverCellChangedListeners(cell: CellCoord): void {
+    this.hoverCellChangedListeners.forEach(listener => {
+      listener(cell);
     });
   }
 
@@ -560,9 +576,12 @@ export class TileMapObserver {
 }
 
 export type RemoveListener<T> = () => T;
+
 export type TileMapChangeListener =
   (tileMapObserver: TileMapObserver) => void;
 
+export type TileMapHoverCellChangedListener =
+  (cell: CellCoord) => void;
 export class TileMapCommander {
   private tileMap: TileMap;
 
