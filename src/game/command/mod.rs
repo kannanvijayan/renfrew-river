@@ -9,6 +9,7 @@ mod read_map_data_cmd;
 mod mini_elevations_cmd;
 mod read_animals_cmd;
 mod take_turn_step_cmd;
+mod get_cell_info_cmd;
 
 mod envelope;
 
@@ -57,6 +58,10 @@ pub(crate) use self::{
     TakeTurnStepCmd,
     TakeTurnStepRsp,
     TurnTakenResponse,
+  },
+  get_cell_info_cmd::{
+    GetCellInfoCmd,
+    GetCellInfoRsp,
   },
   envelope::CommandEnvelope,
 };

@@ -134,10 +134,14 @@ impl Command for ReadMapDataCmd {
           vec![7, 8, 2, 4],
         ]),
         animal_ids: Some(vec![
-          vec![100, 29, 3, 404].iter().copied().map(AnimalId::new).collect(),
-          vec![22, 1006, 95, 332].iter().copied().map(AnimalId::new).collect(),
-          vec![65, 5, 152, 10091].iter().copied().map(AnimalId::new).collect(),
-          vec![78, 88, 252, 491].iter().copied().map(AnimalId::new).collect(),
+          vec![100, 29, 3, 404]
+            .iter().copied().map(AnimalId::from_u32).collect(),
+          vec![22, 1006, 95, 332]
+            .iter().copied().map(AnimalId::from_u32).collect(),
+          vec![65, 5, 152, 10091]
+            .iter().copied().map(AnimalId::from_u32).collect(),
+          vec![78, 88, 252, 491]
+            .iter().copied().map(AnimalId::from_u32).collect(),
         ]),
       }
     );

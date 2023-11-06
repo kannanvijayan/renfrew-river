@@ -1,10 +1,11 @@
 use serde;
 
-use crate::game::command::GameExistsResponse;
+use crate::world::CellInfo;
 
 use super::command::{
   GetConstantsRsp,
   DefaultSettingsRsp,
+  GameExistsResponse,
   MapDataResponse,
   MiniElevationsResponse,
   AnimalsResponse,
@@ -24,6 +25,7 @@ pub(crate) enum ResponseEnvelope {
   MiniElevations(Box<MiniElevationsResponse>),
   Animals(Box<AnimalsResponse>),
   TurnTaken(Box<TurnTakenResponse>),
+  CellInfo(Box<CellInfo>),
 }
 
 #[derive(Debug, Clone)]

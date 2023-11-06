@@ -10,6 +10,7 @@ use std::{
     atomic::AtomicBool,
   }
 };
+use crate::gpu::GPU_MIN_BUFFER_SIZE;
 
 /**
  * Inner wrapper for Device and Queue.
@@ -114,9 +115,10 @@ impl GpuDevice {
       Some(label) => format!("Compute Buffer: {}", label),
       None => "Compute Buffer".to_string(),
     };
+    let alloc_size = u64::max(size, GPU_MIN_BUFFER_SIZE);
     self.inner.device.create_buffer(&wgpu::BufferDescriptor {
       label: Some(&label),
-      size: size,
+      size: alloc_size,
       usage,
       mapped_at_creation: false,
     })

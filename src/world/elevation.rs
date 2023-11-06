@@ -3,16 +3,15 @@ use crate::gpu::GpuBufferDataType;
 pub(crate) type ElevationValueType = u16;
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Elevation(ElevationValueType);
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct Elevation(pub(crate) ElevationValueType);
 impl Elevation {
-  pub(crate) fn new(elevation: ElevationValueType)
-    -> Elevation
-  {
-    assert!(elevation <= 255, "Elevation must be <= 255");
-    Elevation(elevation)
-  }
   pub(crate) fn default() -> Elevation {
     Elevation(127)
+  }
+
+  pub(crate) fn from_value(value: ElevationValueType) -> Elevation {
+    Elevation(value as ElevationValueType)
   }
 
   pub(crate) fn value(&self) -> ElevationValueType {

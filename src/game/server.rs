@@ -19,6 +19,7 @@ use crate::{
       MiniElevationsCmd, MiniElevationsRsp, MiniElevationsResponse,
       ReadAnimalsCmd, ReadAnimalsRsp, AnimalsResponse,
       TakeTurnStepCmd, TakeTurnStepRsp, TurnTakenResponse,
+      GetCellInfoCmd, GetCellInfoRsp,
     },
     response::{
       ResponseEnvelope,
@@ -149,6 +150,10 @@ impl GameServerInner {
       CommandEnvelope::TakeTurnStep(take_turn_step_command) => {
         let resp = self.handle_take_turn_step_command(*take_turn_step_command);
         return TakeTurnStepCmd::embed_response(resp);
+      }
+      CommandEnvelope::GetCellInfo(get_cell_info_command) => {
+        let resp = self.handle_get_cell_info_command(*get_cell_info_command);
+        return GetCellInfoCmd::embed_response(resp);
       }
     };
   }
@@ -355,5 +360,39 @@ impl GameServerInner {
     TakeTurnStepRsp::TurnTaken(
       TurnTakenResponse { turn_no_after, elapsed_ms }
     )
+  }
+
+  fn handle_get_cell_info_command(&mut self,
+    get_cell_info_cmd: GetCellInfoCmd,
+  ) -> GetCellInfoRsp {
+    // Validate command.
+    let mut validation_errors = Vec::new();
+    if !get_cell_info_cmd.validate(&mut validation_errors) {
+      log::warn!("GameServerInner::handle_get_cell_info_command: Invalid command: {:?}",
+        validation_errors
+      );
+      return GetCellInfoRsp::Failed(FailedResponse::new_vec(validation_errors));
+    }
+
+    let game = match self.game {
+      Some(ref game) => game,
+      None => {
+        log::warn!("GameServerInner::handle_get_cell_info_command: No game");
+        return GetCellInfoRsp::Failed(
+          FailedResponse::new("No game to get cell info from")
+        );
+      }
+    };
+
+    let cell_coord = get_cell_info_cmd.cell_coord;
+    let world_dims = game.world().world_dims();
+    if ! world_dims.contains_coord(cell_coord) {
+      return GetCellInfoRsp::Failed(
+        FailedResponse::new("Cell coord is out of bounds")
+      );
+    }
+
+    let cell_info = game.world().read_cell_info(cell_coord);
+    GetCellInfoRsp::CellInfo(cell_info)
   }
 }

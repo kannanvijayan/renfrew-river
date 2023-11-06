@@ -22,6 +22,7 @@ use crate::{
     ElevationValueType,
     AnimalId,
     AnimalData,
+    CellInfo,
   },
   game::constants,
 };
@@ -40,7 +41,7 @@ pub(crate) struct GpuWorldParams {
 pub(crate) struct GpuWorld {
   device: GpuDevice,
 
-  _world_dims: WorldDims,
+  world_dims: WorldDims,
   rand_seed: u64,
 
   // The terrain map.
@@ -82,7 +83,7 @@ impl GpuWorld {
     );
     GpuWorld {
       device,
-      _world_dims: world_dims,
+      world_dims,
       rand_seed,
       elevation_map,
       animals_list,
@@ -112,7 +113,7 @@ impl GpuWorld {
   }
 
   pub(crate) fn move_animals(&self) {
-    let buf = futures::executor::block_on(async {
+    futures::executor::block_on(async {
       let target_positions_buffer = compute_downhill_movement(
         &self.device,
         &self.elevation_map,
@@ -192,5 +193,69 @@ impl GpuWorld {
       ).await;
       out_buf.to_vec().await
     })
+  }
+
+  pub(crate) fn read_cell_info(&self, coord: CellCoord)
+    -> CellInfo
+  {
+    let elevation = self.read_cell_elevation(coord);
+    let animal_id = self.read_cell_animal_id(coord);
+    CellInfo { elevation, animal_id }
+  }
+
+  fn read_cell_elevation(&self, coord: CellCoord) -> Elevation {
+    // We can easily generate unaligned reads here, so we adjust the
+    // read index to be aligned, and the size up as necessary.
+    
+    // We align the colum and row down to a multiple of 4, and make
+    // the size 4.
+    const ALIGN: u16 = 4;
+    let aligned_col = coord.col & !(ALIGN - 1);
+    let aligned_row = coord.row & !(ALIGN - 1);
+    let aligned_coord = CellCoord::new(aligned_col, aligned_row);
+    let offset_coord = CellCoord::new(
+      coord.col - aligned_col,
+      coord.row - aligned_row,
+    );
+
+    let elev_vec_map = futures::executor::block_on(async {
+      debug_assert!(self.world_dims.contains_coord(coord));
+      self.elevation_map
+        .read_mappable_area_copy(
+          &self.device,
+          aligned_coord,
+          WorldDims::new(ALIGN, ALIGN)).await
+        .to_vec_map().await
+    });
+    elev_vec_map.get_copy(offset_coord)
+  }
+
+  fn read_cell_animal_id(&self, coord: CellCoord) -> Option<AnimalId> {
+    // We align the colum and row down to a multiple of 4, and make
+    // the size 4.
+    const ALIGN: u16 = 4;
+    let aligned_col = coord.col & !(ALIGN - 1);
+    let aligned_row = coord.row & !(ALIGN - 1);
+    let aligned_coord = CellCoord::new(aligned_col, aligned_row);
+    let offset_coord = CellCoord::new(
+      coord.col - aligned_col,
+      coord.row - aligned_row,
+    );
+
+    let animals_vec_map = futures::executor::block_on(async {
+      debug_assert!(self.world_dims.contains_coord(coord));
+      self.animals_map
+        .read_mappable_area_copy(
+          &self.device,
+          aligned_coord,
+          WorldDims::new(ALIGN, ALIGN)).await
+        .to_vec_map().await
+    });
+    let animal_id = animals_vec_map.get_copy(offset_coord);
+    if animal_id == AnimalId::INVALID {
+      None
+    } else {
+      Some(animal_id)
+    }
   }
 }

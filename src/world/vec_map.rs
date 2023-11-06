@@ -74,12 +74,11 @@ impl<T> VecMap<T> {
 
   pub(crate) fn area_slice_iter(&self,
     start_coord: CellCoord,
-    width: u16,
-    height: u16,
+    area: WorldDims,
   ) -> Option<VecMapAreaSliceIter<T>> {
     let end_coord = CellCoord::new(
-      start_coord.col + width - 1,
-      start_coord.row + height - 1,
+      start_coord.col + area.columns - 1,
+      start_coord.row + area.rows - 1,
     );
     if !self.dims.contains_coord(start_coord)
     || !self.dims.contains_coord(end_coord)
@@ -91,8 +90,7 @@ impl<T> VecMap<T> {
     Some(VecMapAreaSliceIter {
       vec_map: self,
       start_coord,
-      width,
-      height,
+      area,
       cur_row: 0,
     })
   }
@@ -110,14 +108,13 @@ impl<T> VecMap<T> {
 pub(crate) struct VecMapAreaSliceIter<'a, T> {
   vec_map: &'a VecMap<T>,
   start_coord: CellCoord,
-  width: u16,
-  height: u16,
+  area: WorldDims,
   cur_row: u16,
 }
 impl<'a, T> Iterator for VecMapAreaSliceIter<'a, T> {
   type Item = &'a [T];
   fn next(&mut self) -> Option<Self::Item> {
-    if self.cur_row >= self.height {
+    if self.cur_row >= self.area.rows {
       None
     } else {
       let row_slice = self.vec_map.get_row_slice_ref(
@@ -125,7 +122,7 @@ impl<'a, T> Iterator for VecMapAreaSliceIter<'a, T> {
           self.start_coord.col,
           self.start_coord.row + self.cur_row
         ),
-        self.width,
+        self.area.columns,
       );
       self.cur_row += 1;
       Some(row_slice)

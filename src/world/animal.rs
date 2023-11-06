@@ -7,11 +7,11 @@ use crate::{
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct AnimalId(u32);
+pub(crate) struct AnimalId(pub(crate) u32);
 impl AnimalId {
   pub(crate) const INVALID: AnimalId = AnimalId(0xffff_ffff);
 
-  pub(crate) const fn new(id: u32) -> AnimalId {
+  pub(crate) const fn from_u32(id: u32) -> AnimalId {
     AnimalId(id)
   }
   pub(crate) const fn to_u32(&self) -> u32 {

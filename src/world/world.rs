@@ -5,10 +5,12 @@ use crate::{
     WorldDims,
     InitParams,
     VecMap,
+    Elevation,
     ElevationValueType,
     AnimalId,
     AnimalData,
     TurnNo,
+    CellInfo,
   },
   gpu::{ GpuWorld, GpuWorldParams },
 };
@@ -45,6 +47,10 @@ impl World {
     self.gpu_world.init_animals();
   }
 
+  pub(crate) fn world_dims(&self) -> WorldDims {
+    self.world_dims
+  }
+
   pub(crate) fn read_elevation_values(&self, top_left: CellCoord, area: WorldDims)
     -> VecMap<ElevationValueType>
   {
@@ -75,6 +81,12 @@ impl World {
     let turn_no_after = self.turn_no.next();
     self.turn_no = turn_no_after;
     TakeTurnStepResult { turn_no_after, elapsed_ms }
+  }
+
+  pub(crate) fn read_cell_info(&self, coord: CellCoord)
+    -> CellInfo
+  {
+    self.gpu_world.read_cell_info(coord)
   }
 }
 
