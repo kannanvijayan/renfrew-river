@@ -10,8 +10,8 @@ struct Buffer2D {
 };
 
 const PERLIN_OCTAVE_MAX_SCALE: f32 = 5.0;
-const PERLIN_OCTAVE_MIN_SCALE: f32 = 1.0;
-const PERLIN_OCTAVE_STEP_SCALE: f32 = 2.0;
+const PERLIN_OCTAVE_MIN: f32 = 128.0;
+const PERLIN_OCTAVE_STEP: f32 = 2.0;
 const PERLIN_OCTAVE_CRAGGINESS: f32 = 1.05;
 
 const BORDER_FADE_WIDTH_PERCENT: f32 = 10.0;
@@ -152,11 +152,11 @@ fn gen_f32_value(x: u32, y: u32) -> f32 {
   var amplitude: f32 = 1.0;
   var stage: u32 = 0u;
   var scale: f32 = f32(uniforms.world_dims[0]) / PERLIN_OCTAVE_MAX_SCALE;
-  var cragginess_multiplier = PERLIN_OCTAVE_CRAGGINESS / PERLIN_OCTAVE_STEP_SCALE;
+  var cragginess_multiplier = PERLIN_OCTAVE_CRAGGINESS / PERLIN_OCTAVE_STEP;
   for (
     var s: f32 = scale;
-    s >= PERLIN_OCTAVE_MIN_SCALE;
-    s = s / PERLIN_OCTAVE_STEP_SCALE
+    s >= PERLIN_OCTAVE_MIN;
+    s = s / PERLIN_OCTAVE_STEP
   ) {
     let val = perlin_stage(stage, u32(s), x, y);
     accum = accum + val * amplitude;
@@ -195,6 +195,45 @@ fn init_elevations_u16(
   }
   let v0 = gen_u16_value(x2 * 2u, y);
   let v1 = gen_u16_value(x2 * 2u + 1u, y);
+  let v = (v1 << 16u) | v0;
+
+  let offset = (y * (uniforms.world_dims[0] / 2u)) + x2;
+  surface.values[offset] = v;
+}
+
+fn gen_testpattern_u16_value(x: u32, y: u32) -> u32 {
+  // Only dependent on y.
+  let modulo = y % 4u;
+  switch modulo {
+    case 0u: {
+      return 0x0000u;
+    }
+    case 1u: {
+      return 0x5555u;
+    }
+    case 2u: {
+      return 0xAAAAu;
+    }
+    default: {
+      return 0xFFFFu;
+    }
+  }
+}
+
+@compute
+@workgroup_size(8, 8)
+fn init_elevations_testpattern_u16(
+  @builtin(global_invocation_id) global_id: vec3<u32>
+) {
+  // We generate 2 values per invocation.
+  let x2 = global_id.x;
+  let y = global_id.y;
+  // Bounds check.
+  if ((x2 * 2u) >= uniforms.world_dims[0] || y >= uniforms.world_dims[1]) {
+    return;
+  }
+  let v0 = gen_testpattern_u16_value(x2 * 2u, y);
+  let v1 = gen_testpattern_u16_value(x2 * 2u + 1u, y);
   let v = (v1 << 16u) | v0;
 
   let offset = (y * (uniforms.world_dims[0] / 2u)) + x2;
