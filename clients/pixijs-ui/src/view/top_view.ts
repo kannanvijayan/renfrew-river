@@ -34,6 +34,7 @@ export interface TopViewCallbackApi {
         tilesInvalidated: number,
       }>
     }>,
+    takeTurnStep: () => Promise<void>,
   };
 }
 

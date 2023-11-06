@@ -6,6 +6,8 @@ import { WorldDims } from "./game/types/world_dims";
 import GameWorld from "./game/world";
 import { ProgressCallback } from "./util/progress_tracking";
 import TopView from "./view/top_view";
+import assert from "./util/assert";
+import { TurnNo } from "./game/types/turn_no";
 
 /**
  * Top-level manager of game.
@@ -22,6 +24,7 @@ export default class Game {
   private hasCurrentGame: boolean;
 
   private world: GameWorld | null;
+  private turnNo: TurnNo;
 
   private loadGameProgressCallback: ProgressCallback | null;
 
@@ -34,6 +37,7 @@ export default class Game {
     this.currentGameSettings = null;
     this.hasCurrentGame = false;
     this.world = null;
+    this.turnNo = 0;
     this.loadGameProgressCallback = null;
     if (window) {
       (window as any).GAME = this;
@@ -88,6 +92,7 @@ export default class Game {
             return this.world.newObserver();
           },
           ensureMapDataLoaded: this.ensureMapDataLoaded.bind(this),
+          takeTurnStep: this.takeTurnStep.bind(this),
         },
       },
     });
@@ -259,12 +264,14 @@ export default class Game {
     const animals = await this.client!.readAnimals();
     this.world.addAnimals(animals);
 
+    /*
     // Take a turn once a second.
     setInterval(async () => {
       const result = await this.client!.takeTurnStep();
       console.log("Turn taken", result);
       this.world?.mapData.invalidate();
     }, 1000);
+    */
   }
 
   private ensureMapDataLoaded(topLeft: CellCoord, area: WorldDims)
@@ -281,5 +288,14 @@ export default class Game {
       throw new Error("Game.ensureElevationsLoaded: No world");
     }
     return this.world.mapData.ensureViewAndQueueSurroundings(topLeft, area);
+  }
+
+  private async takeTurnStep(): Promise<void> {
+    assert(this.client !== null, "Game.takeTurnStep: No client");
+    assert(this.world !== null, "Game.takeTurnStep: No world");
+    const result = await this.client.takeTurnStep();
+    console.log("Turn taken", result);
+    this.turnNo = result.turn_no_after;
+    this.world.mapData.invalidate();
   }
 }

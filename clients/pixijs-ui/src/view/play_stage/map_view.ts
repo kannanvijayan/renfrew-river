@@ -3,6 +3,7 @@ import WorldObserver from '../../game/world_observer';
 import TopViewAttributes from '../top_view_attributes';
 import TileMap from './tile_map';
 import MiniMap from './mini_map';
+import NextTurnButton from './next_turn_button';
 
 export interface MapViewCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
@@ -18,6 +19,7 @@ export interface MapViewCallbackApi {
       tilesInvalidated: number,
     }>
   }>,
+  takeTurnStep: () => Promise<void>,
 }
 
 export default class MapView extends PIXI.Container {
@@ -26,6 +28,7 @@ export default class MapView extends PIXI.Container {
   private readonly callbackApi: MapViewCallbackApi;
   private readonly tileMap: TileMap;
   private readonly miniMap: MiniMap;
+  private readonly nextTurnButton: NextTurnButton;
 
   constructor(opts: {
     topViewAttributes: TopViewAttributes,
@@ -75,12 +78,35 @@ export default class MapView extends PIXI.Container {
       this.topViewAttributes.areaWidth - this.miniMap.width;
     this.miniMap.y = 0;
     this.addChild(this.miniMap);
+
+    // Add the next turn button to the stage.
+    // Place it at the bottom right corner.
+    this.nextTurnButton = new NextTurnButton({
+      onClickListener: () => {
+        console.log("Next turn button clicked");
+        this.callbackApi.takeTurnStep();
+      }
+    });
+    this.nextTurnButton.x =
+      this.topViewAttributes.areaWidth - this.nextTurnButton.width;
+    this.nextTurnButton.y =
+      this.topViewAttributes.areaHeight - this.nextTurnButton.height;
+    this.addChild(this.nextTurnButton);
   }
 
   public handleResize(width: number, height: number): void {
+    // Adjust the tilemap.
     this.tileMap.handleResize(width, height);
+
+    // Reposition the minimap.
     this.miniMap.x =
       this.topViewAttributes.areaWidth - this.miniMap.width;
+
+    // Reposition the next turn button.
+    this.nextTurnButton.x =
+      this.topViewAttributes.areaWidth - this.nextTurnButton.width;
+    this.nextTurnButton.y =
+      this.topViewAttributes.areaHeight - this.nextTurnButton.height;
   }
 
   public handleMouseDown(ev: PIXI.FederatedMouseEvent): void {

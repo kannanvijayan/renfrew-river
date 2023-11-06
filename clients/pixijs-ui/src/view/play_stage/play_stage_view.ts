@@ -19,6 +19,7 @@ export interface PlayStageCallbackApi {
       tilesInvalidated: number,
     }>
   }>,
+  takeTurnStep: () => Promise<void>,
 }
 
 /**
