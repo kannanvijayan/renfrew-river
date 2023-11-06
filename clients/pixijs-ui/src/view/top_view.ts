@@ -6,6 +6,8 @@ import PlayStageView from './play_stage/play_stage_view';
 import { GameSettings } from '../client/protocol/types/settings';
 import { ProgressCallback } from '../util/progress_tracking';
 import WorldObserver from '../game/world_observer';
+import { CellCoord } from '../game/types/cell_coord';
+import { CellInfo } from '../game/types/cell_info';
 
 export interface TopViewCallbackApi {
   startStage: {
@@ -35,6 +37,7 @@ export interface TopViewCallbackApi {
       }>
     }>,
     takeTurnStep: () => Promise<void>,
+    getCellInfo: (cell: CellCoord) => Promise<CellInfo>;
   };
 }
 

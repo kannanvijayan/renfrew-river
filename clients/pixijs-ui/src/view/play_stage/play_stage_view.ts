@@ -3,6 +3,8 @@ import TopViewAttributes from '../top_view_attributes';
 import StageView from '../common/stage_view';
 import MapView from './map_view';
 import WorldObserver from '../../game/world_observer';
+import { CellCoord } from '../../game/types/cell_coord';
+import { CellInfo } from '../../game/types/cell_info';
 
 export interface PlayStageCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
@@ -20,6 +22,7 @@ export interface PlayStageCallbackApi {
     }>
   }>,
   takeTurnStep: () => Promise<void>,
+  getCellInfo: (cell: CellCoord) => Promise<CellInfo>;
 }
 
 /**

@@ -10,6 +10,7 @@ import { GameSettings } from "./protocol/types/settings";
 import { WorldDims } from "../game/types/world_dims";
 import { ReadMapDataKind, ReadMapDataKindsToOutput, ReadMapDataOutputNameMap } from "./protocol/commands/read_map_data_cmd";
 import { TurnStepResult } from "./protocol/types/turn_step_result";
+import { CellInfo } from "../game/types/cell_info";
 
 export type GameClientArgs = {
   url: string;
@@ -154,6 +155,15 @@ export default class GameClient {
     const result = await this.sendCommand("TakeTurnStep", {});
     if ("TurnTaken" in result) {
       return result.TurnTaken;
+    } else {
+      throw new Error(result.Error.messages.join(", "));
+    }
+  }
+
+  public async getCellInfo(coord: CellCoord): Promise<CellInfo> {
+    const result = await this.sendCommand("GetCellInfo", { cell_coord: coord });
+    if ("CellInfo" in result) {
+      return result.CellInfo;
     } else {
       throw new Error(result.Error.messages.join(", "));
     }

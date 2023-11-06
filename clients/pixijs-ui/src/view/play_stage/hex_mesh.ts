@@ -332,6 +332,24 @@ function makeShader(opts: {
     uniform float topLeftWorldRow;
 
     void main() {
+      // Test coloring to validate rendering correctness.
+      if (vUvs.x == 0.0 && vUvs.y == 0.0) {
+        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+        return;
+      }
+      if (vUvs.x == 1.0 && vUvs.y == 0.0) {
+        gl_FragColor = vec4(0.0, 0.8, 0.0, 1.0);
+        return;
+      }
+      if (vUvs.x == 0.0 && vUvs.y == 1.0) {
+        gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+        return;
+      }
+      if (vUvs.x == 1.0 && vUvs.y == 1.0) {
+        gl_FragColor = vec4(0.8, 0.0, 0.8, 1.0);
+        return;
+      }
+
       // Convert vUvs to world coordinates.
       float worldX = topLeftWorldColumn + vUvs.x;
       float worldY = topLeftWorldRow + vUvs.y;

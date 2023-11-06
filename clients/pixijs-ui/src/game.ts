@@ -8,6 +8,7 @@ import { ProgressCallback } from "./util/progress_tracking";
 import TopView from "./view/top_view";
 import assert from "./util/assert";
 import { TurnNo } from "./game/types/turn_no";
+import { CellInfo } from "./game/types/cell_info";
 
 /**
  * Top-level manager of game.
@@ -93,6 +94,7 @@ export default class Game {
           },
           ensureMapDataLoaded: this.ensureMapDataLoaded.bind(this),
           takeTurnStep: this.takeTurnStep.bind(this),
+          getCellInfo: this.getCellInfo.bind(this),
         },
       },
     });
@@ -297,5 +299,10 @@ export default class Game {
     console.log("Turn taken", result);
     this.turnNo = result.turn_no_after;
     this.world.mapData.invalidate();
+  }
+
+  private async getCellInfo(coord: CellCoord): Promise<CellInfo> {
+    assert(this.client !== null, "Game.takeTurnStep: No client");
+    return this.client.getCellInfo(coord);
   }
 }

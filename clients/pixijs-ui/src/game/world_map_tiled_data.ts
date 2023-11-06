@@ -27,6 +27,7 @@ const PER_TILE_DIMS: WorldDims = { columns: 256, rows: 256 };
 export default class WorldMapTiledData {
   public readonly constants: Constants;
   public readonly worldDims: WorldDims;
+  public readonly fullElevations: MapData<"uint16">;
   public readonly elevations: MapData<"uint8">;
   public readonly animalKinds: MapData<"uint8">;
 
@@ -56,6 +57,7 @@ export default class WorldMapTiledData {
 
     this.constants = constants;
     this.worldDims = worldDims;
+    this.fullElevations = new MapData("uint16", this.worldDims);
     this.elevations = new MapData("uint8", this.worldDims);
     this.animalKinds = new MapData("uint8", this.worldDims);
 
@@ -358,6 +360,11 @@ export default class WorldMapTiledData {
     }
 
     const shift_bits = this.constants.elevation_bits - 8;
+    this.fullElevations.write2D({
+      topLeft,
+      area,
+      genValue: (x, y) => areaData.elevations[y][x],
+    });
     this.elevations.write2D({
       topLeft,
       area,

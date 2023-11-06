@@ -5,6 +5,8 @@ import TileMap from './tile_map';
 import MiniMap from './mini_map';
 import NextTurnButton from './next_turn_button';
 import CellInfoPanel from './cell_info_panel';
+import { CellCoord } from '../../game/types/cell_coord';
+import { CellInfo } from '../../game/types/cell_info';
 
 export interface MapViewCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
@@ -21,6 +23,7 @@ export interface MapViewCallbackApi {
     }>
   }>,
   takeTurnStep: () => Promise<void>,
+  getCellInfo: (cell: CellCoord) => Promise<CellInfo>;
 }
 
 export default class MapView extends PIXI.Container {
@@ -98,6 +101,10 @@ export default class MapView extends PIXI.Container {
     // Add a cell-info panel to the stage.
     // Position it at the bottom left corner.
     this.cellInfoPanel = new CellInfoPanel({
+      callbackApi: {
+        getCellInfo: this.callbackApi.getCellInfo,
+      },
+      worldObserver: this.worldObserver,
       tileMapObserver: this.tileMap.getObserver(),
     });
     this.cellInfoPanel.x = 0;
