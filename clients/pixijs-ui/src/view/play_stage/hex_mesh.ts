@@ -2,8 +2,8 @@ import * as PIXI from 'pixi.js';
 import {
   HEX_TRIANGLES_CLIP,
   NORMAL_SCALE_TILE,
-  normalOffsetXForTile,
-  normalOffsetYForTile
+  normalOffsetXForTileBoundingBox,
+  normalOffsetYForTileBoundingBox
 } from './hex';
 import Deferred from '../../util/deferred';
 import WorldMapTiledData from '../../game/world_map_tiled_data';
@@ -206,8 +206,8 @@ function makeGeometry(opts: {
     for (let y = 0; y < rows; y++) {
       const idx = y * columns + x;
 
-      const xOffset = normalOffsetXForTile(x, y);
-      const yOffset = normalOffsetYForTile(x, y);
+      const xOffset = normalOffsetXForTileBoundingBox(x, y);
+      const yOffset = normalOffsetYForTileBoundingBox(x, y);
 
       let colorRed = (Math.random() / 2);
       let colorGreen = (Math.random() / 2);

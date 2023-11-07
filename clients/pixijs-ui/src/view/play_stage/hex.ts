@@ -13,25 +13,76 @@ export const NORMAL_SCALE_TILE = {
   mulHeight: 200,
 };
 
-export function normalOffsetXForTile(column: number, _row: number): number {
+export function normalOffsetXForTileBoundingBox(
+  column: number,
+  _row: number
+): number {
   return (column * NORMAL_SCALE_TILE.mulWidth);
 }
-export function normalOffsetYForTile(column: number, row: number): number {
+export function normalOffsetYForTileBoundingBox(
+  column: number,
+  row: number
+): number {
   return (
     (row * NORMAL_SCALE_TILE.mulHeight) +
     ((column % 2) * (NORMAL_SCALE_TILE.height / 2))
   );
 }
 
-export function tileFromNormalOffset(x: number, y: number)
+/**
+ * The rectified bounding box of a cell looks like this:
+ *
+ * +-----==========+
+ * |    /          |\
+ * |   /           | \
+ * |  /            |  \
+ * | /             |   \
+ * |/              |    \
+ * |\              |    /
+ * | \             |   /
+ * |  \            |  /
+ * |   \           | /
+ * |    \          |/
+ * +-----==========+
+ */
+export function rectifiedBoundingBoxTileFromNormalOffset(x: number, y: number)
   : CellCoord
 {
-  const col = Math.floor(x / NORMAL_SCALE_TILE.mulWidth);
-  const row = Math.floor(
-    (y - ((col % 2) * (NORMAL_SCALE_TILE.height / 2)))
-      / NORMAL_SCALE_TILE.mulHeight
-  );
+  const { height, mulWidth, mulHeight } = NORMAL_SCALE_TILE;
+  const col = Math.floor(x / mulWidth);
+  const oddColumn = col & 1;
+  const columnShift = oddColumn * (height / 2);
+  const row = Math.floor((y - columnShift) / mulHeight);
   return { col, row };
+}
+
+export function hexTileUnderNormalOffset(x: number, y: number): CellCoord {
+  const { height, width, mulWidth, mulHeight } = NORMAL_SCALE_TILE;
+  const bbCol = Math.floor(x / mulWidth);
+  const oddColumn = bbCol & 1;
+  const columnShift = oddColumn * (NORMAL_SCALE_TILE.height / 2);
+  const bbRow = Math.floor((y - columnShift) / mulHeight);
+
+  const xOffset = x - (bbCol * mulWidth);
+  const yOffset = y - ((bbRow * mulHeight) + columnShift + (height / 2));
+
+  const slope = (width / 4) / (height / 2);
+  const ratio = xOffset / yOffset;
+  const result = { col: bbCol, row: bbRow };
+  if (yOffset < 0) {
+    // Top half.
+    if (ratio >= -slope) {
+      result.col = bbCol - 1;
+      result.row = bbRow - (1 - oddColumn);
+    }
+  } else {
+    // Bottom half.
+    if (ratio < slope) {
+      result.col = bbCol - 1;
+      result.row = bbRow + oddColumn;
+    }
+  }
+  return result;
 }
 
 /**

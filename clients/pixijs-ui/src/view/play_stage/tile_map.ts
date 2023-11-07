@@ -1,9 +1,10 @@
 import * as PIXI from 'pixi.js';
 import {
   NORMAL_SCALE_TILE,
-  normalOffsetXForTile,
-  normalOffsetYForTile,
-  tileFromNormalOffset,
+  hexTileUnderNormalOffset,
+  normalOffsetXForTileBoundingBox,
+  normalOffsetYForTileBoundingBox,
+  rectifiedBoundingBoxTileFromNormalOffset,
 } from './hex';
 import HexMesh from './hex_mesh';
 import WorldMapTiledData from '../../game/world_map_tiled_data';
@@ -113,11 +114,11 @@ export default class TileMap extends PIXI.Container {
     this.callbackApi = opts.callbackApi;
 
     this.maxWorldX = (
-      normalOffsetXForTile(this.worldColumns - 1, 0) +
+      normalOffsetXForTileBoundingBox(this.worldColumns - 1, 0) +
       NORMAL_SCALE_TILE.width / 2
     );
     this.maxWorldY = (
-      normalOffsetYForTile(0, this.worldRows - 1) +
+      normalOffsetYForTileBoundingBox(0, this.worldRows - 1) +
       NORMAL_SCALE_TILE.height / 2
     );
 
@@ -293,7 +294,7 @@ export default class TileMap extends PIXI.Container {
     const zoom = this.clampedZoomLevel();
     const worldX = this.topLeftWorld.x + (point.x / zoom);
     const worldY = this.topLeftWorld.y + (point.y / zoom);
-    const { col, row } = tileFromNormalOffset(worldX, worldY);
+    const { col, row } = hexTileUnderNormalOffset(worldX, worldY);
     if (
       !this.hoverCellCoord ||
       this.hoverCellCoord.col !== col ||
@@ -459,7 +460,7 @@ export default class TileMap extends PIXI.Container {
     const dx = this.topLeftWorld.x - this.topLeftMesh.x;
     const dy = this.topLeftWorld.y - this.topLeftMesh.y;
 
-    const { col, row } = tileFromNormalOffset(dx, dy);
+    const { col, row } = rectifiedBoundingBoxTileFromNormalOffset(dx, dy);
     this.topLeftWorldColumn = col;
     this.topLeftWorldRow = row;
   }
