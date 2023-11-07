@@ -258,4 +258,22 @@ impl GpuWorld {
       Some(animal_id)
     }
   }
+
+  pub(crate) fn read_animal_data(&self, animal_id: AnimalId)
+    -> AnimalData
+  {
+    const ALIGN: u32 = 4;
+    let animal_id = animal_id.to_u32();
+    let aligned_id = animal_id & !(ALIGN - 1);
+    let offset_id = animal_id - aligned_id;
+
+    futures::executor::block_on(async {
+      let animal_data_vec = self.animals_list.read_mappable_subseq_copy(
+        &self.device,
+        aligned_id as usize,
+        ALIGN as usize,
+      ).await;
+      animal_data_vec.to_vec().await[offset_id as usize]
+    })
+  }
 }

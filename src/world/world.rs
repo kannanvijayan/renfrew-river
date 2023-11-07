@@ -88,6 +88,12 @@ impl World {
   {
     self.gpu_world.read_cell_info(coord)
   }
+
+  pub(crate) fn read_animal_data(&self, animal_id: AnimalId)
+    -> AnimalData
+  {
+    self.gpu_world.read_animal_data(animal_id)
+  }
 }
 
 pub(crate) struct TakeTurnStepResult {

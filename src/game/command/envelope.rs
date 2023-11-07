@@ -10,6 +10,7 @@ use crate::game::command::{
   ReadAnimalsCmd,
   TakeTurnStepCmd,
   GetCellInfoCmd,
+  GetAnimalDataCmd,
 };
 
 /** Tagged union type for commands sent over transport channels. */
@@ -26,4 +27,5 @@ pub(crate) enum CommandEnvelope {
   ReadAnimals(Box<ReadAnimalsCmd>),
   TakeTurnStep(Box<TakeTurnStepCmd>),
   GetCellInfo(Box<GetCellInfoCmd>),
+  GetAnimalData(Box<GetAnimalDataCmd>),
 }

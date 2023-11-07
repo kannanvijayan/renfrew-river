@@ -32,7 +32,7 @@ impl GpuBufferDataType for AnimalId {
 /**
  * The persisted gpu data for an entity.
  */
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct AnimalData {
   // Position of entity.

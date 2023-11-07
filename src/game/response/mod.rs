@@ -1,6 +1,6 @@
 use serde;
 
-use crate::world::CellInfo;
+use crate::world::{CellInfo, AnimalData};
 
 use super::command::{
   GetConstantsRsp,
@@ -26,6 +26,7 @@ pub(crate) enum ResponseEnvelope {
   Animals(Box<AnimalsResponse>),
   TurnTaken(Box<TurnTakenResponse>),
   CellInfo(Box<CellInfo>),
+  AnimalData(Box<AnimalData>),
 }
 
 #[derive(Debug, Clone)]

@@ -20,6 +20,7 @@ use crate::{
       ReadAnimalsCmd, ReadAnimalsRsp, AnimalsResponse,
       TakeTurnStepCmd, TakeTurnStepRsp, TurnTakenResponse,
       GetCellInfoCmd, GetCellInfoRsp,
+      GetAnimalDataCmd, GetAnimalDataRsp,
     },
     response::{
       ResponseEnvelope,
@@ -150,10 +151,14 @@ impl GameServerInner {
       CommandEnvelope::TakeTurnStep(take_turn_step_command) => {
         let resp = self.handle_take_turn_step_command(*take_turn_step_command);
         return TakeTurnStepCmd::embed_response(resp);
-      }
+      },
       CommandEnvelope::GetCellInfo(get_cell_info_command) => {
         let resp = self.handle_get_cell_info_command(*get_cell_info_command);
         return GetCellInfoCmd::embed_response(resp);
+      },
+      CommandEnvelope::GetAnimalData(get_animal_data_command) => {
+        let resp = self.handle_get_animal_data_command(*get_animal_data_command);
+        return GetAnimalDataCmd::embed_response(resp);
       }
     };
   }
@@ -394,5 +399,32 @@ impl GameServerInner {
 
     let cell_info = game.world().read_cell_info(cell_coord);
     GetCellInfoRsp::CellInfo(cell_info)
+  }
+
+  fn handle_get_animal_data_command(&mut self,
+    get_animal_data_cmd: GetAnimalDataCmd
+  ) -> GetAnimalDataRsp {
+    // Validate command.
+    let mut validation_errors = Vec::new();
+    if !get_animal_data_cmd.validate(&mut validation_errors) {
+      log::warn!("GameServerInner::handle_get_animal_data_command: Invalid command: {:?}",
+        validation_errors
+      );
+      return GetAnimalDataRsp::Failed(FailedResponse::new_vec(validation_errors));
+    }
+
+    let game = match self.game {
+      Some(ref game) => game,
+      None => {
+        log::warn!("GameServerInner::handle_get_animal_data_command: No game");
+        return GetAnimalDataRsp::Failed(
+          FailedResponse::new("No game to get animal data from")
+        );
+      }
+    };
+
+    let animal_id = get_animal_data_cmd.animal_id;
+    let animal_data = game.world().read_animal_data(animal_id);
+    GetAnimalDataRsp::AnimalData(animal_data)
   }
 }

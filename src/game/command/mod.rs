@@ -10,6 +10,7 @@ mod mini_elevations_cmd;
 mod read_animals_cmd;
 mod take_turn_step_cmd;
 mod get_cell_info_cmd;
+mod get_animal_data_cmd;
 
 mod envelope;
 
@@ -62,6 +63,10 @@ pub(crate) use self::{
   get_cell_info_cmd::{
     GetCellInfoCmd,
     GetCellInfoRsp,
+  },
+  get_animal_data_cmd::{
+    GetAnimalDataCmd,
+    GetAnimalDataRsp,
   },
   envelope::CommandEnvelope,
 };
