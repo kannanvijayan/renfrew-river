@@ -2,30 +2,30 @@ import * as PIXI from 'pixi.js';
 import { CellCoord } from '../../game/types/cell_coord';
 
 /**
- * The normalized scale of a tile that we base all calculations on.
+ * The normalized scale of a cell that we base all calculations on.
  * E.g. when zoomed, we do calculations using the normal scale tiling
  * and then scale the result to the zoom level.
  */
-export const NORMAL_SCALE_TILE = {
+export const NORMAL_SCALE_CELL = {
   width: 200,
   height: 200,
   mulWidth: 200 * 3 / 4,
   mulHeight: 200,
 };
 
-export function normalOffsetXForTileBoundingBox(
+export function normalOffsetXForCellBoundingBox(
   column: number,
   _row: number
 ): number {
-  return (column * NORMAL_SCALE_TILE.mulWidth);
+  return (column * NORMAL_SCALE_CELL.mulWidth);
 }
-export function normalOffsetYForTileBoundingBox(
+export function normalOffsetYForCellBoundingBox(
   column: number,
   row: number
 ): number {
   return (
-    (row * NORMAL_SCALE_TILE.mulHeight) +
-    ((column % 2) * (NORMAL_SCALE_TILE.height / 2))
+    (row * NORMAL_SCALE_CELL.mulHeight) +
+    ((column % 2) * (NORMAL_SCALE_CELL.height / 2))
   );
 }
 
@@ -45,10 +45,10 @@ export function normalOffsetYForTileBoundingBox(
  * |    \          |/
  * +-----==========+
  */
-export function rectifiedBoundingBoxTileFromNormalOffset(x: number, y: number)
+export function rectifiedBoundingBoxCellFromNormalOffset(x: number, y: number)
   : CellCoord
 {
-  const { height, mulWidth, mulHeight } = NORMAL_SCALE_TILE;
+  const { height, mulWidth, mulHeight } = NORMAL_SCALE_CELL;
   const col = Math.floor(x / mulWidth);
   const oddColumn = col & 1;
   const columnShift = oddColumn * (height / 2);
@@ -56,11 +56,11 @@ export function rectifiedBoundingBoxTileFromNormalOffset(x: number, y: number)
   return { col, row };
 }
 
-export function hexTileUnderNormalOffset(x: number, y: number): CellCoord {
-  const { height, width, mulWidth, mulHeight } = NORMAL_SCALE_TILE;
+export function hexCellUnderNormalOffset(x: number, y: number): CellCoord {
+  const { height, width, mulWidth, mulHeight } = NORMAL_SCALE_CELL;
   const bbCol = Math.floor(x / mulWidth);
   const oddColumn = bbCol & 1;
-  const columnShift = oddColumn * (NORMAL_SCALE_TILE.height / 2);
+  const columnShift = oddColumn * (NORMAL_SCALE_CELL.height / 2);
   const bbRow = Math.floor((y - columnShift) / mulHeight);
 
   const xOffset = x - (bbCol * mulWidth);
@@ -123,8 +123,8 @@ export const HEX_POLYGON_100: PIXI.Polygon =
 function unitScreenCoordToClipCoord(simpleCoord: PIXI.IPointData): PIXI.IPointData {
   const { x, y } = simpleCoord;
   return {
-    x: (x - 0.5) * NORMAL_SCALE_TILE.width,
-    y: -(y - 0.5) * NORMAL_SCALE_TILE.height,
+    x: (x - 0.5) * NORMAL_SCALE_CELL.width,
+    y: -(y - 0.5) * NORMAL_SCALE_CELL.height,
   };
 }
 

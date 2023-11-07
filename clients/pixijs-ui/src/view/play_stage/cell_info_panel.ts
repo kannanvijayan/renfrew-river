@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import { TileMapObserver } from "./tile_map";
+import { CellMapObserver } from "./cell_map";
 import { CellCoord } from "../../game/types/cell_coord";
 import { CellInfo } from "../../game/types/cell_info";
 import WorldObserver from "../../game/world_observer";
@@ -11,7 +11,7 @@ export type CellInfoPanelCallbackApi = {
 export default class CellInfoPanel extends PIXI.Container {
   private callbackApi: CellInfoPanelCallbackApi;
   private worldObserver: WorldObserver;
-  private tileMapObserver: TileMapObserver;
+  private cellMapObserver: CellMapObserver;
   private backgroundGraphics: PIXI.Graphics;
   private currentHoverCellText: PIXI.Text | null;
   private currentElevationText: PIXI.Text | null;
@@ -20,12 +20,12 @@ export default class CellInfoPanel extends PIXI.Container {
   constructor(opts: {
     callbackApi: CellInfoPanelCallbackApi,
     worldObserver: WorldObserver,
-    tileMapObserver: TileMapObserver,
+    cellMapObserver: CellMapObserver,
   }) {
     super();
     this.callbackApi = opts.callbackApi;
     this.worldObserver = opts.worldObserver;
-    this.tileMapObserver = opts.tileMapObserver;
+    this.cellMapObserver = opts.cellMapObserver;
 
     const width = 200;
     const height = 200;
@@ -51,7 +51,7 @@ export default class CellInfoPanel extends PIXI.Container {
     text.y = 10;
     this.backgroundGraphics.addChild(text);
 
-    this.tileMapObserver.addHoverCellChangedListener(
+    this.cellMapObserver.addHoverCellChangedListener(
       this.handleHoverCellChanged.bind(this)
     )
   }

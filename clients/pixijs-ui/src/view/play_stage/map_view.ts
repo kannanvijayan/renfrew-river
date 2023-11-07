@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import WorldObserver from '../../game/world_observer';
 import TopViewAttributes from '../top_view_attributes';
-import TileMap from './tile_map';
+import CellMap from './cell_map';
 import MiniMap from './mini_map';
 import NextTurnButton from './next_turn_button';
 import CellInfoPanel from './cell_info_panel';
@@ -30,7 +30,7 @@ export default class MapView extends PIXI.Container {
   private readonly topViewAttributes: TopViewAttributes;
   private readonly worldObserver: WorldObserver;
   private readonly callbackApi: MapViewCallbackApi;
-  private readonly tileMap: TileMap;
+  private readonly cellMap: CellMap;
   private readonly miniMap: MiniMap;
   private readonly nextTurnButton: NextTurnButton;
   private readonly cellInfoPanel: CellInfoPanel;
@@ -47,7 +47,7 @@ export default class MapView extends PIXI.Container {
 
     const dimensions = this.worldObserver.worldDims();
 
-    this.tileMap = new TileMap({
+    this.cellMap = new CellMap({
       worldColumns: dimensions.columns,
       worldRows: dimensions.rows,
       areaWidth: window.innerWidth,
@@ -57,23 +57,23 @@ export default class MapView extends PIXI.Container {
     });
 
     this.callbackApi.addTickCallback((delta: number, absTime: number) => {
-      this.tileMap.updateTime(absTime);
+      this.cellMap.updateTime(absTime);
     });
 
     this.worldObserver.addMapInvalidationListener(
       this.handleMapInvalidated.bind(this)
     );
 
-    // Add the tile map to the stage.
-    this.tileMap.x = 0;
-    this.tileMap.y = 0;
-    this.addChild(this.tileMap);
+    // Add the cell-map to the stage.
+    this.cellMap.x = 0;
+    this.cellMap.y = 0;
+    this.addChild(this.cellMap);
 
     const miniWidth = 400;
     this.miniMap = new MiniMap({
       topViewAttributes: this.topViewAttributes,
-      tileMapObserver: this.tileMap.getObserver(),
-      tileMapCommander: this.tileMap.getCommander(),
+      cellMapObserver: this.cellMap.getObserver(),
+      cellMapCommander: this.cellMap.getCommander(),
       worldColumns: dimensions.columns,
       worldRows: dimensions.rows,
       miniWidth,
@@ -105,7 +105,7 @@ export default class MapView extends PIXI.Container {
         getCellInfo: this.callbackApi.getCellInfo,
       },
       worldObserver: this.worldObserver,
-      tileMapObserver: this.tileMap.getObserver(),
+      cellMapObserver: this.cellMap.getObserver(),
     });
     this.cellInfoPanel.x = 0;
     this.cellInfoPanel.y =
@@ -114,8 +114,8 @@ export default class MapView extends PIXI.Container {
   }
 
   public handleResize(width: number, height: number): void {
-    // Adjust the tilemap.
-    this.tileMap.handleResize(width, height);
+    // Adjust the cell-map.
+    this.cellMap.handleResize(width, height);
 
     // Reposition the minimap.
     this.miniMap.x =
@@ -135,26 +135,26 @@ export default class MapView extends PIXI.Container {
 
   public handleMouseDown(ev: PIXI.FederatedMouseEvent): void {
     const point = this.callbackApi.localizePointerPosition(ev.global);
-    this.tileMap.handlePointerDown(point);
+    this.cellMap.handlePointerDown(point);
   }
 
   public handleMouseUp(ev: PIXI.FederatedMouseEvent): void {
     const point = this.callbackApi.localizePointerPosition(ev.global);
-    this.tileMap.handlePointerUp(point);
+    this.cellMap.handlePointerUp(point);
   }
 
   public handleMouseMove(ev: PIXI.FederatedMouseEvent): void {
     const point = this.callbackApi.localizePointerPosition(ev.global);
-    this.tileMap.handlePointerMove(point);
+    this.cellMap.handlePointerMove(point);
   }
 
   public handleWheel(ev: PIXI.FederatedWheelEvent): void {
     const point = this.callbackApi.localizePointerPosition(ev.global);
-    this.tileMap.handleWheel(ev.deltaY, point);
+    this.cellMap.handleWheel(ev.deltaY, point);
   }
 
   private handleMapInvalidated(): void {
-    this.tileMap.handleMapInvalidated();
+    this.cellMap.handleMapInvalidated();
   }
 
   public shutdown(): void {

@@ -1,13 +1,13 @@
 import * as PIXI from 'pixi.js';
 import TopViewAttributes from '../top_view_attributes';
-import { TileMapObserver, TileMapCommander } from './tile_map';
-import { NORMAL_SCALE_TILE } from './hex';
+import { CellMapObserver, CellMapCommander } from './cell_map';
+import { NORMAL_SCALE_CELL } from './hex';
 import WorldMinimapData from '../../game/world_minimap_data';
 
 export type MiniMapOptions = {
   topViewAttributes: TopViewAttributes;
-  tileMapObserver: TileMapObserver;
-  tileMapCommander: TileMapCommander;
+  cellMapObserver: CellMapObserver;
+  cellMapCommander: CellMapCommander;
   worldColumns: number;
   worldRows: number;
   miniWidth: number;
@@ -17,8 +17,8 @@ export type MiniMapOptions = {
 
 export default class MiniMap extends PIXI.Container {
   private readonly topViewAttributes: TopViewAttributes;
-  private readonly tileMapObserver: TileMapObserver;
-  private readonly tileMapCommander: TileMapCommander;
+  private readonly cellMapObserver: CellMapObserver;
+  private readonly cellMapCommander: CellMapCommander;
   private readonly worldColumns: number;
   private readonly worldRows: number;
   readonly miniWidth: number;
@@ -37,8 +37,8 @@ export default class MiniMap extends PIXI.Container {
     super();
     const {
       topViewAttributes,
-      tileMapObserver,
-      tileMapCommander,
+      cellMapObserver,
+      cellMapCommander,
       worldColumns,
       worldRows,
       miniWidth,
@@ -46,15 +46,15 @@ export default class MiniMap extends PIXI.Container {
     } = opts;
 
     this.topViewAttributes = topViewAttributes;
-    this.tileMapObserver = tileMapObserver;
-    this.tileMapCommander = tileMapCommander;
+    this.cellMapObserver = cellMapObserver;
+    this.cellMapCommander = cellMapCommander;
     this.worldColumns = worldColumns;
     this.worldRows = worldRows;
 
     // In a column-oriented hex grid, columns are packed together
     // at a ratio of 3/4.
-    const tilesPerPixel = (worldColumns * 3/4) / miniWidth;
-    const miniHeight = worldRows / tilesPerPixel;
+    const cellsPerPixel = (worldColumns * 3/4) / miniWidth;
+    const miniHeight = worldRows / cellsPerPixel;
     this.miniWidth = miniWidth;
     this.miniHeight = miniHeight;
 
@@ -76,7 +76,7 @@ export default class MiniMap extends PIXI.Container {
 
     // This is to handle map panning and zooming, which changes
     // the position and size of the viewport.
-    this.tileMapObserver.addChangeListener(() => {
+    this.cellMapObserver.addChangeListener(() => {
       this.removeAndAddViewport();
     });
 
@@ -93,29 +93,29 @@ export default class MiniMap extends PIXI.Container {
 
   private handleMouseDown(point: PIXI.IPointData): void {
     this.mouseDown = true;
-    this.moveTileMapToMiniMapPoint(point);
+    this.moveCellMapToMiniMapPoint(point);
   }
 
   private handleMouseMove(local: PIXI.IPointData): void {
     if (!this.mouseDown) {
       return;
     }
-    this.moveTileMapToMiniMapPoint(local);
+    this.moveCellMapToMiniMapPoint(local);
   }
 
   private handleMouseUp(): void {
     this.mouseDown = false;
   }
 
-  private moveTileMapToMiniMapPoint(point: PIXI.IPointData): void {
+  private moveCellMapToMiniMapPoint(point: PIXI.IPointData): void {
     const worldColumn = point.x / this.miniWidth * this.worldColumns;
     const worldRow = point.y / this.miniHeight * this.worldRows;
 
     // Compute the normal-scale world point from the local point.
-    const normalScaleWorldX = worldColumn * NORMAL_SCALE_TILE.mulWidth;
-    const normalScaleWorldY = worldRow * NORMAL_SCALE_TILE.mulHeight;
+    const normalScaleWorldX = worldColumn * NORMAL_SCALE_CELL.mulWidth;
+    const normalScaleWorldY = worldRow * NORMAL_SCALE_CELL.mulHeight;
 
-    this.tileMapCommander.centerOnNormalScaleWorldPoint({
+    this.cellMapCommander.centerOnNormalScaleWorldPoint({
       x: normalScaleWorldX,
       y: normalScaleWorldY,
     });
@@ -150,24 +150,24 @@ export default class MiniMap extends PIXI.Container {
   private computeViewportPositionAndSize()
     : { x: number, y: number, width: number, height: number }
   {
-    const topLeftWorld = this.tileMapObserver.topLeftWorld();
+    const topLeftWorld = this.cellMapObserver.topLeftWorld();
 
     const xOffset =
-      (topLeftWorld.x / NORMAL_SCALE_TILE.mulWidth) / this.worldColumns;
+      (topLeftWorld.x / NORMAL_SCALE_CELL.mulWidth) / this.worldColumns;
     const yOffset =
-      (topLeftWorld.y / NORMAL_SCALE_TILE.mulHeight) / this.worldRows;
+      (topLeftWorld.y / NORMAL_SCALE_CELL.mulHeight) / this.worldRows;
 
     const areaWidth = this.topViewAttributes.areaWidth;
     const areaHeight = this.topViewAttributes.areaHeight;
-    const zoomLevel = this.tileMapObserver.zoomLevel();
+    const zoomLevel = this.cellMapObserver.zoomLevel();
 
-    const widthInTiles =
-      (areaWidth / NORMAL_SCALE_TILE.mulWidth) / zoomLevel;
-    const heightInTiles =
-      (areaHeight / NORMAL_SCALE_TILE.mulHeight) / zoomLevel;
+    const widthInCells =
+      (areaWidth / NORMAL_SCALE_CELL.mulWidth) / zoomLevel;
+    const heightInCells =
+      (areaHeight / NORMAL_SCALE_CELL.mulHeight) / zoomLevel;
 
-    const width = widthInTiles / this.worldColumns;
-    const height = heightInTiles / this.worldRows;
+    const width = widthInCells / this.worldColumns;
+    const height = heightInCells / this.worldRows;
     return { x: xOffset, y: yOffset, width, height };
   }
 

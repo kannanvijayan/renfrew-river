@@ -1,9 +1,9 @@
 import * as PIXI from 'pixi.js';
 import {
   HEX_TRIANGLES_CLIP,
-  NORMAL_SCALE_TILE,
-  normalOffsetXForTileBoundingBox,
-  normalOffsetYForTileBoundingBox
+  NORMAL_SCALE_CELL,
+  normalOffsetXForCellBoundingBox,
+  normalOffsetYForCellBoundingBox
 } from './hex';
 import Deferred from '../../util/deferred';
 import WorldMapTiledData from '../../game/world_map_tiled_data';
@@ -206,8 +206,8 @@ function makeGeometry(opts: {
     for (let y = 0; y < rows; y++) {
       const idx = y * columns + x;
 
-      const xOffset = normalOffsetXForTileBoundingBox(x, y);
-      const yOffset = normalOffsetYForTileBoundingBox(x, y);
+      const xOffset = normalOffsetXForCellBoundingBox(x, y);
+      const yOffset = normalOffsetYForCellBoundingBox(x, y);
 
       let colorRed = (Math.random() / 2);
       let colorGreen = (Math.random() / 2);
@@ -238,7 +238,7 @@ function makeGeometry(opts: {
       positionBuffer.data[instancePosOffset + 0] = xOffset;
       positionBuffer.data[instancePosOffset + 1] = yOffset;
 
-      // The UV just identifies the column/row of the tile.
+      // The UV just identifies the column/row of the cell.
       const instanceUvOffset = idx * 2;
       uvBuffer.data[instanceUvOffset + 0] = x;
       uvBuffer.data[instanceUvOffset + 1] = y;
@@ -284,8 +284,8 @@ function makeShader(opts: {
     animalKindTex: animalKindsTexture,
   };
 
-  const adjX = NORMAL_SCALE_TILE.width / 2;
-  const adjY = NORMAL_SCALE_TILE.height / 2;
+  const adjX = NORMAL_SCALE_CELL.width / 2;
+  const adjY = NORMAL_SCALE_CELL.height / 2;
 
   const shader = PIXI.Shader.from(
     `

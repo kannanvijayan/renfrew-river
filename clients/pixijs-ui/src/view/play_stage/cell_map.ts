@@ -1,17 +1,17 @@
 import * as PIXI from 'pixi.js';
 import {
-  NORMAL_SCALE_TILE,
-  hexTileUnderNormalOffset,
-  normalOffsetXForTileBoundingBox,
-  normalOffsetYForTileBoundingBox,
-  rectifiedBoundingBoxTileFromNormalOffset,
+  NORMAL_SCALE_CELL,
+  hexCellUnderNormalOffset,
+  normalOffsetXForCellBoundingBox,
+  normalOffsetYForCellBoundingBox,
+  rectifiedBoundingBoxCellFromNormalOffset,
 } from './hex';
 import HexMesh from './hex_mesh';
 import WorldMapTiledData from '../../game/world_map_tiled_data';
 import { CellCoord } from '../../game/types/cell_coord';
 import { WorldDims } from '../../game/types/world_dims';
 
-export type TileMapCallbackApi = {
+export type CellMapCallbackApi = {
   ensureMapDataLoaded: (
     topleft: CellCoord,
     area: WorldDims,
@@ -25,24 +25,24 @@ export type TileMapCallbackApi = {
   }>,
 };
 
-export type TileMapOptions = {
+export type CellMapOptions = {
   worldColumns: number;
   worldRows: number;
   areaWidth: number;
   areaHeight: number;
   mapData: WorldMapTiledData;
-  callbackApi: TileMapCallbackApi;
+  callbackApi: CellMapCallbackApi;
 };
 
 const MIN_ZOOM_LEVEL = 0.1;
 
 const MESH_SURPLUS = { cols: 4, rows: 4 };
 
-export default class TileMap extends PIXI.Container {
+export default class CellMap extends PIXI.Container {
   private readonly worldColumns: number;
   private readonly worldRows: number;
   private readonly mapData: WorldMapTiledData;
-  private readonly callbackApi: TileMapCallbackApi;
+  private readonly callbackApi: CellMapCallbackApi;
 
   private readonly maxWorldX: number;
   private readonly maxWorldY: number;
@@ -55,11 +55,11 @@ export default class TileMap extends PIXI.Container {
   // The scaling of the world-map by zoom amount.  Maximally 1.
   zoomLevel: number;
 
-  // The number of tile columns and rows in the mesh.
+  // The number of cell columns and rows in the mesh.
   private meshColumns: number;
   private meshRows: number;
 
-  // The top-left corner of the tile-map, using coordinates normalized
+  // The top-left corner of the cell-map, using coordinates normalized
   // to the world map.
   readonly topLeftWorld: PIXI.IPointData;
 
@@ -69,8 +69,8 @@ export default class TileMap extends PIXI.Container {
   private topLeftWorldColumn: number;
   private topLeftWorldRow: number;
 
-  // The top left corner of the tile-map, using pixel coordinates.
-  // Assuming a 100x100 pixel square for each tile.
+  // The top left corner of the cell-map, using pixel coordinates in
+  // normal scale.
   private readonly topLeftMesh: PIXI.IPointData;
 
   // Whether we're starting a drag.
@@ -82,7 +82,7 @@ export default class TileMap extends PIXI.Container {
   // The screen point where the drag started.
   private startDragPoint: Readonly<PIXI.IPointData> | undefined;
 
-  // Whether the tile-map is being dragged.
+  // Whether the cell-map is being dragged.
   private beingDragged: boolean;
 
   // The hover point.
@@ -94,11 +94,11 @@ export default class TileMap extends PIXI.Container {
   // The PIXI mesh object.
   private hexMesh: HexMesh;
 
-  // Observer of the tilemap.
-  private readonly observer: TileMapObserver;
+  // Observer of the cell-map.
+  private readonly observer: CellMapObserver;
 
-  // Commander of the tilemap.
-  private readonly commander: TileMapCommander;
+  // Commander of the cell-map.
+  private readonly commander: CellMapCommander;
 
   // Update counter, incremented every time `updateMeshPosition` is called.
   // This helps ensure that quick successive calls to `updateMeshPosition`
@@ -106,7 +106,7 @@ export default class TileMap extends PIXI.Container {
   // the later call.
   private updateCounter: number;
 
-  constructor(opts: Readonly<TileMapOptions>) {
+  constructor(opts: Readonly<CellMapOptions>) {
     super();
     this.worldColumns = opts.worldColumns;
     this.worldRows = opts.worldRows;
@@ -114,12 +114,12 @@ export default class TileMap extends PIXI.Container {
     this.callbackApi = opts.callbackApi;
 
     this.maxWorldX = (
-      normalOffsetXForTileBoundingBox(this.worldColumns - 1, 0) +
-      NORMAL_SCALE_TILE.width / 2
+      normalOffsetXForCellBoundingBox(this.worldColumns - 1, 0) +
+      NORMAL_SCALE_CELL.width / 2
     );
     this.maxWorldY = (
-      normalOffsetYForTileBoundingBox(0, this.worldRows - 1) +
-      NORMAL_SCALE_TILE.height / 2
+      normalOffsetYForCellBoundingBox(0, this.worldRows - 1) +
+      NORMAL_SCALE_CELL.height / 2
     );
 
     this.areaWidth = opts.areaWidth;
@@ -131,14 +131,14 @@ export default class TileMap extends PIXI.Container {
     this.meshRows = this.meshRowsForAreaHeight(this.areaHeight);
 
     this.topLeftWorld = new PIXI.Point(
-      NORMAL_SCALE_TILE.width / 2,
-      NORMAL_SCALE_TILE.height / 2,
+      NORMAL_SCALE_CELL.width / 2,
+      NORMAL_SCALE_CELL.height / 2,
     );
     this.topLeftWorldColumn = 0;
     this.topLeftWorldRow = 0;
     this.topLeftMesh = new PIXI.Point(
-      NORMAL_SCALE_TILE.width / 2,
-      NORMAL_SCALE_TILE.height / 2
+      NORMAL_SCALE_CELL.width / 2,
+      NORMAL_SCALE_CELL.height / 2
     );
 
     this.startingDrag = false;
@@ -156,8 +156,8 @@ export default class TileMap extends PIXI.Container {
       topLeftWorldRow: this.topLeftWorldRow,
     });
 
-    this.observer = new TileMapObserver(this);
-    this.commander = new TileMapCommander(this);
+    this.observer = new CellMapObserver(this);
+    this.commander = new CellMapCommander(this);
     this.updateCounter = 0;
 
     this.updateMeshPosition().then(() => {
@@ -165,10 +165,10 @@ export default class TileMap extends PIXI.Container {
     });
   }
 
-  public getObserver(): TileMapObserver {
+  public getObserver(): CellMapObserver {
     return this.observer;
   }
-  public getCommander(): TileMapCommander {
+  public getCommander(): CellMapCommander {
     return this.commander;
   }
 
@@ -294,7 +294,7 @@ export default class TileMap extends PIXI.Container {
     const zoom = this.clampedZoomLevel();
     const worldX = this.topLeftWorld.x + (point.x / zoom);
     const worldY = this.topLeftWorld.y + (point.y / zoom);
-    const { col, row } = hexTileUnderNormalOffset(worldX, worldY);
+    const { col, row } = hexCellUnderNormalOffset(worldX, worldY);
     if (
       !this.hoverCellCoord ||
       this.hoverCellCoord.col !== col ||
@@ -438,11 +438,11 @@ export default class TileMap extends PIXI.Container {
     let worldX = this.topLeftWorld.x;
     let worldY = this.topLeftWorld.y;
 
-    if (worldX < NORMAL_SCALE_TILE.width / 2) {
-      worldX = NORMAL_SCALE_TILE.width / 2;
+    if (worldX < NORMAL_SCALE_CELL.width / 2) {
+      worldX = NORMAL_SCALE_CELL.width / 2;
     }
-    if (worldY < NORMAL_SCALE_TILE.height / 2) {
-      worldY = NORMAL_SCALE_TILE.height / 2;
+    if (worldY < NORMAL_SCALE_CELL.height / 2) {
+      worldY = NORMAL_SCALE_CELL.height / 2;
     }
 
     if (worldX > maxTopRightWorldX) {
@@ -460,7 +460,7 @@ export default class TileMap extends PIXI.Container {
     const dx = this.topLeftWorld.x - this.topLeftMesh.x;
     const dy = this.topLeftWorld.y - this.topLeftMesh.y;
 
-    const { col, row } = rectifiedBoundingBoxTileFromNormalOffset(dx, dy);
+    const { col, row } = rectifiedBoundingBoxCellFromNormalOffset(dx, dy);
     this.topLeftWorldColumn = col;
     this.topLeftWorldRow = row;
   }
@@ -474,26 +474,26 @@ export default class TileMap extends PIXI.Container {
     this.topLeftWorld.y = y;
 
     const meshOffsetX = (
-      (x - (NORMAL_SCALE_TILE.width / 2)) % (2 * NORMAL_SCALE_TILE.mulWidth)
+      (x - (NORMAL_SCALE_CELL.width / 2)) % (2 * NORMAL_SCALE_CELL.mulWidth)
     );
     const meshOffsetY = (
-      (y - (NORMAL_SCALE_TILE.height / 2)) % (2 * NORMAL_SCALE_TILE.mulHeight)
+      (y - (NORMAL_SCALE_CELL.height / 2)) % (2 * NORMAL_SCALE_CELL.mulHeight)
     );
-    this.topLeftMesh.x = meshOffsetX + (NORMAL_SCALE_TILE.width / 2);
-    this.topLeftMesh.y = meshOffsetY + (NORMAL_SCALE_TILE.height / 2);
+    this.topLeftMesh.x = meshOffsetX + (NORMAL_SCALE_CELL.width / 2);
+    this.topLeftMesh.y = meshOffsetY + (NORMAL_SCALE_CELL.height / 2);
   }
 
   private meshColumnsForAreaWidth(areaWidth: number): number {
     const zoomLevel = this.clampedZoomLevel();
     return (
-      Math.ceil(areaWidth / (NORMAL_SCALE_TILE.mulWidth * zoomLevel)) +
+      Math.ceil(areaWidth / (NORMAL_SCALE_CELL.mulWidth * zoomLevel)) +
       MESH_SURPLUS.cols
     );
   }
   private meshRowsForAreaHeight(areaHeight: number): number {
     const zoomLevel = this.clampedZoomLevel();
     return (
-      Math.ceil(areaHeight / (NORMAL_SCALE_TILE.mulHeight * zoomLevel)) +
+      Math.ceil(areaHeight / (NORMAL_SCALE_CELL.mulHeight * zoomLevel)) +
       MESH_SURPLUS.rows
     );
   }
@@ -511,19 +511,19 @@ export default class TileMap extends PIXI.Container {
   }
 }
 
-export class TileMapObserver {
-  private tileMap: TileMap;
-  private changeListeners: Array<TileMapChangeListener>;
-  private hoverCellChangedListeners: Array<TileMapHoverCellChangedListener>;
+export class CellMapObserver {
+  private cellMap: CellMap;
+  private changeListeners: Array<CellMapChangeListener>;
+  private hoverCellChangedListeners: Array<CellMapHoverCellChangedListener>;
 
-  constructor(tileMap: TileMap) {
-    this.tileMap = tileMap;
+  constructor(cellMap: CellMap) {
+    this.cellMap = cellMap;
     this.changeListeners = [];
     this.hoverCellChangedListeners = [];
   }
 
-  public addChangeListener(listener: TileMapChangeListener)
-    : RemoveListener<TileMapChangeListener>
+  public addChangeListener(listener: CellMapChangeListener)
+    : RemoveListener<CellMapChangeListener>
   {
     this.changeListeners.push(listener);
     return () => {
@@ -534,8 +534,8 @@ export class TileMapObserver {
     };
   }
 
-  public addHoverCellChangedListener(listener: TileMapHoverCellChangedListener)
-    : RemoveListener<TileMapHoverCellChangedListener>
+  public addHoverCellChangedListener(listener: CellMapHoverCellChangedListener)
+    : RemoveListener<CellMapHoverCellChangedListener>
   {
     this.hoverCellChangedListeners.push(listener);
     return () => {
@@ -560,39 +560,39 @@ export class TileMapObserver {
 
   public topLeftWorld(): PIXI.IPointData {
     return {
-      x: this.tileMap.topLeftWorld.x,
-      y: this.tileMap.topLeftWorld.y,
+      x: this.cellMap.topLeftWorld.x,
+      y: this.cellMap.topLeftWorld.y,
     };
   }
 
   public areaWidth(): number {
-    return this.tileMap.areaWidth;
+    return this.cellMap.areaWidth;
   }
   public areaHeight(): number {
-    return this.tileMap.areaHeight;
+    return this.cellMap.areaHeight;
   }
   public zoomLevel(): number {
-    return this.tileMap.zoomLevel;
+    return this.cellMap.zoomLevel;
   }
 }
 
 export type RemoveListener<T> = () => T;
 
-export type TileMapChangeListener =
-  (tileMapObserver: TileMapObserver) => void;
+export type CellMapChangeListener =
+  (cellMapObserver: CellMapObserver) => void;
 
-export type TileMapHoverCellChangedListener =
+export type CellMapHoverCellChangedListener =
   (cell: CellCoord) => void;
-export class TileMapCommander {
-  private tileMap: TileMap;
+export class CellMapCommander {
+  private cellMap: CellMap;
 
-  constructor(tileMap: TileMap) {
-    this.tileMap = tileMap;
+  constructor(cellMap: CellMap) {
+    this.cellMap = cellMap;
   }
 
   public centerOnNormalScaleWorldPoint(
     point: Readonly<PIXI.IPointData>
   ): void {
-    this.tileMap.centerOnNormalScaleWorldPoint(point);
+    this.cellMap.centerOnNormalScaleWorldPoint(point);
   }
 }
