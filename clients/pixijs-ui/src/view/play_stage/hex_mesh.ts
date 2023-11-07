@@ -332,34 +332,21 @@ function makeShader(opts: {
     uniform float topLeftWorldRow;
 
     void main() {
-      // Test coloring to validate rendering correctness.
-      if (vUvs.x == 0.0 && vUvs.y == 0.0) {
-        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-        return;
-      }
-      if (vUvs.x == 1.0 && vUvs.y == 0.0) {
-        gl_FragColor = vec4(0.0, 0.8, 0.0, 1.0);
-        return;
-      }
-      if (vUvs.x == 0.0 && vUvs.y == 1.0) {
-        gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-        return;
-      }
-      if (vUvs.x == 1.0 && vUvs.y == 1.0) {
-        gl_FragColor = vec4(0.8, 0.0, 0.8, 1.0);
-        return;
-      }
-
       // Convert vUvs to world coordinates.
       float worldX = topLeftWorldColumn + vUvs.x;
       float worldY = topLeftWorldRow + vUvs.y;
 
       // Convert world coordinates to texture coordinates.
       float textureX = worldX / worldColumns;
-      float textureY = (worldRows - (worldY + 1.0)) / worldRows;
+      float textureY = worldY / worldRows;
+      float adjX = 1.0 / (worldColumns * 2.0);
+      float adjY = 1.0 / (worldRows * 2.0);
 
-      float elevation = texture2D(elevationTex, vec2(textureX, 1.0 - textureY)).r;
-      float animalKind = texture2D(animalKindTex, vec2(textureX, 1.0 - textureY)).r;
+      float texX = textureX + adjX;
+      float texY = textureY + adjY;
+
+      float elevation = texture2D(elevationTex, vec2(texX, texY)).r;
+      float animalKind = texture2D(animalKindTex, vec2(texX, texY)).r;
       if (animalKind > 0.0) {
         // color red
         gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
