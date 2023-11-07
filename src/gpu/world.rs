@@ -113,6 +113,7 @@ impl GpuWorld {
   }
 
   pub(crate) fn move_animals(&self) {
+    let prior_time = std::time::Instant::now();
     futures::executor::block_on(async {
       let target_positions_buffer = compute_downhill_movement(
         &self.device,
@@ -135,6 +136,8 @@ impl GpuWorld {
         &self.animals_map,
       ).await;
     });
+    let elapsed = prior_time.elapsed();
+    log::info!("move_animals(elapsed_ms={})", elapsed.as_millis());
   }
 
   pub(crate) fn read_elevation_values(&self, top_left: CellCoord, area: WorldDims)

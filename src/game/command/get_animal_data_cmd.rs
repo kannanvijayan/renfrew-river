@@ -4,13 +4,7 @@ use crate::{
     response::{ResponseEnvelope, FailedResponse},
     command::{Command, CommandEnvelope},
   },
-  world::{
-    CellCoord,
-    AnimalId,
-    Elevation,
-    CellInfo,
-    AnimalData,
-  },
+  world::{ CellCoord, AnimalId, AnimalData },
 };
 
 #[derive(Debug, Clone)]
