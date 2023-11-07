@@ -8,6 +8,7 @@ import { MiniElevationsCmd } from "./commands/mini_elevations_cmd";
 import { ReadAnimalsCmd } from "./commands/read_animals_cmd";
 import { TakeTurnStepCmd } from "./commands/take_turn_step_cmd";
 import { GetCellInfoCmd } from "./commands/get_cell_info_cmd";
+import { GetAnimalDataCmd } from "./commands/get_animal_data_cmd";
 
 /**
  * Protocol commands.
@@ -23,6 +24,7 @@ export type ProtocolCommand = {
   ReadAnimals: ReadAnimalsCmd,
   TakeTurnStep: TakeTurnStepCmd,
   GetCellInfo: GetCellInfoCmd,
+  GetAnimalData: GetAnimalDataCmd,
 };
 
 export type ProtocolCommandName = keyof ProtocolCommand;

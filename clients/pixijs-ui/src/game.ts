@@ -9,6 +9,7 @@ import TopView from "./view/top_view";
 import assert from "./util/assert";
 import { TurnNo } from "./game/types/turn_no";
 import { CellInfo } from "./game/types/cell_info";
+import { AnimalData, AnimalId } from "./game/types/animal_data";
 
 /**
  * Top-level manager of game.
@@ -95,6 +96,7 @@ export default class Game {
           ensureMapDataLoaded: this.ensureMapDataLoaded.bind(this),
           takeTurnStep: this.takeTurnStep.bind(this),
           getCellInfo: this.getCellInfo.bind(this),
+          getAnimalData: this.getAnimalData.bind(this),
         },
       },
     });
@@ -302,7 +304,12 @@ export default class Game {
   }
 
   private async getCellInfo(coord: CellCoord): Promise<CellInfo> {
-    assert(this.client !== null, "Game.takeTurnStep: No client");
+    assert(this.client !== null, "Game.getCellInfo: No client");
     return this.client.getCellInfo(coord);
+  }
+
+  private async getAnimalData(animalId: AnimalId): Promise<AnimalData> {
+    assert(this.client !== null, "Game.getAnimalData: No client");
+    return this.client.getAnimalData(animalId);
   }
 }

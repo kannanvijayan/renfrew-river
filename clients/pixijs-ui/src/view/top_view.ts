@@ -8,6 +8,7 @@ import { ProgressCallback } from '../util/progress_tracking';
 import WorldObserver from '../game/world_observer';
 import { CellCoord } from '../game/types/cell_coord';
 import { CellInfo } from '../game/types/cell_info';
+import { AnimalData, AnimalId } from '../game/types/animal_data';
 
 export interface TopViewCallbackApi {
   startStage: {
@@ -38,6 +39,7 @@ export interface TopViewCallbackApi {
     }>,
     takeTurnStep: () => Promise<void>,
     getCellInfo: (cell: CellCoord) => Promise<CellInfo>;
+    getAnimalData: (animalId: AnimalId) => Promise<AnimalData>;
   };
 }
 

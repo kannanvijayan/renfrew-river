@@ -3,9 +3,11 @@ import { CellMapObserver } from "./cell_map";
 import { CellCoord } from "../../game/types/cell_coord";
 import { CellInfo } from "../../game/types/cell_info";
 import WorldObserver from "../../game/world_observer";
+import { AnimalData, AnimalId } from "../../game/types/animal_data";
 
 export type CellInfoPanelCallbackApi = {
   getCellInfo: (cell: CellCoord) => Promise<CellInfo>;
+  getAnimalData: (animalId: AnimalId) => Promise<AnimalData>;
 };
 
 export default class CellInfoPanel extends PIXI.Container {
@@ -16,6 +18,7 @@ export default class CellInfoPanel extends PIXI.Container {
   private currentHoverCellText: PIXI.Text | null;
   private currentElevationText: PIXI.Text | null;
   private currentAnimalIdText: PIXI.Text | null;
+  private currentAnimalDataText: PIXI.Text | null;
 
   constructor(opts: {
     callbackApi: CellInfoPanelCallbackApi,
@@ -42,6 +45,7 @@ export default class CellInfoPanel extends PIXI.Container {
     this.currentHoverCellText = null;
     this.currentElevationText = null;
     this.currentAnimalIdText = null;
+    this.currentAnimalDataText = null;
 
     const text = new PIXI.Text("Cell Info Panel", {
       fontSize: 20,
@@ -58,6 +62,10 @@ export default class CellInfoPanel extends PIXI.Container {
 
   private async handleHoverCellChanged(cell: CellCoord): Promise<void> {
     const cellInfo = await this.callbackApi.getCellInfo(cell);
+    let animalData: AnimalData | null = null;
+    if (cellInfo.animal_id !== null) {
+      animalData = await this.callbackApi.getAnimalData(cellInfo.animal_id);
+    }
 
     if (this.currentHoverCellText) {
       this.backgroundGraphics.removeChild(this.currentHoverCellText);
@@ -70,6 +78,10 @@ export default class CellInfoPanel extends PIXI.Container {
     if (this.currentAnimalIdText) {
       this.backgroundGraphics.removeChild(this.currentAnimalIdText);
       this.currentAnimalIdText = null;
+    }
+    if (this.currentAnimalDataText) {
+      this.backgroundGraphics.removeChild(this.currentAnimalDataText);
+      this.currentAnimalDataText = null;
     }
 
     // Show the hovered cell coordinates.
@@ -99,13 +111,30 @@ export default class CellInfoPanel extends PIXI.Container {
     this.backgroundGraphics.addChild(elevationText);
 
     // Show the animal id.
-    const animalIdText = new PIXI.Text(`Animal: ${cellInfo.animal_id}`, {
-      fontSize: 15,
-      fill: 0xffffff,
-    });
-    animalIdText.x = 10;
-    animalIdText.y = 100;
-    this.currentAnimalIdText = animalIdText;
-    this.backgroundGraphics.addChild(animalIdText);
+    if (cellInfo.animal_id !== null) {
+      const animalIdText = new PIXI.Text(`Animal: ${cellInfo.animal_id}`, {
+        fontSize: 15,
+        fill: 0xffffff,
+      });
+      animalIdText.x = 10;
+      animalIdText.y = 100;
+      this.currentAnimalIdText = animalIdText;
+      this.backgroundGraphics.addChild(animalIdText);
+    }
+
+    // Show animal data if any exists.
+    if (animalData !== null) {
+      const animalDataText = new PIXI.Text(
+        `Animal Data: ${JSON.stringify(animalData)}`,
+        {
+          fontSize: 15,
+          fill: 0xffffff,
+        }
+      );
+      animalDataText.x = 10;
+      animalDataText.y = 130;
+      this.currentAnimalDataText = animalDataText;
+      this.backgroundGraphics.addChild(animalDataText);
+    }
   }
 }

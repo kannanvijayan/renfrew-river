@@ -5,6 +5,7 @@ import MapView from './map_view';
 import WorldObserver from '../../game/world_observer';
 import { CellCoord } from '../../game/types/cell_coord';
 import { CellInfo } from '../../game/types/cell_info';
+import { AnimalData, AnimalId } from '../../game/types/animal_data';
 
 export interface PlayStageCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
@@ -23,6 +24,7 @@ export interface PlayStageCallbackApi {
   }>,
   takeTurnStep: () => Promise<void>,
   getCellInfo: (cell: CellCoord) => Promise<CellInfo>;
+  getAnimalData: (animalId: AnimalId) => Promise<AnimalData>;
 }
 
 /**

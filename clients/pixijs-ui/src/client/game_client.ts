@@ -161,9 +161,22 @@ export default class GameClient {
   }
 
   public async getCellInfo(coord: CellCoord): Promise<CellInfo> {
-    const result = await this.sendCommand("GetCellInfo", { cell_coord: coord });
+    const result = await this.sendCommand("GetCellInfo", {
+      cell_coord: coord,
+    });
     if ("CellInfo" in result) {
       return result.CellInfo;
+    } else {
+      throw new Error(result.Error.messages.join(", "));
+    }
+  }
+
+  public async getAnimalData(animalId: number): Promise<AnimalData> {
+    const result = await this.sendCommand("GetAnimalData", {
+      animal_id: animalId,
+    });
+    if ("AnimalData" in result) {
+      return result.AnimalData;
     } else {
       throw new Error(result.Error.messages.join(", "));
     }

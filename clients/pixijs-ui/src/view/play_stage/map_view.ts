@@ -7,6 +7,7 @@ import NextTurnButton from './next_turn_button';
 import CellInfoPanel from './cell_info_panel';
 import { CellCoord } from '../../game/types/cell_coord';
 import { CellInfo } from '../../game/types/cell_info';
+import { AnimalData, AnimalId } from '../../game/types/animal_data';
 
 export interface MapViewCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;
@@ -24,6 +25,7 @@ export interface MapViewCallbackApi {
   }>,
   takeTurnStep: () => Promise<void>,
   getCellInfo: (cell: CellCoord) => Promise<CellInfo>;
+  getAnimalData: (animalId: AnimalId) => Promise<AnimalData>;
 }
 
 export default class MapView extends PIXI.Container {
@@ -103,6 +105,7 @@ export default class MapView extends PIXI.Container {
     this.cellInfoPanel = new CellInfoPanel({
       callbackApi: {
         getCellInfo: this.callbackApi.getCellInfo,
+        getAnimalData: this.callbackApi.getAnimalData,
       },
       worldObserver: this.worldObserver,
       cellMapObserver: this.cellMap.getObserver(),
