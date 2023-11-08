@@ -21,7 +21,10 @@ pub(crate) enum TakeTurnStepRsp {
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct TurnTakenResponse {
+  #[serde(rename = "turnNoAfter")]
   pub(crate) turn_no_after: TurnNo,
+
+  #[serde(rename = "elapsedMs")]
   pub(crate) elapsed_ms: u32,
 }
 

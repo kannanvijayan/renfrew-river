@@ -7,7 +7,10 @@ use crate::{
 #[derive(Clone, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct GameSettings {
+  #[serde(rename = "worldDims")]
   world_dims: WorldDims,
+
+  #[serde(rename = "randSeed")]
   rand_seed: u64,
 }
 impl GameSettings {

@@ -10,6 +10,7 @@ use crate::{
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct GetAnimalDataCmd {
+  #[serde(rename = "animalId")]
   pub(crate) animal_id: AnimalId,
 }
 

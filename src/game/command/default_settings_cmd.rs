@@ -17,7 +17,11 @@ pub(crate) struct DefaultSettingsCmd {}
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct DefaultSettingsRsp {
   pub(crate) settings: GameSettings,
+
+  #[serde(rename = "minWorldDims")]
   pub(crate) min_world_dims: WorldDims,
+
+  #[serde(rename = "maxWorldDims")]
   pub(crate) max_world_dims: WorldDims,
 }
 

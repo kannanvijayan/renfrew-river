@@ -15,6 +15,7 @@ use crate::{
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct GetCellInfoCmd {
+  #[serde(rename = "cellCoord")]
   pub(crate) cell_coord: CellCoord,
 }
 

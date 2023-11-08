@@ -8,5 +8,7 @@ use crate::world::{ Elevation, AnimalId };
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct CellInfo {
   pub(crate) elevation: Elevation,
+
+  #[serde(rename = "animalId")]
   pub(crate) animal_id: Option<AnimalId>,
 }

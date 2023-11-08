@@ -10,6 +10,7 @@ use crate::{
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct MiniElevationsCmd {
+  #[serde(rename = "miniDims")]
   pub(crate) mini_dims: WorldDims,
 }
 impl MiniElevationsCmd {

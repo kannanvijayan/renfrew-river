@@ -15,8 +15,13 @@ pub(crate) struct GetConstantsCmd {}
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct GetConstantsRsp {
+  #[serde(rename = "elevationBits")]
   pub(crate) elevation_bits: u32,
+
+  #[serde(rename = "minWorldDims")]
   pub(crate) min_world_dims: WorldDims,
+
+  #[serde(rename = "maxWorldDims")]
   pub(crate) max_world_dims: WorldDims,
 }
 

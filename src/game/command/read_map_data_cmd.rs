@@ -17,6 +17,7 @@ pub(crate) enum ReadMapDataKind {
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct ReadMapDataCmd {
+  #[serde(rename = "topLeft")]
   pub(crate) top_left: CellCoord,
   pub(crate) area: WorldDims,
   pub(crate) kinds: Vec<ReadMapDataKind>,
@@ -39,6 +40,8 @@ pub(crate) enum ReadMapDataRsp {
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct MapDataResponse {
   pub(crate) elevations: Option<Vec<Vec<ElevationValueType>>>,
+
+  #[serde(rename = "animalIds")]
   pub(crate) animal_ids: Option<Vec<Vec<AnimalId>>>,
 }
 
