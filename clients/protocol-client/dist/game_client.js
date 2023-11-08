@@ -15,7 +15,7 @@ var GameClientConnectError;
 (function (GameClientConnectError) {
     // Failed to create connection.
     GameClientConnectError["CONNECTION_FAILED"] = "connection-failed";
-})(GameClientConnectError = exports.GameClientConnectError || (exports.GameClientConnectError = {}));
+})(GameClientConnectError || (exports.GameClientConnectError = GameClientConnectError = {}));
 class GameClient {
     constructor(args) {
         const { url, callbacks } = args;
