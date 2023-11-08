@@ -55,7 +55,7 @@ fn hexcell_checked(
     return tile;
   }
 }
- 
+
 // Calculate tile in given direction
 fn hexcell_adjacent_unchecked(
   tile: vec2<u32>,
