@@ -3,5 +3,5 @@ import { Elevation } from "./elevation"
 
 export type CellInfo = {
   elevation: Elevation;
-  animal_id: AnimalId | null;
+  animalId: AnimalId | null;
 }

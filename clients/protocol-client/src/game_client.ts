@@ -80,16 +80,16 @@ export default class GameClient {
   public async defaultSettings()
     : Promise<{
         settings: GameSettings,
-        min_world_dims: WorldDims,
-        max_world_dims: WorldDims,
+        minWorldDims: WorldDims,
+        maxWorldDims: WorldDims,
       }>
   {
     const result = await this.sendCommand("DefaultSettings", {});
     if ("DefaultSettings" in result) {
       const settings = result.DefaultSettings.settings;
-      const min_world_dims = result.DefaultSettings.min_world_dims;
-      const max_world_dims = result.DefaultSettings.max_world_dims;
-      return { settings, min_world_dims, max_world_dims };
+      const minWorldDims = result.DefaultSettings.minWorldDims;
+      const maxWorldDims = result.DefaultSettings.maxWorldDims;
+      return { settings, minWorldDims, maxWorldDims };
     }
     console.error("DefaultSettings: unexpected response", result);
     throw new Error("DefaultSettings: unexpected response");
@@ -116,11 +116,7 @@ export default class GameClient {
     area: WorldDims,
     kinds: Kinds,
   }): Promise<ReadMapDataKindsToOutput<Kinds>> {
-    const result = await this.sendCommand("ReadMapData", {
-      top_left: opts.topLeft,
-      area: opts.area,
-      kinds: opts.kinds,
-    });
+    const result = await this.sendCommand("ReadMapData", opts);
     if ("MapData" in result) {
       const retval = {} as Record<string, unknown[][] | null>;
       for (const kind of opts.kinds) {
@@ -137,7 +133,7 @@ export default class GameClient {
     miniDims: WorldDims,
   }): Promise<number[][]> {
     const result = await this.sendCommand("MiniElevations", {
-      mini_dims: opts.miniDims,
+      miniDims: opts.miniDims,
     });
     if ("MiniElevations" in result) {
       return result.MiniElevations.elevations;
@@ -166,7 +162,7 @@ export default class GameClient {
 
   public async getCellInfo(coord: CellCoord): Promise<CellInfo> {
     const result = await this.sendCommand("GetCellInfo", {
-      cell_coord: coord,
+      cellCoord: coord,
     });
     if ("CellInfo" in result) {
       return result.CellInfo;
@@ -177,7 +173,7 @@ export default class GameClient {
 
   public async getAnimalData(animalId: number): Promise<AnimalData> {
     const result = await this.sendCommand("GetAnimalData", {
-      animal_id: animalId,
+      animalId: animalId,
     });
     if ("AnimalData" in result) {
       return result.AnimalData;

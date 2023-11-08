@@ -13,21 +13,21 @@ export type ReadMapDataResultType<K extends ReadMapDataKind> =
 
 export type ReadMapDataCmd = {
   params: {
-    top_left: CellCoord,
+    topLeft: CellCoord,
     area: WorldDims,
     kinds: ReadMapDataKind[],
   };
   response: {
     MapData: {
       elevations: ReadMapDataResultType<"Elevation">[][] | null,
-      animal_ids: ReadMapDataResultType<"AnimalId">[][] | null,
+      animalIds: ReadMapDataResultType<"AnimalId">[][] | null,
     },
   };
 };
 
 export const ReadMapDataOutputNameMap = {
   Elevation: "elevations" as const,
-  AnimalId: "animal_ids" as const,
+  AnimalId: "animalIds" as const,
 };
 
 export type ReadMapDataKindsToOutput<Ks> =

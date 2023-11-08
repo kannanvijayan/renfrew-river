@@ -3,7 +3,7 @@ import { CellInfo } from "../../types/cell_info";
 
 export type GetCellInfoCmd = {
   params: {
-    cell_coord: CellCoord,
+    cellCoord: CellCoord,
   };
   response: {
     CellInfo: CellInfo;
