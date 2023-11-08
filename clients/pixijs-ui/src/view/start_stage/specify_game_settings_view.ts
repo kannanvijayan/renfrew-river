@@ -31,10 +31,11 @@ export default class SpecifyGameSettingsView extends PIXI.Container {
     super();
 
     this.callbackApi = callbackApi;
+    const { worldDims, randSeed } = currentGameSettings;
     this.data = {
-      columns: currentGameSettings.world_dims.columns.toString(),
-      rows: currentGameSettings.world_dims.rows.toString(),
-      randSeed: currentGameSettings.rand_seed.toString(),
+      columns: worldDims.columns.toString(),
+      rows: worldDims.rows.toString(),
+      randSeed: randSeed.toString(),
     };
     this.graphics = new PIXI.Graphics();
     this.build();
@@ -68,11 +69,11 @@ export default class SpecifyGameSettingsView extends PIXI.Container {
     }
 
     const newGameSettings: GameSettings = {
-      world_dims: {
+      worldDims: {
         columns: parseInt(this.data.columns),
         rows: parseInt(this.data.rows),
       },
-      rand_seed: parseInt(this.data.randSeed),
+      randSeed: parseInt(this.data.randSeed),
     };
     if (!this.callbackApi.validateGameSettings(newGameSettings, errors)) {
       this.rebuildWithError(`Invalid game settings: ${errors[0]}`);

@@ -138,8 +138,8 @@ export default class Game {
     // Always get the default settings.
     const defaultSettings = await client.defaultSettings();
     console.log("Got default settings", defaultSettings);
-    this.minWorldDims = defaultSettings.min_world_dims;
-    this.maxWorldDims = defaultSettings.max_world_dims;
+    this.minWorldDims = defaultSettings.minWorldDims;
+    this.maxWorldDims = defaultSettings.maxWorldDims;
 
     // If succesffully connected, check for an existing game.
     // If there is one, set current settings to that game's settings.
@@ -181,28 +181,29 @@ export default class Game {
     if (!this.minWorldDims || !this.maxWorldDims) {
       throw new Error("No min/max world dims");
     }
-    if (settings.world_dims.columns < this.minWorldDims.columns) {
+    const worldDims = settings.worldDims;
+    if (worldDims.columns < this.minWorldDims.columns) {
       errors.push(
         `columns must be at least ${this.minWorldDims.columns}` +
-        ` (got ${settings.world_dims.columns})`
+        ` (got ${worldDims.columns})`
       );
     }
-    if (settings.world_dims.rows < this.minWorldDims.rows) {
+    if (worldDims.rows < this.minWorldDims.rows) {
       errors.push(
         `rows must be at least ${this.minWorldDims.rows}` +
-        ` (got ${settings.world_dims.rows})`
+        ` (got ${worldDims.rows})`
       );
     }
-    if (settings.world_dims.columns > this.maxWorldDims.columns) {
+    if (worldDims.columns > this.maxWorldDims.columns) {
       errors.push(
         `columns must be at most ${this.maxWorldDims.columns}` +
-        ` (got ${settings.world_dims.columns})`
+        ` (got ${worldDims.columns})`
       );
     }
-    if (settings.world_dims.rows > this.maxWorldDims.rows) {
+    if (worldDims.rows > this.maxWorldDims.rows) {
       errors.push(
         `rows must be at most ${this.maxWorldDims.rows}` +
-        ` (got ${settings.world_dims.rows})`
+        ` (got ${worldDims.rows})`
       );
     }
     return errors.length === 0;
@@ -237,7 +238,7 @@ export default class Game {
       throw new Error("Game.loadGame: Sanity error: client is null");
     }
 
-    const { columns, rows } = this.currentGameSettings.world_dims;
+    const { columns, rows } = this.currentGameSettings.worldDims;
 
     // Read the mini-elevations map.
     const miniColumns = 500;
@@ -247,7 +248,7 @@ export default class Game {
     // Initialize the game world.
     this.world = new GameWorld({
       constants: this.constants!,
-      worldDims: this.currentGameSettings.world_dims,
+      worldDims: this.currentGameSettings.worldDims,
       miniDims,
       loaderApi: {
         readMapArea: async ({topLeft, area}) => {
@@ -257,8 +258,8 @@ export default class Game {
             kinds: ["Elevation", "AnimalId"] as ["Elevation", "AnimalId"],
           });
           // TODO: assert(result.elevations !== null);
-          const { elevations, animal_ids } = result;
-          return { elevations, animalIds: animal_ids };
+          const { elevations, animalIds } = result;
+          return { elevations, animalIds };
         },
       },
     });
@@ -301,7 +302,7 @@ export default class Game {
     assert(this.world !== null, "Game.takeTurnStep: No world");
     const result = await this.client.takeTurnStep();
     console.log("Turn taken", result);
-    this.turnNo = result.turn_no_after;
+    this.turnNo = result.turnNoAfter;
     this.world.mapData.invalidate();
   }
 

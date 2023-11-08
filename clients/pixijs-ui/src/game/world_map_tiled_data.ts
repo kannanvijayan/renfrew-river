@@ -361,7 +361,7 @@ export default class WorldMapTiledData {
       return "invalidated";
     }
 
-    const shift_bits = this.constants.elevation_bits - 8;
+    const shift_bits = this.constants.elevationBits - 8;
     this.fullElevations.write2D({
       topLeft,
       area,

@@ -66,8 +66,8 @@ export default class CellInfoPanel extends PIXI.Container {
   private async handleHoverCellChanged(cell: CellCoord): Promise<void> {
     const cellInfo = await this.callbackApi.getCellInfo(cell);
     let animalData: AnimalData | null = null;
-    if (cellInfo.animal_id !== null) {
-      animalData = await this.callbackApi.getAnimalData(cellInfo.animal_id);
+    if (cellInfo.animalId !== null) {
+      animalData = await this.callbackApi.getAnimalData(cellInfo.animalId);
     }
 
     if (this.currentHoverCellText) {
@@ -114,8 +114,8 @@ export default class CellInfoPanel extends PIXI.Container {
     this.backgroundGraphics.addChild(elevationText);
 
     // Show the animal id.
-    if (cellInfo.animal_id !== null) {
-      const animalIdText = new PIXI.Text(`Animal: ${cellInfo.animal_id}`, {
+    if (cellInfo.animalId !== null) {
+      const animalIdText = new PIXI.Text(`Animal: ${cellInfo.animalId}`, {
         fontSize: 15,
         fill: 0xffffff,
       });

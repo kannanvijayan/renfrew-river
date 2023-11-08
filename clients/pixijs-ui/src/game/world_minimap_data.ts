@@ -22,8 +22,8 @@ export default class WorldMinimapData {
     // When writing elevations, we want to keep only the top 8 bits.
     // To know how many bits to shift, we need to know how many bits
     // are in the elevation values.
-    const { elevation_bits } = this.constants;
-    const shift_bits = elevation_bits - 8;
+    const { elevationBits } = this.constants;
+    const shift_bits = elevationBits - 8;
 
     this.elevations.write2D({
       topLeft: { col: 0, row: 0 },
