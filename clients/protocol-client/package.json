@@ -1,0 +1,25 @@
+{
+  "name": "renfrew-river-protocol-client",
+  "version": "0.1.0",
+  "description": "Protocol Client for Renfrew River",
+  "main": "./dist/lib.js",
+  "types": "./dist/lib.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode production",
+    "lint": "eslint --ext .ts src"
+  },
+  "author": "Kannan Vijayan <kv-github@kvijayan.com>",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "eslint": "8.53.0",
+    "@stylistic/eslint-plugin": "1.0.0",
+    "terser-webpack-plugin": "^5.3.9",
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.2.2",
+    "@typescript-eslint/eslint-plugin": "6.9.1",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {}
+}
