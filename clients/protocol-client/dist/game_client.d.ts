@@ -28,8 +28,8 @@ export default class GameClient {
     getConstants(): Promise<GameConstants>;
     defaultSettings(): Promise<{
         settings: GameSettings;
-        min_world_dims: WorldDims;
-        max_world_dims: WorldDims;
+        minWorldDims: WorldDims;
+        maxWorldDims: WorldDims;
     }>;
     hasGame(): Promise<GameSettings | false>;
     newGame(settings: GameSettings): Promise<void>;

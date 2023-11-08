@@ -5,8 +5,8 @@ export type DefaultSettingsCmd = {
     response: {
         DefaultSettings: {
             settings: GameSettings;
-            min_world_dims: WorldDims;
-            max_world_dims: WorldDims;
+            minWorldDims: WorldDims;
+            maxWorldDims: WorldDims;
         };
     };
 };

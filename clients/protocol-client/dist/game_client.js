@@ -46,9 +46,9 @@ class GameClient {
             const result = yield this.sendCommand("DefaultSettings", {});
             if ("DefaultSettings" in result) {
                 const settings = result.DefaultSettings.settings;
-                const min_world_dims = result.DefaultSettings.min_world_dims;
-                const max_world_dims = result.DefaultSettings.max_world_dims;
-                return { settings, min_world_dims, max_world_dims };
+                const minWorldDims = result.DefaultSettings.minWorldDims;
+                const maxWorldDims = result.DefaultSettings.maxWorldDims;
+                return { settings, minWorldDims, maxWorldDims };
             }
             console.error("DefaultSettings: unexpected response", result);
             throw new Error("DefaultSettings: unexpected response");
@@ -75,11 +75,7 @@ class GameClient {
     }
     readMapData(opts) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.sendCommand("ReadMapData", {
-                top_left: opts.topLeft,
-                area: opts.area,
-                kinds: opts.kinds,
-            });
+            const result = yield this.sendCommand("ReadMapData", opts);
             if ("MapData" in result) {
                 const retval = {};
                 for (const kind of opts.kinds) {
@@ -96,7 +92,7 @@ class GameClient {
     miniElevations(opts) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.sendCommand("MiniElevations", {
-                mini_dims: opts.miniDims,
+                miniDims: opts.miniDims,
             });
             if ("MiniElevations" in result) {
                 return result.MiniElevations.elevations;
@@ -131,7 +127,7 @@ class GameClient {
     getCellInfo(coord) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.sendCommand("GetCellInfo", {
-                cell_coord: coord,
+                cellCoord: coord,
             });
             if ("CellInfo" in result) {
                 return result.CellInfo;
@@ -144,7 +140,7 @@ class GameClient {
     getAnimalData(animalId) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield this.sendCommand("GetAnimalData", {
-                animal_id: animalId,
+                animalId: animalId,
             });
             if ("AnimalData" in result) {
                 return result.AnimalData;

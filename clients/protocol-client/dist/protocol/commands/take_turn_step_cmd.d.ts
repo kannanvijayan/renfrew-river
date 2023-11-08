@@ -4,8 +4,8 @@ export type TakeTurnStepCmd = {
     params: EmptyObject;
     response: {
         TurnTaken: {
-            turn_no_after: TurnNo;
-            elapsed_ms: number;
+            turnNoAfter: TurnNo;
+            elapsedMs: number;
         };
     };
 };

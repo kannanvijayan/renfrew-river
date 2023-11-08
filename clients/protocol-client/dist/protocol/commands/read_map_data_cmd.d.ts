@@ -8,20 +8,20 @@ export type ReadMapDataResultTypeMap = {
 export type ReadMapDataResultType<K extends ReadMapDataKind> = ReadMapDataResultTypeMap[K];
 export type ReadMapDataCmd = {
     params: {
-        top_left: CellCoord;
+        topLeft: CellCoord;
         area: WorldDims;
         kinds: ReadMapDataKind[];
     };
     response: {
         MapData: {
             elevations: ReadMapDataResultType<"Elevation">[][] | null;
-            animal_ids: ReadMapDataResultType<"AnimalId">[][] | null;
+            animalIds: ReadMapDataResultType<"AnimalId">[][] | null;
         };
     };
 };
 export declare const ReadMapDataOutputNameMap: {
     Elevation: "elevations";
-    AnimalId: "animal_ids";
+    AnimalId: "animalIds";
 };
 export type ReadMapDataKindsToOutput<Ks> = Ks extends [infer K, ...infer KsRest] ? ReadMapDataKindToOutputSinglet<K> & ReadMapDataKindsToOutput<KsRest> : Record<string, never>;
 type ReadMapDataKindToOutputSinglet<K> = K extends ReadMapDataKind ? {

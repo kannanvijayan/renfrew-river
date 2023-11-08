@@ -1,7 +1,7 @@
 import { AnimalData, AnimalId } from "../../types/animal_data";
 export type GetAnimalDataCmd = {
     params: {
-        animal_id: AnimalId;
+        animalId: AnimalId;
     };
     response: {
         AnimalData: AnimalData;
