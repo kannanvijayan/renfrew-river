@@ -1,7 +1,7 @@
-import WorldMinimapData from "./world_minimap_data";
-import { WorldDims } from "./types/world_dims";
+import { WorldDims } from "renfrew-river-protocol-client";
 import GameWorld from "./world";
 import WorldMapTiledData from "./world_map_tiled_data";
+import WorldMinimapData from "./world_minimap_data";
 
 /**
  * A read-only interface to observe the world.

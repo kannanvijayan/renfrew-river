@@ -8,8 +8,7 @@ import {
 } from './hex';
 import HexMesh from './hex_mesh';
 import WorldMapTiledData from '../../game/world_map_tiled_data';
-import { CellCoord } from '../../game/types/cell_coord';
-import { WorldDims } from '../../game/types/world_dims';
+import { CellCoord, WorldDims } from "renfrew-river-protocol-client";
 
 export type CellMapCallbackApi = {
   ensureMapDataLoaded: (

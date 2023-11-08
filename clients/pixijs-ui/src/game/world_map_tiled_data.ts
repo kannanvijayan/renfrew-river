@@ -1,9 +1,11 @@
-import { CellCoord } from "./types/cell_coord";
-import { Constants } from "../client/protocol/types/constants";
-import { WorldDims } from "./types/world_dims";
+import {
+  CellCoord,
+  GameConstants,
+  WorldDims,
+  INVALID_ANIMAL_ID
+} from "renfrew-river-protocol-client";
 import Deferred from "../util/deferred";
 import MapData from "./map_data";
-import { INVALID_ANIMAL_ID } from "./types/animal_data";
 
 export type WorldMapTiledDataCallbackApi = {
   readMapArea: (opts: {
@@ -25,7 +27,7 @@ const PER_TILE_DIMS: WorldDims = { columns: 256, rows: 256 };
  * tile as needed.
  */
 export default class WorldMapTiledData {
-  public readonly constants: Constants;
+  public readonly constants: GameConstants;
   public readonly worldDims: WorldDims;
   public readonly fullElevations: MapData<"uint16">;
   public readonly elevations: MapData<"uint8">;
@@ -49,7 +51,7 @@ export default class WorldMapTiledData {
   private invalidationListeners: (() => void)[];
 
   constructor(opts: {
-    constants: Constants,
+    constants: GameConstants,
     worldDims: WorldDims,
     loaderApi: WorldMapTiledDataCallbackApi,
   }) {

@@ -1,4 +1,4 @@
-import { GameSettings } from '../../client/protocol/types/settings';
+import { GameSettings } from "renfrew-river-protocol-client";
 import UnconnectedMainMenuView from './unconnected_main_menu_view';
 import TopViewAttributes from '../top_view_attributes';
 import StageView from '../common/stage_view';

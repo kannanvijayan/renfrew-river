@@ -1,15 +1,17 @@
-import GameClient from "./client/game_client";
-import { CellCoord } from "./game/types/cell_coord";
-import { Constants } from "./client/protocol/types/constants";
-import { GameSettings } from "./client/protocol/types/settings";
-import { WorldDims } from "./game/types/world_dims";
+import GameClient, {
+  CellCoord,
+  GameConstants,
+  GameSettings,
+  WorldDims,
+  TurnNo,
+  CellInfo,
+  AnimalData,
+  AnimalId,
+} from "renfrew-river-protocol-client"
 import GameWorld from "./game/world";
 import { ProgressCallback } from "./util/progress_tracking";
 import TopView from "./view/top_view";
 import assert from "./util/assert";
-import { TurnNo } from "./game/types/turn_no";
-import { CellInfo } from "./game/types/cell_info";
-import { AnimalData, AnimalId } from "./game/types/animal_data";
 
 /**
  * Top-level manager of game.
@@ -19,7 +21,7 @@ export default class Game {
 
   private view: TopView;
   private client: GameClient | null;
-  private constants: Constants | null;
+  private constants: GameConstants | null;
   private minWorldDims: WorldDims | null;
   private maxWorldDims: WorldDims | null;
   private currentGameSettings: GameSettings | null;

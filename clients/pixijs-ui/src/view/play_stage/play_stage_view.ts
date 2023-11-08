@@ -3,9 +3,12 @@ import TopViewAttributes from '../top_view_attributes';
 import StageView from '../common/stage_view';
 import MapView from './map_view';
 import WorldObserver from '../../game/world_observer';
-import { CellCoord } from '../../game/types/cell_coord';
-import { CellInfo } from '../../game/types/cell_info';
-import { AnimalData, AnimalId } from '../../game/types/animal_data';
+import {
+  CellCoord,
+  CellInfo,
+  AnimalData,
+  AnimalId,
+} from "renfrew-river-protocol-client";
 
 export interface PlayStageCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;

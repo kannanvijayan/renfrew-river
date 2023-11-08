@@ -1,14 +1,17 @@
 
 import * as PIXI from 'pixi.js';
+import {
+  GameSettings,
+  CellInfo,
+  CellCoord,
+  AnimalData,
+  AnimalId
+} from "renfrew-river-protocol-client";
 import TopViewAttributes from './top_view_attributes';
 import StartStageView from './start_stage/start_stage_view';
 import PlayStageView from './play_stage/play_stage_view';
-import { GameSettings } from '../client/protocol/types/settings';
 import { ProgressCallback } from '../util/progress_tracking';
 import WorldObserver from '../game/world_observer';
-import { CellCoord } from '../game/types/cell_coord';
-import { CellInfo } from '../game/types/cell_info';
-import { AnimalData, AnimalId } from '../game/types/animal_data';
 
 export interface TopViewCallbackApi {
   startStage: {

@@ -3,7 +3,7 @@ import * as PIXI_UI from '@pixi/ui';
 import GameMenuTitle from '../common/game_menu_title';
 import GameMenuSubtitle from '../common/game_menu_subtitle';
 import MenuButton from '../common/menu_button';
-import { GameSettings } from '../../client/protocol/types/settings';
+import { GameSettings } from "renfrew-river-protocol-client";
 import ErrorMessage from '../common/error_message';
 
 export type SpecifyGameSettingsCallbackApi = {

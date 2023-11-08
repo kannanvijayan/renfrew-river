@@ -5,9 +5,12 @@ import CellMap from './cell_map';
 import MiniMap from './mini_map';
 import NextTurnButton from './next_turn_button';
 import CellInfoPanel from './cell_info_panel';
-import { CellCoord } from '../../game/types/cell_coord';
-import { CellInfo } from '../../game/types/cell_info';
-import { AnimalData, AnimalId } from '../../game/types/animal_data';
+import {
+  CellCoord,
+  CellInfo,
+  AnimalData,
+  AnimalId
+} from "renfrew-river-protocol-client";
 
 export interface MapViewCallbackApi {
   localizePointerPosition(point: PIXI.IPointData): PIXI.IPointData;

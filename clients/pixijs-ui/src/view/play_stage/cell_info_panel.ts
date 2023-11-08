@@ -1,9 +1,12 @@
 import * as PIXI from "pixi.js";
+import {
+  CellCoord,
+  CellInfo,
+  AnimalData,
+  AnimalId
+} from "renfrew-river-protocol-client";
 import { CellMapObserver } from "./cell_map";
-import { CellCoord } from "../../game/types/cell_coord";
-import { CellInfo } from "../../game/types/cell_info";
 import WorldObserver from "../../game/world_observer";
-import { AnimalData, AnimalId } from "../../game/types/animal_data";
 
 export type CellInfoPanelCallbackApi = {
   getCellInfo: (cell: CellCoord) => Promise<CellInfo>;

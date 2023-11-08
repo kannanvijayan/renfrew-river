@@ -1,17 +1,16 @@
-import { Constants } from "../client/protocol/types/constants";
-import { WorldDims } from "./types/world_dims";
+import { GameConstants, WorldDims } from "renfrew-river-protocol-client";
 import MapData from "./map_data";
 
 /**
  * Holder of mini-map data.
  */
 export default class WorldMinimapData {
-  public readonly constants: Constants;
+  public readonly constants: GameConstants;
   public readonly miniDims: WorldDims;
   public readonly elevations: MapData<"uint8">;
 
   constructor(opts: {
-    constants: Constants,
+    constants: GameConstants,
     miniDims: WorldDims,
   }) {
     this.constants = opts.constants;

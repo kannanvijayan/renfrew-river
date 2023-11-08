@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { CellCoord } from '../../game/types/cell_coord';
+import { CellCoord } from "renfrew-river-protocol-client";
 
 /**
  * The normalized scale of a cell that we base all calculations on.

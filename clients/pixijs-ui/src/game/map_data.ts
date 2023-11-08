@@ -1,5 +1,4 @@
-import { CellCoord } from "./types/cell_coord";
-import { WorldDims } from "./types/world_dims";
+import { CellCoord, WorldDims } from "renfrew-river-protocol-client";
 
 type TypedArrayConstructor = 
   | Uint8ArrayConstructor

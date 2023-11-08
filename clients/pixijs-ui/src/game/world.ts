@@ -1,7 +1,9 @@
-import { CellCoord } from "./types/cell_coord";
-import { Constants } from "../client/protocol/types/constants";
-import { AnimalData } from "./types/animal_data";
-import { WorldDims } from "./types/world_dims";
+import {
+  CellCoord,
+  GameConstants,
+  AnimalData,
+  WorldDims
+} from "renfrew-river-protocol-client";
 import WorldMapTiledData from "./world_map_tiled_data";
 import WorldObserver from "./world_observer";
 import WorldMinimapData from "./world_minimap_data";
@@ -25,7 +27,7 @@ export default class GameWorld {
   public readonly animals: AnimalData[];
 
   constructor(opts: {
-    constants: Constants,
+    constants: GameConstants,
     worldDims: WorldDims,
     miniDims: WorldDims,
     loaderApi: GameWorldLoaderApi,
