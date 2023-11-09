@@ -12,6 +12,7 @@ import GameWorld from "./game/world";
 import { ProgressCallback } from "./util/progress_tracking";
 import TopView from "./view/top_view";
 import assert from "./util/assert";
+import { GameClientTransportListeners } from "renfrew-river-protocol-client/dist/game_client";
 
 /**
  * Top-level manager of game.
@@ -108,10 +109,45 @@ export default class Game {
     if (this.client) {
       throw new Error("Game.connectToServer: Already connected to server");
     }
+    const ws = new WebSocket(server);
+    const transport = {
+      addEventListener<T extends keyof GameClientTransportListeners>(
+        eventType: T,
+        listener: GameClientTransportListeners[T]
+      ): void {
+        switch (eventType) {
+          case "open":
+            ws.addEventListener("open", listener as any);
+            break;
+          case "close":
+            ws.addEventListener("close", listener as any);
+            break;
+          case "error":
+            ws.addEventListener("error", listener as any);
+            break;
+          case "message":
+            ws.addEventListener("message", (event) => {
+              if (typeof event.data !== "string") {
+                throw new Error("Expected string data");
+              }
+              listener(event.data);
+            });
+            break;
+          default:
+            throw new Error(`Unknown event type ${eventType}`);
+        }
+      },
+      close(): void {
+        ws.close();
+      },
+      send(data: string): void {
+        ws.send(data);
+      }
+    };
     // Connect to the server.
     const client = await new Promise<GameClient>((resolve, reject) => {
       const client = new GameClient({
-        url: server,
+        transport,
         callbacks: {
           onConnect: () => {
             console.log("Connected to server", server);
