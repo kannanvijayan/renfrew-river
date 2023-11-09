@@ -18,18 +18,17 @@ var GameClientConnectError;
 })(GameClientConnectError || (exports.GameClientConnectError = GameClientConnectError = {}));
 class GameClient {
     constructor(args) {
-        const { url, callbacks } = args;
-        this.url_ = url;
+        const { transport, callbacks } = args;
         this.callbacks_ = callbacks;
-        this.ws_ = new WebSocket(url);
+        this.transport_ = transport;
         this.responseAwaiters_ = [];
-        this.ws_.addEventListener("open", this.onOpen.bind(this));
-        this.ws_.addEventListener("close", this.onClose.bind(this));
-        this.ws_.addEventListener("error", e => this.onError("Connection failed", e));
-        this.ws_.addEventListener("message", this.onMessage.bind(this));
+        this.transport_.addEventListener("open", this.handleOpen.bind(this));
+        this.transport_.addEventListener("close", this.handleClose.bind(this));
+        this.transport_.addEventListener("error", this.handleError.bind(this));
+        this.transport_.addEventListener("message", this.handleMessage.bind(this));
     }
     disconnect() {
-        this.ws_.close();
+        this.transport_.close();
     }
     getConstants() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -37,7 +36,6 @@ class GameClient {
             if ("Constants" in result) {
                 return result.Constants;
             }
-            console.error("GetConstants: unexpected response", result);
             throw new Error("GetConstants: unexpected response");
         });
     }
@@ -50,7 +48,6 @@ class GameClient {
                 const maxWorldDims = result.DefaultSettings.maxWorldDims;
                 return { settings, minWorldDims, maxWorldDims };
             }
-            console.error("DefaultSettings: unexpected response", result);
             throw new Error("DefaultSettings: unexpected response");
         });
     }
@@ -154,21 +151,19 @@ class GameClient {
         return __awaiter(this, void 0, void 0, function* () {
             // Compose the command to send.
             const msgObj = { [command]: params };
-            console.debug("GameClient.sendCommand: message", msgObj);
             const msg = JSON.stringify(msgObj);
             // Send the command, but only after the response from the
             // current last command has been received.
             if (this.responseAwaiters_.length > 0) {
-                this.responseAwaiters_[this.responseAwaiters_.length - 1].promise.then(() => this.ws_.send(msg));
+                this.responseAwaiters_[this.responseAwaiters_.length - 1].promise.then(() => this.transport_.send(msg));
             }
             else {
-                this.ws_.send(msg);
+                this.transport_.send(msg);
             }
             // Create and push an awaiter for the response.
             let resolve;
             let reject;
             const promise = new Promise((res, rej) => {
-                console.debug("GameClient.sendCommand: awaiter created");
                 resolve = res;
                 reject = rej;
             });
@@ -177,45 +172,37 @@ class GameClient {
             return promise;
         });
     }
-    onOpen() {
-        console.debug("GameClient.onOpen");
+    handleOpen() {
         this.callbacks_.onConnect();
     }
-    onClose() {
+    handleClose() {
         var _a, _b;
-        console.debug("GameClient.onClose");
         for (const awaiter of this.responseAwaiters_) {
             awaiter.reject("Connection closed");
         }
         this.responseAwaiters_ = [];
         (_b = (_a = this.callbacks_).onClose) === null || _b === void 0 ? void 0 : _b.call(_a);
     }
-    onError(msg, err) {
-        console.debug("GameClient.onError", err);
+    handleError(err) {
         for (const awaiter of this.responseAwaiters_) {
-            awaiter.reject(`Connection errored: ${msg}`);
+            if (err instanceof Error) {
+                awaiter.reject(err);
+            }
+            else {
+                awaiter.reject(new Error(`Connection error: ${err}`));
+            }
         }
         this.responseAwaiters_ = [];
-        this.callbacks_.onError(msg);
+        this.callbacks_.onError(err);
     }
-    onMessage(msg) {
-        console.debug("GameClient.onMessage");
+    handleMessage(msg) {
         // Parse a text message.
-        if (typeof msg.data === "string") {
-            const data = JSON.parse(msg.data);
-            console.debug("GameClient.onMessage: data", data);
-            const awaiter = this.responseAwaiters_.shift();
-            if (!awaiter) {
-                console.error("GameClient.onMessage: no awaiter for message", data);
-                throw new Error("GameClient.onMessage: no awaiter");
-            }
-            awaiter.resolve(data);
-            console.debug("GameClient.onMessage: awaiter resolved");
+        const data = JSON.parse(msg);
+        const awaiter = this.responseAwaiters_.shift();
+        if (!awaiter) {
+            throw new Error("GameClient.onMessage: no awaiter");
         }
-        else {
-            console.error("GameClient.onMessage: unexpected message type", typeof msg.data);
-            throw new Error("GameClient.onMessage: unexpected message type");
-        }
+        awaiter.resolve(data);
     }
 }
 exports.default = GameClient;
