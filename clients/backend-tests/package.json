@@ -1,0 +1,26 @@
+{
+  "name": "renfrew-river-backend-tests",
+  "version": "0.1.0",
+  "description": "Backend testing for Renfrew River",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "lint": "eslint --ext .ts src"
+  },
+  "author": "Kannan Vijayan <kv-github@kvijayan.com>",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "1.0.0",
+    "@types/node": "20.9.0",
+    "@types/ws": "^8.5.9",
+    "@typescript-eslint/eslint-plugin": "6.9.1",
+    "eslint": "8.53.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "renfrew-river-protocol-client": "file:../protocol-client",
+    "ws": "^8.14.2"
+  }
+}
