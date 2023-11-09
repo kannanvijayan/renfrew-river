@@ -1,5 +1,6 @@
 
 mod settings;
+mod extra_flags;
 mod game;
 mod server;
 mod command;
@@ -13,6 +14,7 @@ pub(crate) use self::{
   game::Game,
   command::CommandEnvelope,
   response::ResponseEnvelope,
+  extra_flags::ExtraFlags,
 };
 pub use self::protocol_documentation::{
   ProtocolDocumentation,

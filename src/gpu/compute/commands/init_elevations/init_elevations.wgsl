@@ -1,29 +1,4 @@
 
-struct Uniforms {
-  world_dims: vec2<u32>,
-  seed: u32,
-  significant_bits: u32,
-};
-
-struct Buffer2D {
-  values: array<u32>,
-};
-
-const PERLIN_OCTAVE_MAX_SCALE: f32 = 5.0;
-const PERLIN_OCTAVE_MIN: f32 = 128.0;
-const PERLIN_OCTAVE_STEP: f32 = 2.0;
-const PERLIN_OCTAVE_CRAGGINESS: f32 = 1.05;
-
-const BORDER_FADE_WIDTH_PERCENT: f32 = 10.0;
-
-@group(0) @binding(0)
-var<uniform> uniforms: Uniforms;
-
-@group(0) @binding(1)
-var<storage, write> surface: Buffer2D;
-
-const PI: f32 = 3.1415926535897932384626;
-
 // LIBRARY(xxhash)
 fn rot_left(val: vec4<u32>, rot: vec4<u32>) -> vec4<u32> {
   return (val << rot) | (val >> (32u - rot));
@@ -51,6 +26,34 @@ fn xxhash(seed: u32, values: vec4<u32>) -> u32 {
   return res ^ (res >> 16u);
 }
 // END_LIBRARY(xxhash)
+
+struct Uniforms {
+  world_dims: vec2<u32>,
+  seed: u32,
+  significant_bits: u32,
+  testpattern_flags: u32,
+};
+
+struct Buffer2D {
+  values: array<u32>,
+};
+
+const PERLIN_OCTAVE_MAX_SCALE: f32 = 5.0;
+const PERLIN_OCTAVE_MIN: f32 = 128.0;
+const PERLIN_OCTAVE_STEP: f32 = 2.0;
+const PERLIN_OCTAVE_CRAGGINESS: f32 = 1.05;
+
+const BORDER_FADE_WIDTH_PERCENT: f32 = 10.0;
+
+const TESTPATTERN_FLAG_HRUTS: u32 = 1u;
+
+@group(0) @binding(0)
+var<uniform> uniforms: Uniforms;
+
+@group(0) @binding(1)
+var<storage, write> surface: Buffer2D;
+
+const PI: f32 = 3.1415926535897932384626;
 
 fn swizzle(seed: u32, adjust: u32, x: u32, y: u32) -> f32 {
   let a = xxhash(seed, vec4<u32>(adjust, x, y, 0u));
@@ -193,8 +196,15 @@ fn init_elevations_u16(
   if ((x2 * 2u) >= uniforms.world_dims[0] || y >= uniforms.world_dims[1]) {
     return;
   }
-  let v0 = gen_u16_value(x2 * 2u, y);
-  let v1 = gen_u16_value(x2 * 2u + 1u, y);
+  var v0: u32;
+  var v1: u32;
+  if (uniforms.testpattern_flags == TESTPATTERN_FLAG_HRUTS) {
+    v0 = gen_testpattern_u16_value(x2 * 2u, y);
+    v1 = gen_testpattern_u16_value(x2 * 2u + 1u, y);
+  } else {
+    v0 = gen_u16_value(x2 * 2u, y);
+    v1 = gen_u16_value(x2 * 2u + 1u, y);
+  }
   let v = (v1 << 16u) | v0;
 
   let offset = (y * (uniforms.world_dims[0] / 2u)) + x2;
@@ -218,24 +228,4 @@ fn gen_testpattern_u16_value(x: u32, y: u32) -> u32 {
       return 0xFFFFu;
     }
   }
-}
-
-@compute
-@workgroup_size(8, 8)
-fn init_elevations_testpattern_u16(
-  @builtin(global_invocation_id) global_id: vec3<u32>
-) {
-  // We generate 2 values per invocation.
-  let x2 = global_id.x;
-  let y = global_id.y;
-  // Bounds check.
-  if ((x2 * 2u) >= uniforms.world_dims[0] || y >= uniforms.world_dims[1]) {
-    return;
-  }
-  let v0 = gen_testpattern_u16_value(x2 * 2u, y);
-  let v1 = gen_testpattern_u16_value(x2 * 2u + 1u, y);
-  let v = (v1 << 16u) | v0;
-
-  let offset = (y * (uniforms.world_dims[0] / 2u)) + x2;
-  surface.values[offset] = v;
 }

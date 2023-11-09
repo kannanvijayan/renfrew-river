@@ -13,6 +13,16 @@ use crate::{
 const WORKGROUP_X: u32 = 8;
 const WORKGROUP_Y: u32 = 8;
 
+// Test pattern flags.
+const TEST_PATTERN_NONE: u32 = 0;
+const TEST_PATTERN_HRUTS: u32 = 1;
+fn get_test_pattern_flags(test_pattern: Option<&str>) -> u32 {
+  match test_pattern {
+    Some("hruts") => TEST_PATTERN_HRUTS,
+    _ => TEST_PATTERN_NONE,
+  }
+}
+
 /**
  * Initialize an elevation map.
  */
@@ -21,6 +31,7 @@ pub(crate) fn init_elevations_command(
   encoder: &mut wgpu::CommandEncoder,
   rand_seed: u32,
   target_buffer: &GpuMapBuffer<Elevation>,
+  test_pattern: Option<&str>
 ) {
   debug_assert!(
     std::mem::size_of::<<Elevation as GpuBufferDataType>::NativeType>() == 2
@@ -30,12 +41,16 @@ pub(crate) fn init_elevations_command(
   let world_dims = target_buffer.dims();
   let world_columns = world_dims.columns_u32();
   let world_rows = world_dims.rows_u32();
+  let test_pattern_flags = get_test_pattern_flags(test_pattern);
 
   // Create the uniform buffer.
-  let config_uniforms_u32: [u32; 4] = [
-    world_columns, world_rows,
+  let config_uniforms_u32: [u32; 6] = [
+    world_columns,
+    world_rows,
     rand_seed,
-    ELEVATION_BITS as u32
+    ELEVATION_BITS as u32,
+    test_pattern_flags,
+    0
   ];
   let config_uniforms_u8: &[u8] = bytemuck::cast_slice(&config_uniforms_u32);
   let uniform_buffer = device.create_uniform_buffer(

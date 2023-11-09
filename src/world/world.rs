@@ -27,11 +27,11 @@ pub(crate) struct World {
 }
 impl World {
   pub(crate) fn new(init_params: InitParams) -> World {
-    let world_dims = init_params.world_dims();
-    let rand_seed = init_params.rand_seed();
+    let InitParams { world_dims, rand_seed, extra_flags } = init_params;
     let gpu_world = GpuWorld::new(GpuWorldParams {
       world_dims,
       rand_seed,
+      extra_flags,
     });
     let turn_no = TurnNo(0);
     World {

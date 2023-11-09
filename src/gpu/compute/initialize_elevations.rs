@@ -16,7 +16,8 @@ use super::commands::init_elevations_command;
 pub(crate) async fn initialize_elevations(
   device: &GpuDevice,
   seed: u32,
-  target_buffer: &GpuMapBuffer<Elevation>
+  target_buffer: &GpuMapBuffer<Elevation>,
+  test_pattern: Option<&str>,
 ) {
   debug_assert!(
     std::mem::size_of::<
@@ -32,7 +33,13 @@ pub(crate) async fn initialize_elevations(
     }
   );
 
-  init_elevations_command(device, &mut encoder, seed, target_buffer);
+  init_elevations_command(
+    device,
+    &mut encoder,
+    seed,
+    target_buffer,
+    test_pattern
+  );
 
   let prior_time = std::time::Instant::now();
 

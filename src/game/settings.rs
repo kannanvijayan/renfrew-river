@@ -1,6 +1,9 @@
 use serde;
 use crate::{
-  game::constants::{ MIN_WORLD_DIMS, MAX_WORLD_DIMS },
+  game::{
+    ExtraFlags,
+    constants::{ MIN_WORLD_DIMS, MAX_WORLD_DIMS },
+  },
   world::{ WorldDims, InitParams },
 };
 
@@ -12,6 +15,10 @@ pub(crate) struct GameSettings {
 
   #[serde(rename = "randSeed")]
   rand_seed: u64,
+
+  #[serde(rename = "extraFlags")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  extra_flags: Option<String>,
 }
 impl GameSettings {
   pub(crate) fn new(world_dims: WorldDims, rand_seed: u64) -> GameSettings {
@@ -22,6 +29,7 @@ impl GameSettings {
     GameSettings {
       world_dims,
       rand_seed,
+      extra_flags: None,
     }
   }
   pub(crate) fn default() -> GameSettings {
@@ -32,13 +40,16 @@ impl GameSettings {
     &self.world_dims
   }
 
-  pub(crate) fn rand_seed(&self) -> u64 {
-    self.rand_seed
+  pub(crate) fn with_extra_flags(mut self, extra_flags: &str) -> Self {
+    self.extra_flags = Some(extra_flags.to_string());
+    self
   }
 
   // Convert into world init params.
   pub(crate) fn world_init_params(&self) -> InitParams {
-    InitParams::new(self.world_dims, self.rand_seed)
+    let extra_flags_str = self.extra_flags.as_ref().map(|s| s.as_str());
+    let extra_flags = ExtraFlags::from_str(extra_flags_str);
+    InitParams::new(self.world_dims, self.rand_seed, extra_flags)
   }
 }
 

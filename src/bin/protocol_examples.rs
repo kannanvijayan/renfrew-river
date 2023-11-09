@@ -12,8 +12,11 @@ fn main() {
     println!("");
     println!("{}", proto_ex.description);
     println!("");
-    for note in proto_ex.notes {
-      println!("  * {}", note);
+    if proto_ex.notes.len() > 0 {
+      for note in proto_ex.notes {
+        println!("  * {}", note);
+      }
+      println!("");
     }
     for cmd in proto_ex.command_examples {
       println!("### Command");

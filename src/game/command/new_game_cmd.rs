@@ -69,13 +69,18 @@ impl Command for NewGameCmd {
     let new_game_example = NewGameCmd {
       settings: GameSettings::default(),
     };
+    let new_game_example2 = NewGameCmd {
+      settings:
+        GameSettings::default()
+          .with_extra_flags("elevations.testPattern=ruts"),
+    };
 
     let new_game_ok_response_example = NewGameRsp::Ok;
     let new_game_failed_response_example = NewGameRsp::Failed(
       FailedResponse::new("Failed to start game".to_string())
     );
     (
-      vec![new_game_example],
+      vec![new_game_example, new_game_example2],
       vec![
         new_game_ok_response_example,
         new_game_failed_response_example,
@@ -84,7 +89,9 @@ impl Command for NewGameCmd {
   }
   fn protocol_notes() -> Vec<String> {
     vec![
-      "Width and height must both be a multiple of 100".to_string(),
+      "Fields `width` and `height` must be a multiple of 100".to_string(),
+      "The `extraFlags` field is optional, and is used to".to_string()
+        + " configure undocumented features"
     ]
   }
 }

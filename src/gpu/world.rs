@@ -1,3 +1,4 @@
+use log;
 use futures;
 use crate::{
   gpu::{
@@ -24,7 +25,10 @@ use crate::{
     AnimalData,
     CellInfo,
   },
-  game::constants,
+  game::{
+    constants,
+    ExtraFlags
+  },
 };
 
 /**
@@ -33,6 +37,7 @@ use crate::{
 pub(crate) struct GpuWorldParams {
   pub(crate) world_dims: WorldDims,
   pub(crate) rand_seed: u64,
+  pub(crate) extra_flags: ExtraFlags,
 }
 
 /**
@@ -43,6 +48,7 @@ pub(crate) struct GpuWorld {
 
   world_dims: WorldDims,
   rand_seed: u64,
+  extra_flags: ExtraFlags,
 
   // The terrain map.
   elevation_map: GpuMapBuffer<Elevation>,
@@ -55,7 +61,7 @@ pub(crate) struct GpuWorld {
 }
 impl GpuWorld {
   pub(crate) fn new(init_params: GpuWorldParams) -> GpuWorld {
-    let GpuWorldParams { world_dims, rand_seed } = init_params;
+    let GpuWorldParams { world_dims, rand_seed, extra_flags } = init_params;
     let device = futures::executor::block_on(GpuDevice::new());
     let elevation_map = GpuMapBuffer::new(
       &device,
@@ -85,6 +91,7 @@ impl GpuWorld {
       device,
       world_dims,
       rand_seed,
+      extra_flags,
       elevation_map,
       animals_list,
       animals_map,
@@ -92,11 +99,16 @@ impl GpuWorld {
   }
 
   pub(crate) fn init_elevations(&self) {
+    log::info!("INIT_ELEVATIONS EXTRA_FLAGS={:?}", self.extra_flags);
+    let test_pattern =
+      self.extra_flags.get_string("elevations.testPattern");
+    log::info!("INIT_ELEVATIONS TEST_PATTERN={:?}", test_pattern);
     futures::executor::block_on(async {
       initialize_elevations(
         &self.device,
         self.rand_seed as u32,
-        &self.elevation_map
+        &self.elevation_map,
+        test_pattern,
       ).await
     });
   }
