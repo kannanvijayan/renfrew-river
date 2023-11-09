@@ -16,14 +16,32 @@ import {
   ReadMapDataOutputNameMap
 } from "./protocol/commands/read_map_data_cmd";
 
+export type GameClientTransportListeners = {
+  open: () => void;
+  close: () => void;
+  error: (err: unknown) => void;
+  message: (msg: string) => void;
+};
+
+/** The transport used by the game client to talk to the game server. */
+export interface GameClientTransport {
+  addEventListener(type: "open", listener: () => void): void;
+  addEventListener(type: "close", listener: () => void): void;
+  addEventListener(type: "error", listener: (error?: unknown) => void): void;
+  addEventListener(type: "message", listener: (message: string) => void): void;
+
+  close(): void;
+  send(data: string): void;
+}
+
 export type GameClientArgs = {
-  url: string;
+  transport: GameClientTransport;
   callbacks: GameClientCallbacks;
 };
 
 export type GameClientCallbacks = {
   onConnect: () => void;
-  onError: (msg: string) => void;
+  onError: (err: unknown) => void;
   onClose?: () => void;
 };
 
@@ -40,32 +58,28 @@ type ResponseAwaiter = {
 };
 
 export default class GameClient {
-  // Websocket URL to connect to.
-  private readonly url_: string;
-
   // Callbacks for the game client.
   private readonly callbacks_: GameClientCallbacks;
 
-  // The websocket connection.
-  private readonly ws_: WebSocket;
+  // The transport for the client.
+  private readonly transport_: GameClientTransport;
 
   // Current command response awaiter.
   private responseAwaiters_: ResponseAwaiter[];
 
   public constructor(args: GameClientArgs) {
-    const { url, callbacks } = args;
-    this.url_ = url;
+    const { transport, callbacks } = args;
     this.callbacks_ = callbacks;
-    this.ws_ = new WebSocket(url);
+    this.transport_ = transport;
     this.responseAwaiters_ = [];
-    this.ws_.addEventListener("open", this.onOpen.bind(this));
-    this.ws_.addEventListener("close", this.onClose.bind(this));
-    this.ws_.addEventListener("error", e => this.onError("Connection failed", e));
-    this.ws_.addEventListener("message", this.onMessage.bind(this));
+    this.transport_.addEventListener("open", this.handleOpen.bind(this));
+    this.transport_.addEventListener("close", this.handleClose.bind(this));
+    this.transport_.addEventListener("error", this.handleError.bind(this));
+    this.transport_.addEventListener("message", this.handleMessage.bind(this));
   }
 
   public disconnect(): void {
-    this.ws_.close();
+    this.transport_.close();
   }
 
   public async getConstants(): Promise<GameConstants> {
@@ -73,7 +87,6 @@ export default class GameClient {
     if ("Constants" in result) {
       return result.Constants;
     }
-    console.error("GetConstants: unexpected response", result);
     throw new Error("GetConstants: unexpected response");
   }
 
@@ -91,7 +104,6 @@ export default class GameClient {
       const maxWorldDims = result.DefaultSettings.maxWorldDims;
       return { settings, minWorldDims, maxWorldDims };
     }
-    console.error("DefaultSettings: unexpected response", result);
     throw new Error("DefaultSettings: unexpected response");
   }
 
@@ -188,24 +200,22 @@ export default class GameClient {
   ): Promise<ProtocolCommandResponse<T>> {
     // Compose the command to send.
     const msgObj = { [command]: params };
-    console.debug("GameClient.sendCommand: message", msgObj);
     const msg = JSON.stringify(msgObj);
 
     // Send the command, but only after the response from the
     // current last command has been received.
     if (this.responseAwaiters_.length > 0) {
       this.responseAwaiters_[this.responseAwaiters_.length - 1].promise.then(
-        () => this.ws_.send(msg)
+        () => this.transport_.send(msg)
       );
     } else {
-      this.ws_.send(msg);
+      this.transport_.send(msg);
     }
 
     // Create and push an awaiter for the response.
     let resolve: unknown;
     let reject: unknown;
     const promise = new Promise<ProtocolCommandResponse<T>>((res, rej) => {
-      console.debug("GameClient.sendCommand: awaiter created");
       resolve = res;
       reject = rej;
     });
@@ -215,13 +225,11 @@ export default class GameClient {
     return promise;
   }
 
-  private onOpen(): void {
-    console.debug("GameClient.onOpen");
+  private handleOpen(): void {
     this.callbacks_.onConnect();
   }
 
-  private onClose(): void {
-    console.debug("GameClient.onClose");
+  private handleClose(): void {
     for (const awaiter of this.responseAwaiters_) {
       awaiter.reject("Connection closed");
     }
@@ -229,35 +237,25 @@ export default class GameClient {
     this.callbacks_.onClose?.();
   }
 
-  private onError(msg: string, err?: unknown): void {
-    console.debug("GameClient.onError", err);
+  private handleError(err?: unknown): void {
     for (const awaiter of this.responseAwaiters_) {
-      awaiter.reject(`Connection errored: ${msg}`);
+      if (err instanceof Error) {
+        awaiter.reject(err);
+      } else {
+        awaiter.reject(new Error(`Connection error: ${err}`));
+      }
     }
     this.responseAwaiters_ = [];
-    this.callbacks_.onError(msg);
+    this.callbacks_.onError(err);
   }
 
-  private onMessage(msg: MessageEvent): void {
-    console.debug("GameClient.onMessage");
+  private handleMessage(msg: string): void {
     // Parse a text message.
-    if (typeof msg.data === "string") {
-      const data = JSON.parse(msg.data);
-      console.debug("GameClient.onMessage: data", data);
-
-      const awaiter = this.responseAwaiters_.shift();
-      if (!awaiter) {
-        console.error("GameClient.onMessage: no awaiter for message", data);
-        throw new Error("GameClient.onMessage: no awaiter");
-      }
-      awaiter.resolve(data);
-      console.debug("GameClient.onMessage: awaiter resolved");
-    } else {
-      console.error(
-        "GameClient.onMessage: unexpected message type",
-        typeof msg.data
-      );
-      throw new Error("GameClient.onMessage: unexpected message type");
+    const data = JSON.parse(msg);
+    const awaiter = this.responseAwaiters_.shift();
+    if (!awaiter) {
+      throw new Error("GameClient.onMessage: no awaiter");
     }
+    awaiter.resolve(data);
   }
 }
