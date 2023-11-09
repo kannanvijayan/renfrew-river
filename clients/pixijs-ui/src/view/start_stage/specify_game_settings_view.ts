@@ -8,7 +8,6 @@ import ErrorMessage from '../common/error_message';
 
 export type SpecifyGameSettingsCallbackApi = {
   validateGameSettings(settings: GameSettings, errors: string[]): boolean;
-
   switchToConnectedMainMenuView(settings: GameSettings | null): void;
 }
 
@@ -16,6 +15,7 @@ type SpecifyGameSettingsData = {
   columns: string;
   rows: string;
   randSeed: string;
+  extraFlags: string;
 };
 
 export default class SpecifyGameSettingsView extends PIXI.Container {
@@ -31,11 +31,12 @@ export default class SpecifyGameSettingsView extends PIXI.Container {
     super();
 
     this.callbackApi = callbackApi;
-    const { worldDims, randSeed } = currentGameSettings;
+    const { worldDims, randSeed, extraFlags } = currentGameSettings;
     this.data = {
       columns: worldDims.columns.toString(),
       rows: worldDims.rows.toString(),
       randSeed: randSeed.toString(),
+      extraFlags: extraFlags?.toString() || "",
     };
     this.graphics = new PIXI.Graphics();
     this.build();
@@ -74,6 +75,7 @@ export default class SpecifyGameSettingsView extends PIXI.Container {
         rows: parseInt(this.data.rows),
       },
       randSeed: parseInt(this.data.randSeed),
+      extraFlags: this.data.extraFlags,
     };
     if (!this.callbackApi.validateGameSettings(newGameSettings, errors)) {
       this.rebuildWithError(`Invalid game settings: ${errors[0]}`);
@@ -131,11 +133,22 @@ export default class SpecifyGameSettingsView extends PIXI.Container {
     randSeedInput.x = 50;
     randSeedInput.y = randSeedInputLabel.y + randSeedInputLabel.height + 5;
 
+    const extraFlagsInputLabel = new PIXI.Text("Extra Flags", {
+      fontSize: 15,
+      fontVariant: "small-caps",
+    });
+    extraFlagsInputLabel.x = 50;
+    extraFlagsInputLabel.y = randSeedInput.y + randSeedInput.height + 25;
+
+    const extraFlagsInput = new ExtraFlagsInput({ data: this.data });
+    extraFlagsInput.x = 50;
+    extraFlagsInput.y = extraFlagsInputLabel.y + extraFlagsInputLabel.height + 5;
+
     let validationErrorText: ErrorMessage | null = null;
     if (validationError) {
       validationErrorText = new ErrorMessage({ text: validationError });
       validationErrorText.x = 50;
-      validationErrorText.y = randSeedInput.y + randSeedInput.height + 25;
+      validationErrorText.y = extraFlagsInput.y + extraFlagsInput.height + 25;
     }
 
     const okButton = new OkButton({
@@ -152,7 +165,7 @@ export default class SpecifyGameSettingsView extends PIXI.Container {
     if (validationErrorText) {
       okButton.y = validationErrorText.y + validationErrorText.height + 25;
     } else {
-      okButton.y = randSeedInput.y + randSeedInput.height + 25;
+      okButton.y = extraFlagsInput.y + extraFlagsInput.height + 25;
     }
     
     const cancelButton = new CancelButton({
@@ -164,7 +177,7 @@ export default class SpecifyGameSettingsView extends PIXI.Container {
     if (validationErrorText) {
       cancelButton.y = validationErrorText.y + validationErrorText.height + 25;
     } else {
-      cancelButton.y = randSeedInput.y + randSeedInput.height + 25;
+      cancelButton.y = extraFlagsInput.y + extraFlagsInput.height + 25;
     }
 
     this.graphics.addChild(menuTitle);
@@ -175,6 +188,8 @@ export default class SpecifyGameSettingsView extends PIXI.Container {
     this.graphics.addChild(heightInput);
     this.graphics.addChild(randSeedInputLabel);
     this.graphics.addChild(randSeedInput);
+    this.graphics.addChild(extraFlagsInputLabel);
+    this.graphics.addChild(extraFlagsInput);
     if (validationErrorText) {
       this.graphics.addChild(validationErrorText);
     }
@@ -246,6 +261,26 @@ class RandSeedInput extends PIXI_UI.Input {
 
     this.onChange.connect((text) => {
       data.randSeed = text;
+    });
+  }
+}
+
+class ExtraFlagsInput extends PIXI_UI.Input {
+  constructor(opts: { data: SpecifyGameSettingsData }) {
+    const { data } = opts;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x808040);
+    bg.lineStyle(0);
+    bg.drawRect(0, 0, 300, 60);
+    bg.endFill();
+    super({
+      bg,
+      padding: 10,
+      value: data.extraFlags,
+    });
+
+    this.onChange.connect((text) => {
+      data.extraFlags = text;
     });
   }
 }
