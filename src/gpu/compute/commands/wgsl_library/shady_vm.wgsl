@@ -7,15 +7,17 @@
  *
  * ```
  * Register file:
- *   r0-r31: 32 x 32-bit registers
+ *   r0-r29: 30 x 32-bit registers, read-write general purpose
+ *   r30: 1 x 32-bit register, read-only, always zero
  *   r32-r79: 48 x 32-bit registers, only usable as source operands
- *   r80-r95: UNUSED
+ *   r80-r96: UNUSED
  *
  * Special registers:
- *   r96: program counter
- *   r97: flags register
- *   r98: call stack depth
- *   r99-123: UNUSED
+ *   r112: program counter
+ *   r113: flags register
+ *   r114: call stack depth
+ *   r115: error code
+ *   r116-123: UNUSED
  * 
  *   r124: call-stack register 3
  *   r125: call-stack register 2
@@ -92,7 +94,7 @@
  *     - 0 => all flags must be set, 1 => any flag must be set
  *   * KK (2 bits)
  *     - branch kind
- *     - 00 => goto, 01 => call, 10 => return
+ *     - 00 => goto, 01 => call, 10 => return, 11 => end
  * ```
  */
 
@@ -213,54 +215,109 @@ const SHADY_BCOP_INS_ARITH_KIND_DIV: u32 = 2u;
 const SHADY_BCOP_INS_ARITH_KIND_MOD: u32 = 3u;
 
 /** Immediate instruction kinds. */
-const SHADY_BCOP_INS_IMMED_KIND_SET = 0u;
-const SHADY_BCOP_INS_IMMED_KIND_XOR = 1u;
-const SHADY_BCOP_INS_IMMED_KIND_AND = 2u;
-const SHADY_BCOP_INS_IMMED_KIND_OR = 3u;
+const SHADY_BCOP_INS_IMMED_KIND_SET: u32 = 0u;
+const SHADY_BCOP_INS_IMMED_KIND_XOR: u32 = 1u;
+const SHADY_BCOP_INS_IMMED_KIND_AND: u32 = 2u;
+const SHADY_BCOP_INS_IMMED_KIND_OR: u32 = 3u;
 
 /** Control flow instruction kinds. */
-const SHADY_BCOP_INS_CFLOW_KIND_GOTO = 0u;
-const SHADY_BCOP_INS_CFLOW_KIND_CALL = 1u;
-const SHADY_BCOP_INS_CFLOW_KIND_RET = 2u;
+const SHADY_BCOP_INS_CFLOW_KIND_GOTO: u32 = 0u;
+const SHADY_BCOP_INS_CFLOW_KIND_CALL: u32 = 1u;
+const SHADY_BCOP_INS_CFLOW_KIND_RET: u32 = 2u;
+const SHADY_BCOP_INS_CFLOW_KIND_END: u32 = 3u;
+
+/** Flags query kinds. */
+const SHADY_BCOP_CFLOW_QUERY_ALL: u32 = 0u;
+const SHADY_BCOP_CFLOW_QUERY_ANY: u32 = 1u;
+
+/** Flags bit meanings. */
+const SHADY_BCOP_FLAGS_BIT_ZERO: u32 = 1u;
+const SHADY_BCOP_FLAGS_BIT_NEGATIVE: u32 = 2u;
+const SHADY_BCOP_FLAGS_BIT_POSITIVE: u32 = 4u;
+const SHADY_BCOP_FLAGS_BIT_HIGH: u32 = 8u;
+const SHADY_BCOP_FLAGS_BIT_ALWAYS: u32 = 16u;
+
+/** Offsets of special registers. */
+const SHADY_REG_OFFSET_PC: u32 = 96u;
+const SHADY_REG_OFFSET_FL: u32 = 97u;
+const SHADY_REG_OFFSET_CD: u32 = 98u;
+const SHADY_REG_OFFSET_EC: u32 = 99u;
+
+/** Start offset of the call stack. (callstack grows down)  */
+const SHADY_CALLSTACK_OFFSET: u32 = 127u;
+const SHADY_CALLDEPTH_MAX: u32 = 4u;
+
+/** Error codes. */
+const SHADY_EC_NONE: u32 = 0u;
+const SHADY_EC_INVALID_INSTRUCTION: u32 = 1u;
+const SHADY_EC_CALLSTACK_OVERFLOW: u32 = 2u;
+const SHADY_EC_CALLSTACK_UNDERFLOW: u32 = 3u;
+const SHADY_EC_SANITY: u32 = 4u;
+
+/** PC that marks the end of the program. */
+const SHADY_PC_END: u32 = 0xFFFFFFFFu;
+
 
 /** Access to the register file and call stack. */
-struct ShadyRegistersAndCallStack {
-  regs: array<u32, 120>,
-  callstack: array<u32, 8>,
+struct ShadyRegisterFile {
+  regs: array<u32, 128>,
+}
+
+/** Initialize private pointers from a pointer to the full struct. */
+fn shady_init_ptrs(
+  regfile: ptr<private, ShadyRegisterFile>,
+  flags: ptr<private, u32>,
+  pc: ptr<private, u32>,
+  cd: ptr<private, u32>
+) {
+  *flags = (*regfile).regs[SHADY_REG_OFFSET_FL];
+  *pc = (*regfile).regs[SHADY_REG_OFFSET_PC];
+  *cd = (*regfile).regs[SHADY_REG_OFFSET_CD];
+}
+
+/** Update register file struct. */
+fn shady_writeback_ptrs(
+  regfile: ptr<private, ShadyRegisterFile>,
+  flags: ptr<private, u32>,
+  pc: ptr<private, u32>,
+  cd: ptr<private, u32>
+) {
+  (*regfile).regs[SHADY_REG_OFFSET_FL] = *flags;
+  (*regfile).regs[SHADY_REG_OFFSET_PC] = *pc;
+  (*regfile).regs[SHADY_REG_OFFSET_CD] = *cd;
 }
 
 /** Execute an instruction. */
 fn shady_ins_exec(
   ins: u32,
-  regs: ptr<private, ShadyRegistersAndCallStack>,
+  regfile: ptr<private, ShadyRegisterFile>,
   flags: ptr<private, u32>,
-  pc: ptr<private, u32>
-) {
+  pc: ptr<private, u32>,
+  cd: ptr<private, u32>
+) -> u32 {
   let fam = shady_bcop_ins_get_insfam(ins);
   let kind = shady_bcop_ins_get_kind(ins);
-  switch fam {
-    case 1u: {
-      shady_ins_exec_arith(ins, kind, regs, flags, pc);
-    }
-    case 2u: {
-      shady_ins_exec_immed(ins, kind, regs, flags, pc);
-    }
-    case 3u: {
-      shady_ins_exec_cflow(ins, kind, regs, flags, pc);
-    }
-    default: {
-    }
+  if fam == SHADY_BCOP_INS_ARITH {
+    return shady_ins_exec_arith(ins, kind, regfile, flags, pc);
   }
+  if fam == SHADY_BCOP_INS_IMMED {
+    return shady_ins_exec_immed(ins, kind, regfile, flags, pc);
+  }
+  if fam == SHADY_BCOP_INS_CFLOW {
+    return shady_ins_exec_cflow(ins, kind, regfile, flags, pc, cd);
+  }
+  // Unrecognized instruction family.
+  return set_error_and_end(regfile, SHADY_EC_INVALID_INSTRUCTION);
 }
 
 /** Execute an arithmetic instruction. */
 fn shady_ins_exec_arith(
   ins: u32,
   kind: u32,
-  regs: ptr<private, ShadyRegistersAndCallStack>,
+  regfile: ptr<private, ShadyRegisterFile>,
   flags: ptr<private, u32>,
   pc: ptr<private, u32>
-) {
+) -> u32 {
   let srcreg1 = shady_bcop_ins_get_srcreg1(ins);
   let srcreg2 = shady_bcop_ins_get_srcreg2(ins);
   let srcreg2_shift = shady_bcop_ins_get_srcrsh(ins);
@@ -273,9 +330,9 @@ fn shady_ins_exec_arith(
   let flip = shady_bcop_ins_get_flip(ins);
   let dstreg = shady_bcop_ins_get_dstreg(ins);
 
-  var srcval1 = (*regs)[srcreg1];
+  var srcval1 = (*regfile).regs[srcreg1];
 
-  var srcval2 = (*regs)[srcreg2];
+  var srcval2 = (*regfile).regs[srcreg2];
   // Shift and mask.
   srcval2 = (srcval2 >> srcreg2_shift_bits) & srcreg2_mask_val;
   // Use the high-bit to sign extend.
@@ -297,31 +354,35 @@ fn shady_ins_exec_arith(
   }
 
   var result = 0u;
-  switch kind {
-    case 0u: {
-      result = srcval1 + srcval2;
-    }
-    case 1u: {
-      result = srcval1 * srcval2;
-    }
-    case 2u: {
-      result = srcval1 / srcval2;
-    }
-    default: {
-      result = srcval1 % srcval2;
-    }
+  if kind == SHADY_BCOP_INS_ARITH_KIND_ADD {
+    result = srcval1 + srcval2;
+  } else if kind == SHADY_BCOP_INS_ARITH_KIND_MUL {
+    result = srcval1 * srcval2;
+  } else if kind == SHADY_BCOP_INS_ARITH_KIND_DIV {
+    result = srcval1 / srcval2;
+  } else if kind == SHADY_BCOP_INS_ARITH_KIND_MOD {
+    result = srcval1 % srcval2;
+  } else {
+    // Should never get here because of the instruction kind mask.
+    return set_error_and_end(regfile, SHADY_EC_SANITY);
   }
-  (*regs)[dstreg] = result;
+  (*regfile).regs[dstreg] = result;
+
+  // Update flags.
+  *flags = calculate_flags_word(result);
+
+  // Go to next instruction.
+  return *pc + 1u;
 }
 
 /** Execute an immediate instruction. */
 fn shady_ins_exec_immed(
   ins: u32,
   kind: u32,
-  regs: ptr<private, ShadyRegistersAndCallStack>,
+  regfile: ptr<private, ShadyRegisterFile>,
   flags: ptr<private, u32>,
   pc: ptr<private, u32>
-) {
+) -> u32 {
   var immval = shady_bcop_ins_get_immval(ins);
   let immval_sx = shady_bcop_ins_get_sx(ins);
   let immlsh = shady_bcop_ins_get_immlsh(ins);
@@ -335,32 +396,37 @@ fn shady_ins_exec_immed(
   let immlsh_bits = immlsh << 2u;
   immval = immval << immlsh_bits;
 
-  var result = (*regs)[dstreg];
-  switch kind {
-    case 0u: {
-      result = immval;
-    }
-    case 1u: {
-      result = result ^ immval;
-    }
-    case 2u: {
-      result = result & immval;
-    }
-    default: {
-      result = result | immval;
-    }
+  var result = (*regfile).regs[dstreg];
+  if kind == SHADY_BCOP_INS_IMMED_KIND_SET {
+    result = immval;
+  } else if kind == SHADY_BCOP_INS_IMMED_KIND_XOR {
+    result = result ^ immval;
+  } else if kind == SHADY_BCOP_INS_IMMED_KIND_AND {
+    result = result & immval;
+  } else if kind == SHADY_BCOP_INS_IMMED_KIND_OR {
+    result = result | immval;
+  } else {
+    // Should never get here because of the instruction kind mask.
+    return set_error_and_end(regfile, SHADY_EC_SANITY);
   }
-  (*regs)[dstreg] = result;
+  (*regfile).regs[dstreg] = result;
+
+  // Update flags.
+  *flags = calculate_flags_word(result);
+
+  // Go to next instruction.
+  return *pc + 1u;
 }
 
 /** Execute a control flow instruction. */
 fn shady_ins_exec_cflow(
   ins: u32,
   kind: u32,
-  regs: ptr<private, ShadyRegistersAndCallStack>,
+  regfile: ptr<private, ShadyRegisterFile>,
   flags: ptr<private, u32>,
-  pc: ptr<private, u32>
-) {
+  pc: ptr<private, u32>,
+  cd: ptr<private, u32>
+) -> u32 {
   let brtarg = shady_bcop_ins_get_brtarg(ins);
   let chk_flags = shady_bcop_ins_get_brflags(ins);
   let query = shady_bcop_ins_get_brquery(ins);
@@ -370,11 +436,65 @@ fn shady_ins_exec_cflow(
   let flags_set_all = flags_set == chk_flags;
   let flags_set_any = flags_set > 0u;
   var do_branch = false;
-  if query == 0u {
+  if query == SHADY_BCOP_CFLOW_QUERY_ALL {
     do_branch = flags_set_all;
   } else {
     do_branch = flags_set_any;
   }
 
-  // TODO: implement.
+  if ! do_branch {
+    return *pc + 1u;
+  }
+
+  if kind == SHADY_BCOP_INS_CFLOW_KIND_GOTO {
+    return brtarg;
+  }
+  if kind == SHADY_BCOP_INS_CFLOW_KIND_CALL {
+    let cd_val = *cd;
+    if cd_val >= SHADY_CALLDEPTH_MAX {
+      return set_error_and_end(regfile, SHADY_EC_CALLSTACK_OVERFLOW);
+    }
+    (*regfile).regs[SHADY_CALLSTACK_OFFSET - cd_val] = *pc + 1u;
+    *cd = cd_val + 1u;
+    return brtarg;
+  }
+  if kind == SHADY_BCOP_INS_CFLOW_KIND_RET {
+    let cd_val = *cd;
+    if cd_val == 0u {
+      return set_error_and_end(regfile, SHADY_EC_CALLSTACK_UNDERFLOW);
+    }
+    let ret_pc = (*regfile).regs[SHADY_CALLSTACK_OFFSET - cd_val];
+    *cd = cd_val - 1u;
+    return ret_pc;
+  }
+  if kind == SHADY_BCOP_INS_CFLOW_KIND_END {
+    return SHADY_PC_END;
+  }
+  // Should never get here because of the instruction kind mask.
+  return set_error_and_end(regfile, SHADY_EC_SANITY);
+}
+
+fn calculate_flags_word(value: u32) -> u32 {
+  var flags = SHADY_BCOP_FLAGS_BIT_ALWAYS;
+  if value == 0u {
+    flags |= SHADY_BCOP_FLAGS_BIT_ZERO;
+  }
+  if value > 0u {
+    flags |= SHADY_BCOP_FLAGS_BIT_POSITIVE;
+  }
+  if value < 0u {
+    flags |= SHADY_BCOP_FLAGS_BIT_NEGATIVE;
+  }
+  if (value >> 31u) > 0u {
+    flags |= SHADY_BCOP_FLAGS_BIT_HIGH;
+  }
+  return flags;
+}
+
+fn set_error_and_end(
+  regfile: ptr<private, ShadyRegisterFile>,
+  err: u32,
+) -> u32 {
+  (*regfile).regs[SHADY_REG_OFFSET_EC] = err;
+  return SHADY_PC_END;
 }
