@@ -1,138 +1,201 @@
 
-use super::bytecode_format::*;
+use super::bytecode_format as bf;
 
-pub(crate) enum ShadyInstruction {
-  Arithmetic(ShadyArithmeticInstruction),
-  Immediate(ShadyImmediateInstruction),
-  ControlFLow(ShadyControlFlowInstruction),
+#[derive(Copy, Clone, Debug)]
+pub(crate) struct ShadyRegister(u8);
+impl ShadyRegister {
+  pub(crate) const MAX_VALUE: u8 = bf::SHADY_MAX_REG;
+  pub(crate) fn from_u8(value: u8) -> Self {
+    assert!(value <= Self::MAX_VALUE);
+    Self(value)
+  }
+  pub(crate) unsafe fn from_u8_unchecked(value: u8) -> Self {
+    debug_assert!(value <= Self::MAX_VALUE);
+    Self(value)
+  }
+  pub(crate) fn as_u32(&self) -> u32 { self.0 as u32 }
 }
 
-pub(crate) struct ShadyRegister(pub(crate) u8);
-
-/*
- * Arithmetic operations:
- *   TTTT-TSSS SSSS-RRRM MMXN-F??D DDDD-KK01
- *   
- *   * TTTTT (5 bits)
- *     - source register 1
- *   * SSSSSSS (7 bits)
- *     - source register 2
- *   * RRR (3 bits)
- *     - source register 2 right-shift amount
- *     - value multiplied by 4 before shift
- *   * MMM (3 bits)
- *     - source register 2 mask specifier
- *     - 0xf, 0xff, 0xfff, 0xffff
- *   * X (1 bit)
- *     - if set, sign-extend the source register 2 value
- *   * N (1 bit)
- *     - if set, negate source register 2 (after flip)
- *   * F (1 bit)
- *     - if set, flip source registers before operation
- *   * DDDDD (5 bits)
- *     - destination register
- *   * KK (2 bits)
- *     - operation kind
- *     - 00 => add, 01 => mul, 10 => divide, 11 => modulo
- */
-pub(crate) struct ShadyArithmeticInstruction {
-  pub(crate) src_reg1: ShadyRegister,
-  pub(crate) src_reg2: ShadyRegister,
-  pub(crate) src_reg2_rsh: u8,
-  pub(crate) src_reg2_mask: u8,
-  pub(crate) src_reg2_sx: bool,
-  pub(crate) src_reg2_negate: bool,
-  pub(crate) flip: bool,
-  pub(crate) dst_reg: ShadyRegister,
-  pub(crate) kind: ShadyArithmeticKind,
+#[derive(Copy, Clone, Debug)]
+pub(crate) struct ShadyDestRegister(u8);
+impl ShadyDestRegister {
+  pub(crate) const MAX_VALUE: u8 = 62;
+  pub(crate) fn from_u8(value: u8) -> Self {
+    assert!(value <= Self::MAX_VALUE);
+    Self(value)
+  }
+  pub(crate) unsafe fn from_u8_unchecked(value: u8) -> Self {
+    debug_assert!(value <= Self::MAX_VALUE);
+    Self(value)
+  }
+  pub(crate) fn as_u8(&self) -> u8 { self.0 }
+  pub(crate) fn as_u32(&self) -> u32 { self.0 as u32 }
 }
-impl ShadyArithmeticInstruction {
-  pub(crate) fn encode(&self) -> u32 {
-    let mut bcop: u32 = 0;
-    bcop |= (self.src_reg1.0 as u32) << SHADY_BCOP_OFFSET_SRCREG1;
-    bcop |= (self.src_reg2.0 as u32) << SHADY_BCOP_OFFSET_SRCREG2;
-    bcop |= (self.src_reg2_rsh as u32) << SHADY_BCOP_OFFSET_SRCRSH;
-    bcop |= (self.src_reg2_mask as u32) << SHADY_BCOP_OFFSET_SRCMASK;
-    bcop |= (self.src_reg2_sx as u32) << SHADY_BCOP_OFFSET_SX;
-    bcop |= (self.src_reg2_negate as u32) << SHADY_BCOP_OFFSET_NEGATE;
-    bcop |= (self.flip as u32) << SHADY_BCOP_OFFSET_FLIP;
-    bcop |= (self.dst_reg.0 as u32) << SHADY_BCOP_OFFSET_DSTREG;
-    bcop |= (self.kind as u32) << SHADY_BCOP_OFFSET_KIND;
-    bcop
+impl Into<ShadyOperand> for ShadyDestRegister {
+  fn into(self) -> ShadyOperand {
+    ShadyOperand::Register(ShadyRegister::from_u8(self.0))
   }
 }
 
-#[derive(Clone, Copy, Debug)]
-#[repr(u8)]
-pub(crate) enum ShadyArithmeticKind {
-  Add = 0,
-  Mul = 1,
-  Div = 2,
-  Mod = 3,
+#[derive(Copy, Clone, Debug)]
+pub(crate) struct ShadyImmediate(u8);
+impl ShadyImmediate {
+  pub(crate) const MAX_VALUE: u8 = 63;
+  pub(crate) fn from_u8(value: u8) -> Self {
+    assert!(value <= Self::MAX_VALUE);
+    Self(value)
+  }
+  pub(crate) unsafe fn from_u8_unchecked(value: u8) -> Self {
+    debug_assert!(value <= Self::MAX_VALUE);
+    Self(value)
+  }
+  pub(crate) fn as_u8(&self) -> u8 { self.0 }
+  pub(crate) fn as_u32(&self) -> u32 { self.0 as u32 }
+}
+impl Into<ShadyOperand> for ShadyImmediate {
+  fn into(self) -> ShadyOperand {
+    ShadyOperand::Immediate(self)
+  }
 }
 
-/*
- * Immediate operations:
- *   VVVV-VVVV VVVV-VVVV ??X?-LLLD DDDD-KK10
- *
- *   * VVV...VVV (16-bits)
- *     - immediate value
- *   * X (1 bit)
- *     - if set, sign-extend the value
- *   * LLL (3 bits)
- *     - immediate value left-shift amount
- *     - value multiplied by 4 before shift
- *   * DDDDD (5 bits)
- *     - destination register
- *   * KK (2 bits)
- *     - accumulation kind
- *     - 00 => set, 01 => xor, 10 => and, 11 => or
- */
-pub(crate) struct ShadyImmediateInstruction {
-  pub(crate) value: u16,
-  pub(crate) sx: bool,
-  pub(crate) lsh: u8,
-  pub(crate) dst_reg: ShadyRegister,
-  pub(crate) kind: ShadyImmediateKind,
+#[derive(Copy, Clone, Debug)]
+pub(crate) struct ShadyImmediateX2(u8);
+impl ShadyImmediateX2 {
+  pub(crate) const MAX_VALUE: u8 = 62;
+  pub(crate) fn from_u8(value: u8) -> Self {
+    assert!(value <= Self::MAX_VALUE);
+    Self(value)
+  }
+  pub(crate) unsafe fn from_u8_unchecked(value: u8) -> Self {
+    debug_assert!(value <= Self::MAX_VALUE);
+    Self(value)
+  }
+  pub(crate) fn as_u8(&self) -> u8 { self.0 }
+  pub(crate) fn as_u32(&self) -> u32 { self.0 as u32 }
 }
 
-#[derive(Clone, Copy, Debug)]
-#[repr(u8)]
-pub(crate) enum ShadyImmediateKind {
-  Set = 0,
-  Xor = 1,
-  And = 2,
-  Or = 3,
+#[derive(Copy, Clone, Debug)]
+pub(crate) enum ShadyOperand {
+  Register(ShadyRegister),
+  Immediate(ShadyImmediate),
+}
+impl ShadyOperand {
+  pub(crate) fn as_u32(&self) -> u32 {
+    match self {
+      ShadyOperand::Register(r) => r.as_u32(),
+      ShadyOperand::Immediate(i) => i.as_u32(),
+    }
+  }
+
+  pub(crate) fn is_immediate(&self) -> bool {
+    match self {
+      ShadyOperand::Register(_) => false,
+      ShadyOperand::Immediate(_) => true,
+    }
+  }
 }
 
-/*
- *
- * Control flow operations:
- *   BBBB-BBBB BBBB-BBBB CCCC-CCCC Q???-KK11
- *
- *   * BBBBB...BBBB (16-bits)
- *     - branch target (absolute)
- *   * CCCCCCCC (8 bits)
- *     - condition flags to check
- *   * Q (1 bit)
- *     - flags query kind
- *     - 0 => all flags must be set, 1 => any flag must be set
- *   * KK (2 bits)
- *     - branch kind
- *     - 00 => goto, 01 => call, 10 => return, 11 => end
- */
-pub(crate) struct ShadyControlFlowInstruction {
-  pub(crate) target: u16,
-  pub(crate) flags: u8,
-  pub(crate) query_any: bool,
-  pub(crate) kind: ShadyControlFlowKind,
+pub(crate) struct ShadyInstructionCompute {
+  pub(crate) x0: ShadyOperand,
+  pub(crate) x1: ShadyOperand,
+  pub(crate) op: bf::ShadyInsOp,
+}
+impl ShadyInstructionCompute {
+  pub(crate) fn encode(&self) -> u32 {
+    let mut bcop: u32 = 0;
+    bcop |= bf::SHADY_INS_FIELD_X0.encode(self.x0.as_u32());
+    bcop |= bf::SHADY_INS_FIELD_X1.encode(self.x1.as_u32());
+    bcop |= bf::SHADY_INS_FIELD_OP.encode(self.op as u32);
+    bcop |= bf::SHADY_INS_FIELD_X0_IMM.encode(
+      if self.x0.is_immediate() { 1 } else { 0 }
+    );
+    bcop |= bf::SHADY_INS_FIELD_X1_IMM.encode(
+      if self.x1.is_immediate() { 1 } else { 0 }
+    );
+    bcop
+  }
+
+  pub(crate) fn new(x0: ShadyOperand, x1: ShadyOperand, op: bf::ShadyInsOp)
+    -> Self
+  {
+    Self { x0, x1, op }
+  }
 }
 
-#[derive(Clone, Copy, Debug)]
-#[repr(u8)]
-pub(crate) enum ShadyControlFlowKind {
-  Goto = 0,
-  Call = 1,
-  Return = 2,
-  End = 3
+pub(crate) struct ShadyInstructionDataFlow {
+  pub(crate) x2: u8,
+  pub(crate) df: bf::ShadyInsDf,
+}
+impl ShadyInstructionDataFlow {
+  pub(crate) fn encode(&self) -> u32 {
+    let mut bcop: u32 = 0;
+    bcop |= bf::SHADY_INS_FIELD_X2.encode(self.x2 as u32);
+    bcop |= bf::SHADY_INS_FIELD_DF.encode(self.df as u32);
+    bcop
+  }
+
+  fn new(x2: u8, df: bf::ShadyInsDf) -> Self {
+    Self { x2, df }
+  }
+
+  pub(crate) fn mov(x2: ShadyDestRegister) -> Self {
+    Self::new(x2.as_u8(), bf::ShadyInsDf::MovOrJump)
+  }
+  pub(crate) fn read(x2: ShadyDestRegister) -> Self {
+    Self::new(x2.as_u8(), bf::ShadyInsDf::ReadOrCall)
+  }
+  pub(crate) fn write(x2: ShadyDestRegister) -> Self {
+    Self::new(x2.as_u8(), bf::ShadyInsDf::WriteOrRet)
+  }
+  pub(crate) fn write_imm(x2: ShadyImmediateX2) -> Self {
+    Self::new(x2.as_u8(), bf::ShadyInsDf::WriteImmOrEnd)
+  }
+
+  pub(crate) fn jump() -> Self {
+    Self::new(bf::SHADY_REG_CFLOW, bf::ShadyInsDf::MovOrJump)
+  }
+  pub(crate) fn call() -> Self {
+    Self::new(bf::SHADY_REG_CFLOW, bf::ShadyInsDf::ReadOrCall)
+  }
+  pub(crate) fn ret() -> Self {
+    Self::new(bf::SHADY_REG_CFLOW, bf::ShadyInsDf::WriteOrRet)
+  }
+  pub(crate) fn end() -> Self {
+    Self::new(bf::SHADY_REG_CFLOW, bf::ShadyInsDf::WriteImmOrEnd)
+  }
+
+  /*
+  MovOrJump = 0b00,
+  ReadOrCall = 0b01,
+  WriteOrRet = 0b10,
+  WriteImmOrEnd = 0b11,
+  */
+}
+
+pub(crate) struct ShadyInstruction {
+  pub(crate) cond: bf::ShadyInsCond,
+  pub(crate) compute: ShadyInstructionCompute,
+  pub(crate) data_flow: ShadyInstructionDataFlow,
+  pub(crate) set_flags: bool,
+}
+impl ShadyInstruction {
+  pub(crate) fn encode(&self) -> u32 {
+    let mut bcop: u32 = 0;
+    bcop |= bf::SHADY_INS_FIELD_COND.encode(self.cond as u32);
+    bcop |= self.compute.encode();
+    bcop |= self.data_flow.encode();
+    bcop |= bf::SHADY_INS_FIELD_SETFLAG.encode(
+      if self.set_flags { 1 } else { 0 }
+    );
+    bcop
+  }
+
+  pub(crate) fn new(
+    cond: bf::ShadyInsCond,
+    compute: ShadyInstructionCompute,
+    data_flow: ShadyInstructionDataFlow,
+    set_flags: bool,
+  ) -> Self {
+    Self { cond, compute, data_flow, set_flags }
+  }
 }
