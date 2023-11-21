@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-from pre_validation import RUST_SRC_PATH
+from pre_validation import common
 
 def find_nonewline_files(path):
   """Find files that do not end with a newline character."""
@@ -18,7 +18,7 @@ def find_nonewline_files(path):
 
 
 def main():
-  root_path = RUST_SRC_PATH
+  root_path = common.RUST_SRC_PATH
   print("Files that do not end with a newline character:")
   no_newline_files = find_nonewline_files(root_path)
   for filename in no_newline_files:
