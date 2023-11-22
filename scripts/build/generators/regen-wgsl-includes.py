@@ -9,6 +9,39 @@ import os
 from generators import common
 
 def main():
+  regenerate_library_dir()
+  regenerate_command_dirs()
+
+def regenerate_library_dir():
+  print("")
+  print("")
+  print("Regenerating wgsl library in {:s}".format(common.WGSL_LIBRARY_PATH))
+  print("")
+  # List all files in library dir
+  library_files = [
+    os.path.join(common.WGSL_LIBRARY_PATH, f)
+    for f in os.listdir(common.WGSL_LIBRARY_PATH)
+    if f.endswith(".wgsl")
+  ]
+  num_failed = 0
+  for library_file in library_files:
+    libname = os.path.basename(library_file)[:-len(".wgsl")]
+    try:
+      regenerate_file_overwrite(library_file, "LIBRARY: {:s}".format(libname))
+    except Exception as e:
+      print("regen_library ERROR: {:s}".format(str(e)))
+      raise
+      num_failed += 1
+  if num_failed > 0:
+    print("")
+    print("regen_library ERROR: {:d} library files failed regeneration".format(
+      num_failed
+    ))
+    exit(1)
+
+def regenerate_command_dirs():
+  print("")
+  print("")
   print("Regenerating wgsl includes in {:s}".format(common.GPU_COMMANDS_SUBPATH))
   print("")
   # List subdirs in commands dir
@@ -22,30 +55,50 @@ def main():
   # Re-generate each subdir
   num_failed = 0
   for subdir in subdirs:
-    if not regenerate_subdir(subdir):
+    if not regenerate_command_subdir(subdir):
       num_failed += 1
   if num_failed > 0:
     print("")
-    print("ERROR: {:d} subdirs failed regeneration".format(num_failed))
+    print("regen_cmds ERROR: {:d} subdirs failed regeneration".format(num_failed))
     exit(1)
 
-def regenerate_subdir(subdir):
+def regenerate_command_subdir(subdir):
   print("Checking `{:s}`".format(subdir["dirname"]))
   subdirpath = subdir["dirpath"]
+
   # Walk the entire tree under subdirpath, and validate each wgsl file
   num_failed = 0
   for root, dirs, files in os.walk(subdirpath):
     for filename in files:
       if filename.endswith(".wgsl"):
-        file_succeeded = regenerate_wgsl_file(
-          os.path.join(root, filename),
-          os.path.join(filename)
-        )
-        if not file_succeeded:
+        # Keep a seen-set of library names already included
+        # to avoid including the same library multiple times.
+        try:
+          filepath = os.path.join(root, filename)
+          subpath = os.path.join(filename)
+          regenerate_file_overwrite(filepath, subpath)
+        except Exception as e:
+          print("regen_cmd_dir ERROR: {:s}".format(str(e)))
           num_failed += 1
   return num_failed == 0
 
-def regenerate_wgsl_file(filepath, subpath):
+def regenerate_file_overwrite(filepath, subpath):
+  generated_lines = generate_wgsl_file(filepath, subpath, set())
+  # Write out modified file.
+  open(filepath, "w").write("".join(generated_lines))
+
+class Section:
+  def __init__(self, name, start_line, end_line):
+    self.name = name
+    self.start_line = start_line
+    self.end_line = end_line
+
+class LibStackEntry:
+  def __init__(self, name, start_line):
+    self.name = name
+    self.start_line = start_line
+
+def generate_wgsl_file(filepath, subpath, seen_libnames):
   print("  * {:s}".format(subpath))
   filedata = open(filepath).readlines()
   libsections = []
@@ -53,44 +106,54 @@ def regenerate_wgsl_file(filepath, subpath):
 
   def add_section(libname, start_line, end_line):
     section_names.add(libname)
-    libsections.append({
-      "name": libname,
-      "start_line": start_line,
-      "end_line": end_line,
-    })
+    libsections.append(Section(libname, start_line, end_line))
 
-  cur_library = None
-  cur_library_start_line = None
-  num_failed = 0
+  lib_stack = []
+
+  def push_lib(libname, start_line):
+    lib_stack.append(LibStackEntry(libname, start_line))
+  def peek_lib():
+    return lib_stack[-1] if len(lib_stack) > 0 else None
+  def pop_lib():
+    return lib_stack.pop() if len(lib_stack) > 0 else None
+
   for (line_no, line) in enumerate(filedata):
     (libline_type, libname) = parse_library_line(line)
     if libline_type == "none":
       pass
     elif libline_type == "start":
-      if cur_library:
-        raise Exception("Library {:s} started before {:s} ended".format(
-          libname, cur_library
-        ))
-      cur_library = libname
-      cur_library_start_line = line_no
+      push_lib(libname, line_no)
     elif libline_type == "end":
+      cur_library = pop_lib()
       if not cur_library:
         raise Exception("Library {:s} ended before it started".format(
           libname
         ))
-      if cur_library != libname:
-        raise Exception("Library {:s} ended before {:s} ended".format(
-          libname, cur_library
-        ))
-      add_section(cur_library, cur_library_start_line + 1, line_no)
-      cur_library = None
-      cur_library_start_line = None
 
-  # Current library should be None
-  if cur_library:
-    raise Exception("Library {:s} started but never ended".format(
-      cur_library
-    ))
+      # Library names should match for corresponding start and end lines.
+      if cur_library.name != libname:
+        raise Exception("Library {:s} ended before {:s} ended".format(
+          libname, cur_library.name
+        ))
+
+      # if the library stack is not empty now, then this is ending a nested
+      # library.  Ignore it, since the interpolation of the library will
+      # take care of internal libraries.
+      if len(lib_stack) > 0:
+        continue
+
+      # Otherwise, this is the end of the top-level library.
+      # Add it to the list of sections.
+      add_section(cur_library.name, cur_library.start_line + 1, line_no)
+      pop_lib()
+
+  # Library stack should be empty.
+  if len(lib_stack) > 0:
+    raise Exception(
+      "Unclosed libraries {:s} started but never ended".format(
+        [lib.name for lib in lib_stack].join(", ")
+      )
+    )
 
   output_lines = []
   for (line_no, line) in enumerate(filedata):
@@ -101,38 +164,38 @@ def regenerate_wgsl_file(filepath, subpath):
       continue
 
     # Check to see if we're at or within the next session
-    if line_no < next_section["start_line"]:
+    if line_no < next_section.start_line:
       # We're before the next section
       output_lines.append(line)
       continue
-    elif line_no < next_section["end_line"]:
+    elif line_no < next_section.end_line:
       # We're in the middle of the library.
       # Skip the line.
       continue
     else:
-      assert(line_no == next_section["end_line"])
+      assert(line_no == next_section.end_line)
       # We've reached of the library section.
       # Output the library
-      libname = next_section["name"]
-      liblines = read_library_file(libname)
-      output_lines.extend(liblines)
+      libname = next_section.name
+      if libname in seen_libnames:
+        output_lines.append(
+          "// Library {:s} already included\n".format(libname)
+        )
+      else:
+        seen_libnames.add(libname)
+        liblines = read_library_file(libname, seen_libnames)
+        output_lines.extend(liblines)
       # Write out the END_LIBRARY line
       output_lines.append(line)
 
       # Remove the section from the list
       libsections.pop(0)
       continue
-
-  # Write out modified file.
-  open(filepath, "w").write("".join(output_lines))
-
-  return num_failed == 0
-
+  return output_lines
 
 LIBRARY_REGEX = r"// LIBRARY\((\w+)\)"
 END_LIBRARY_REGEX = r"// END_LIBRARY\((\w+)\)"
 def parse_library_line(line):
-  # Parse a line like `// LIBRARY(libname)`
   match_lib = re.match(LIBRARY_REGEX, line)
   match_endlib = re.match(END_LIBRARY_REGEX, line)
   if match_lib:
@@ -142,12 +205,14 @@ def parse_library_line(line):
   else:
     return ("none", None)
 
-LIBRARY_FILE_CACHE = {}
-def read_library_file(libname):
-  if libname not in LIBRARY_FILE_CACHE:
-    libpath = os.path.join(common.WGSL_LIBRARY_PATH, libname + ".wgsl")
-    LIBRARY_FILE_CACHE[libname] = open(libpath).readlines()
-  return LIBRARY_FILE_CACHE[libname]
+def read_library_file(libname, seen_libnames):
+  libpath = os.path.join(common.WGSL_LIBRARY_PATH, libname + ".wgsl")
+  # regenerate the library wgsl file to fix up any includes it has.
+  return generate_wgsl_file(
+    libpath,
+    "LIBRARY: {:s}".format(libname),
+    seen_libnames
+  )
 
 if __name__ == "__main__":
   print("HERE!")
