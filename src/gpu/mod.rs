@@ -11,6 +11,8 @@ mod map_buffer;
 mod seq_buffer;
 mod world;
 
+mod shady_vm;
+
 pub(crate) mod compute;
 pub(crate) use self::{
   constants::{ GPU_MIN_BUFFER_SIZE, GPU_COPY_BUFFER_ALIGNMENT },
