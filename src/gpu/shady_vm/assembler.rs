@@ -49,12 +49,36 @@ impl ShadyAssembler {
     self.set_flags_for_next = false;
     self
   }
-  pub(crate) fn with_cond(&mut self, cond: Cond) -> &mut Self {
+  fn with_cond(&mut self, cond: Cond) -> &mut Self {
     self.cond_for_next = cond;
     self
   }
+  pub(crate) fn with_ifeq(&mut self) -> &mut Self {
+    self.with_cond(Cond::Equal)
+  }
+  pub(crate) fn with_ifz(&mut self) -> &mut Self {
+    self.with_cond(Cond::Equal)
+  }
+  pub(crate) fn with_ifne(&mut self) -> &mut Self {
+    self.with_cond(Cond::NotEqual)
+  }
+  pub(crate) fn with_ifnz(&mut self) -> &mut Self {
+    self.with_cond(Cond::NotEqual)
+  }
+  pub(crate) fn with_iflt(&mut self) -> &mut Self {
+    self.with_cond(Cond::Less)
+  }
+  pub(crate) fn with_ifle(&mut self) -> &mut Self {
+    self.with_cond(Cond::LessEqual)
+  }
+  pub(crate) fn with_ifgt(&mut self) -> &mut Self {
+    self.with_cond(Cond::Greater)
+  }
+  pub(crate) fn with_ifge(&mut self) -> &mut Self {
+    self.with_cond(Cond::GreaterEqual)
+  }
 
-  pub(crate) fn emit_label(&mut self, name: &'static str) {
+  pub(crate) fn declare_label(&mut self, name: &'static str) {
     self.labels.push(Label { name: name.to_string(), pos: None })
   }
   pub(crate) fn bind_label(&mut self, name: &'static str) {

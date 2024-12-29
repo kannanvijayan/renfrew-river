@@ -18,7 +18,7 @@ pub(crate) use self::{
     apply_animal_moves,
   },
   shady_interp::{
-    VmInterpretInfo,
+    ShadyInterpVmInfo,
     shady_interpret,
   },
 };

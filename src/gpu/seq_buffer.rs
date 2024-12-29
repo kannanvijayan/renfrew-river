@@ -166,7 +166,6 @@ impl<T: GpuBufferDataType> GpuSeqBuffer<T> {
       });
       mapped_recv.await.unwrap();
       let view = slice.get_mapped_range();
-      eprintln!("KVKV to_vec: self.len()={} view.len()={}", self.length(), view.len());
       bytemuck::cast_slice::<u8, T::NativeType>(&view)
         .iter()
         .copied()
@@ -234,8 +233,6 @@ impl<T: GpuBufferDataType> GpuSeqBuffer<T> {
     let offset_u64 = offset as u64;
     let length_u64 = temp_buffer.length() as u64;
 
-    eprintln!("KVKV write_iter_staged: native_size={}, offset={}, length={}",
-      native_size, offset_u64, length_u64);
     encoder.copy_buffer_to_buffer(
       &temp_buffer.wgpu_buffer(),
       0,

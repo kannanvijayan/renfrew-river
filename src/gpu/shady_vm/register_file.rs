@@ -2,15 +2,15 @@ use crate::gpu::GpuBufferDataType;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct ShadyRegisterFile {
-  regs: [u32; SHADY_REG_COUNT]
+  regs: [i32; SHADY_REG_COUNT]
 }
 impl ShadyRegisterFile {
-  pub(crate) fn read_reg(&self, reg: u8) -> u32 {
+  pub(crate) fn read_reg(&self, reg: u8) -> i32 {
     self.regs[reg as usize]
   }
 }
 impl GpuBufferDataType for ShadyRegisterFile {
-  type NativeType = [u32; SHADY_REG_COUNT];
+  type NativeType = [i32; SHADY_REG_COUNT];
   fn to_native(&self) -> Self::NativeType { self.regs }
   fn from_native(regs: Self::NativeType) -> Self { Self { regs } }
 }

@@ -28,7 +28,7 @@ const SHADY_REG_COUNT: u32 = 256u;
  * The register file.
  */
 struct ShadyRegisterFile {
-  regs: array<u32, SHADY_REG_COUNT>,
+  regs: array<i32, SHADY_REG_COUNT>,
 }
 
 const SHADY_REG_VMID: u32 = 240u;
@@ -129,11 +129,11 @@ const SHADY_INS_OP_SHIFT16_OFFSET: u32 = 6u;
 const SHADY_INS_OP_SHIFT16_MASK: u32 = 0x1u;
 
 /** Offset and mask to extract the operation kind. */
-const SHADY_INS_OP_KIND_OFFSET: u32 = 7u;
+const SHADY_INS_OP_KIND_OFFSET: u32 = 8u;
 const SHADY_INS_OP_KIND_MASK: u32 = 0x7u;
 
 /** Offset and mask to extract the control flow bits. */
-const SHADY_INS_OP_CFLOW_OFFSET: u32 = 10u;
+const SHADY_INS_OP_CFLOW_OFFSET: u32 = 12u;
 const SHADY_INS_OP_CFLOW_MASK: u32 = 0x7u;
 
 //// Destination: BBBB-BBBN RRRR-RRRR
@@ -314,8 +314,8 @@ struct ShadySrcReg {
 }
 
 /** Use a ShadySrcReg to process a register value. */
-fn shady_src_reg_process(src_reg: ShadySrcReg, regval: u32) -> i32 {
-  var val: i32 = i32(regval);
+fn shady_src_reg_process(src_reg: ShadySrcReg, regval: i32) -> i32 {
+  var val = regval;
   if (src_reg.shift >= 0) {
     val = val << u32(src_reg.shift);
   } else {

@@ -136,7 +136,7 @@ impl GpuBufferNativeType for [u32; 2] {
   }
 }
 
-impl GpuBufferNativeType for [u32; 256] {
+impl GpuBufferNativeType for [i32; 256] {
   const SIZE: usize = 4 * 256;
   fn write_to_slice(&self, slice: &mut [u8]) {
     for i in 0..256 {
@@ -144,9 +144,9 @@ impl GpuBufferNativeType for [u32; 256] {
     }
   }
   fn read_from_slice(slice: &[u8]) -> Self {
-    let mut regs = [0u32; 256];
+    let mut regs = [0; 256];
     for i in 0..256 {
-      regs[i] = u32::read_from_slice(&slice[i*4..(i+1)*4]);
+      regs[i] = i32::read_from_slice(&slice[i*4..(i+1)*4]);
     }
     regs
   }
@@ -219,8 +219,8 @@ impl GpuBufferDataType for [u32; 2] {
   fn from_native(data_type: Self::NativeType) -> Self { data_type }
 }
 
-impl GpuBufferDataType for [u32; 256] {
-  type NativeType = [u32; 256];
+impl GpuBufferDataType for [i32; 256] {
+  type NativeType = [i32; 256];
   fn to_native(&self) -> Self::NativeType { *self }
   fn from_native(data_type: Self::NativeType) -> Self { data_type }
 }

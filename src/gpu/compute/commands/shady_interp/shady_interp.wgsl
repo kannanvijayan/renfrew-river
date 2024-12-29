@@ -30,7 +30,7 @@ const SHADY_REG_COUNT: u32 = 256u;
  * The register file.
  */
 struct ShadyRegisterFile {
-  regs: array<u32, SHADY_REG_COUNT>,
+  regs: array<i32, SHADY_REG_COUNT>,
 }
 
 const SHADY_REG_VMID: u32 = 240u;
@@ -131,11 +131,11 @@ const SHADY_INS_OP_SHIFT16_OFFSET: u32 = 6u;
 const SHADY_INS_OP_SHIFT16_MASK: u32 = 0x1u;
 
 /** Offset and mask to extract the operation kind. */
-const SHADY_INS_OP_KIND_OFFSET: u32 = 7u;
+const SHADY_INS_OP_KIND_OFFSET: u32 = 8u;
 const SHADY_INS_OP_KIND_MASK: u32 = 0x7u;
 
 /** Offset and mask to extract the control flow bits. */
-const SHADY_INS_OP_CFLOW_OFFSET: u32 = 10u;
+const SHADY_INS_OP_CFLOW_OFFSET: u32 = 12u;
 const SHADY_INS_OP_CFLOW_MASK: u32 = 0x7u;
 
 //// Destination: BBBB-BBBN RRRR-RRRR
@@ -316,8 +316,8 @@ struct ShadySrcReg {
 }
 
 /** Use a ShadySrcReg to process a register value. */
-fn shady_src_reg_process(src_reg: ShadySrcReg, regval: u32) -> i32 {
-  var val: i32 = i32(regval);
+fn shady_src_reg_process(src_reg: ShadySrcReg, regval: i32) -> i32 {
+  var val = regval;
   if (src_reg.shift >= 0) {
     val = val << u32(src_reg.shift);
   } else {
@@ -426,7 +426,7 @@ fn execute_instructions(
   }
 
   machine_state = shady_machine_state_new(vm_id, start_pc_buffer[vm_id]);
-  vm_set_reg(SHADY_REG_VMID, vm_id);
+  vm_set_reg(SHADY_REG_VMID, i32(vm_id));
 
   let ins_count: u32 = uniforms.ins_count; 
   for (var i: u32 = 0u; i < ins_count; i++) {
@@ -444,28 +444,31 @@ fn invoke_instruction() {
 
   // Check the condition flags.
   let flags = machine_state.flags;
-  vm_set_reg(0u, flags);
+  vm_set_reg(0u, i32(flags));
   if ((flags & shady_ins_op_cond(ins)) == 0u) {
     return;
   }
 
   // Write the current PC to the PC register.
-  vm_set_reg(SHADY_REG_PC, machine_state.pc);
+  vm_set_reg(SHADY_REG_PC, i32(machine_state.pc));
 
   // Compute source operand values.
-  var src1_val: i32 = extractBits(i32(ins.src1), 0u, 15u);
+  var src1_val: i32 = extractBits(i32(ins.src1), 0u, 16u);
   if ! shady_ins_op_immsrc1(ins) {
     let src1_reg = shady_src_reg_from_word(ins.src1);
     src1_val = shady_src_reg_process(src1_reg, vm_get_reg(src1_reg.reg));
   }
 
-  var src2_val: i32 = extractBits(i32(ins.src2), 0u, 15u);
+  var src2_val: i32 = extractBits(i32(ins.src2), 0u, 16u);
   if ! shady_ins_op_immsrc2(ins) {
     let src2_reg = shady_src_reg_from_word(ins.src2);
     src2_val = shady_src_reg_process(src2_reg, vm_get_reg(src2_reg.reg));
+    vm_set_reg(0u, i32(5555));
+    return;
   }
 
   if shady_ins_op_shift16(ins) {
+    src1_val = i32(u32(src1_val) & 0xFFFFu);
     src2_val = src2_val << 16u;
   }
 
@@ -498,7 +501,7 @@ fn invoke_instruction() {
   }
 
   // Write result to destination register.
-  vm_set_reg(dst_reg.reg, u32(result));
+  vm_set_reg(dst_reg.reg, result);
 
   // Set flags if necessary.
   if shady_ins_op_setflags(ins) {
@@ -519,7 +522,7 @@ fn invoke_instruction() {
   var target_pc = machine_state.pc + 1u;
   let cflow = shady_ins_op_cflow(ins);
   if ((cflow & SHADY_CFLOW_WRITE_BIT) != 0u) {
-    target_pc = vm_get_reg(SHADY_REG_PC);
+    target_pc = u32(vm_get_reg(SHADY_REG_PC));
   }
   if ((cflow & SHADY_CFLOW_CALL_BIT) != 0u) {
     shady_machine_state_push_call(&machine_state);
@@ -530,10 +533,10 @@ fn invoke_instruction() {
   machine_state.pc = target_pc;
 }
 
-fn vm_get_reg(reg: u32) -> u32 {
+fn vm_get_reg(reg: u32) -> i32 {
   return register_file_buffer[machine_state.vm_id].regs[reg];
 }
-fn vm_set_reg(reg: u32, val: u32) {
+fn vm_set_reg(reg: u32, val: i32) {
   register_file_buffer[machine_state.vm_id].regs[reg] = val;
 }
 

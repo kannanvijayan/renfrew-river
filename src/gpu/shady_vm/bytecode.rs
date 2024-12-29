@@ -173,7 +173,7 @@ impl Ins {
       }
     };
 
-    let mut op_word = bitcode::OpWord {
+    let op_word = bitcode::OpWord {
       cond,
       set_flags,
       imm_src1,
@@ -182,12 +182,12 @@ impl Ins {
       kind: op_kind,
       cflow,
     };
-    let mut dst_word = bitcode::DstWord {
+    let dst_word = bitcode::DstWord {
       reg: reg_dst,
       negate: negate_dst,
       bump: 0,
     };
-    let mut src1_word = if imm_src1 {
+    let src1_word = if imm_src1 {
       bitcode::SrcWord::Immediate { value: immval_src1 }
     } else {
       bitcode::SrcWord::Register {
@@ -196,7 +196,7 @@ impl Ins {
         shift: shift_src1,
       }
     };
-    let mut src2_word = if imm_src2 {
+    let src2_word = if imm_src2 {
       bitcode::SrcWord::Immediate { value: immval_src2 }
     } else {
       bitcode::SrcWord::Register {
