@@ -89,6 +89,9 @@ impl ShadyAssembler {
     label.pos = Some(pos)
   }
 
+  pub(crate) fn emit_mov(&mut self, d: Dst, s1: Src) {
+    self.emit_std_compute(d, Op::Add, s1, Src::Imm(0))
+  }
   pub(crate) fn emit_add(&mut self, d: Dst, s1: Src, s2: Src) {
     self.emit_std_compute(d, Op::Add, s1, s2)
   }

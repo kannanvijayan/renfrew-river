@@ -31,7 +31,7 @@ fn const_load() {
           .with_copy_src(true)
       );
 
-    run_program(&device, program, &register_file_buffer).await;
+    run_program(&device, program, &register_file_buffer, Some(1)).await;
 
     let copy_regfiles = register_file_buffer.read_mappable_full_copy(&device).await;
     let regfiles = copy_regfiles.to_vec().await;
@@ -60,7 +60,7 @@ fn modulo_by_constant() {
           .with_copy_src(true)
       );
 
-    run_program(&device, program, &register_file_buffer).await;
+    run_program(&device, program, &register_file_buffer, Some(1)).await;
 
     let copy_regfiles = register_file_buffer.read_mappable_full_copy(&device).await;
     let regfiles = copy_regfiles.to_vec().await;

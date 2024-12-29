@@ -185,9 +185,9 @@ const SHADY_COND_NEG: u32 = 2u;
 const SHADY_COND_POS: u32 = 4u;
 
 /** Control flow definitions. */
-const SHADY_CFLOW_WRITE_BIT: u32 = 0u;
-const SHADY_CFLOW_CALL_BIT: u32 = 1u;
-const SHADY_CFLOW_RET_BIT: u32 = 2u;
+const SHADY_CFLOW_WRITE_BIT: u32 = 1u;
+const SHADY_CFLOW_CALL_BIT: u32 = 2u;
+const SHADY_CFLOW_RET_BIT: u32 = 4u;
 
 
 /** The in-memory instruction representation.  */
@@ -356,6 +356,7 @@ struct ShadyMachineState {
   flags: u32,
   call_depth: u32,
   call_stack: array<u32, 4>,
+  terminated: bool,
 }
 
 alias ShadyMachineStatePtr = ptr<private, ShadyMachineState>;
@@ -367,6 +368,7 @@ fn shady_machine_state_new(vm_id: u32, pc: u32) -> ShadyMachineState {
   state.flags = 0x7u;
   state.call_depth = 0u;
   state.call_stack = array<u32, 4>(0u, 0u, 0u, 0u);
+  state.terminated = false;
   return state;
 }
 
@@ -381,15 +383,15 @@ fn shady_machine_state_push_call(state_ptr: ShadyMachineStatePtr) {
   (*state_ptr).call_depth = call_depth + 1u;
 }
 
-fn shady_machine_state_pop_ret(state_ptr: ShadyMachineStatePtr) {
+fn shady_machine_state_pop_ret(state_ptr: ShadyMachineStatePtr) -> u32 {
   let call_depth = (*state_ptr).call_depth;
   if (call_depth == 0u) {
     // TODO: Log an error somehow.
-    return;
+    return 0xffffffffu;
   }
   let return_pc = (*state_ptr).call_stack[call_depth - 1u];
   (*state_ptr).call_depth = call_depth - 1u;
-  (*state_ptr).pc = return_pc;
+  return return_pc;
 }
 // END_LIBRARY(shady_vm)
 
@@ -430,12 +432,12 @@ fn execute_instructions(
 
   let ins_count: u32 = uniforms.ins_count; 
   for (var i: u32 = 0u; i < ins_count; i++) {
-    if (i >= ins_count) {
+    invoke_instruction();
+    vm_set_reg(SHADY_REG_PC, i32(machine_state.pc)); 
+    if (machine_state.terminated) {
       break;
     }
-    invoke_instruction();
   }
-
   end_pc_buffer[vm_id] = machine_state.pc;
 }
 
@@ -444,8 +446,9 @@ fn invoke_instruction() {
 
   // Check the condition flags.
   let flags = machine_state.flags;
-  vm_set_reg(0u, i32(flags));
   if ((flags & shady_ins_op_cond(ins)) == 0u) {
+    // Advance the PC and return if the condition is not met.
+    machine_state.pc = machine_state.pc + 1u;
     return;
   }
 
@@ -463,8 +466,6 @@ fn invoke_instruction() {
   if ! shady_ins_op_immsrc2(ins) {
     let src2_reg = shady_src_reg_from_word(ins.src2);
     src2_val = shady_src_reg_process(src2_reg, vm_get_reg(src2_reg.reg));
-    vm_set_reg(0u, i32(5555));
-    return;
   }
 
   if shady_ins_op_shift16(ins) {
@@ -528,7 +529,7 @@ fn invoke_instruction() {
     shady_machine_state_push_call(&machine_state);
   }
   if ((cflow & SHADY_CFLOW_RET_BIT) != 0u) {
-    shady_machine_state_pop_ret(&machine_state);
+    target_pc = shady_machine_state_pop_ret(&machine_state);
   }
   machine_state.pc = target_pc;
 }

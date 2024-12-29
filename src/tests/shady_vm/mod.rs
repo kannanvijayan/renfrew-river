@@ -36,6 +36,7 @@ pub(crate) async fn run_program(
   device: &GpuDevice,
   program: ShadyProgram,
   register_file_buffer: &GpuSeqBuffer<ShadyRegisterFile>,
+  ins_count: Option<u32>,
 ) {
   let num_vms = register_file_buffer.length();
 
@@ -63,6 +64,6 @@ pub(crate) async fn run_program(
     &program_buffer,
     vms_info,
     &register_file_buffer,
-    /* ins_count */ Some(1),
+    ins_count,
   ).await;
 }

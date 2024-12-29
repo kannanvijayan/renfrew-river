@@ -183,9 +183,9 @@ const SHADY_COND_NEG: u32 = 2u;
 const SHADY_COND_POS: u32 = 4u;
 
 /** Control flow definitions. */
-const SHADY_CFLOW_WRITE_BIT: u32 = 0u;
-const SHADY_CFLOW_CALL_BIT: u32 = 1u;
-const SHADY_CFLOW_RET_BIT: u32 = 2u;
+const SHADY_CFLOW_WRITE_BIT: u32 = 1u;
+const SHADY_CFLOW_CALL_BIT: u32 = 2u;
+const SHADY_CFLOW_RET_BIT: u32 = 4u;
 
 
 /** The in-memory instruction representation.  */
@@ -354,6 +354,7 @@ struct ShadyMachineState {
   flags: u32,
   call_depth: u32,
   call_stack: array<u32, 4>,
+  terminated: bool,
 }
 
 alias ShadyMachineStatePtr = ptr<private, ShadyMachineState>;
@@ -365,6 +366,7 @@ fn shady_machine_state_new(vm_id: u32, pc: u32) -> ShadyMachineState {
   state.flags = 0x7u;
   state.call_depth = 0u;
   state.call_stack = array<u32, 4>(0u, 0u, 0u, 0u);
+  state.terminated = false;
   return state;
 }
 
@@ -379,13 +381,13 @@ fn shady_machine_state_push_call(state_ptr: ShadyMachineStatePtr) {
   (*state_ptr).call_depth = call_depth + 1u;
 }
 
-fn shady_machine_state_pop_ret(state_ptr: ShadyMachineStatePtr) {
+fn shady_machine_state_pop_ret(state_ptr: ShadyMachineStatePtr) -> u32 {
   let call_depth = (*state_ptr).call_depth;
   if (call_depth == 0u) {
     // TODO: Log an error somehow.
-    return;
+    return 0xffffffffu;
   }
   let return_pc = (*state_ptr).call_stack[call_depth - 1u];
   (*state_ptr).call_depth = call_depth - 1u;
-  (*state_ptr).pc = return_pc;
+  return return_pc;
 }

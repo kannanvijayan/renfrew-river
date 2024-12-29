@@ -31,7 +31,7 @@ impl Ins {
     let mut cflow = bitcode::ControlFlow::None;
 
     let mut negate_dst = false;
-    let mut shift_dst: i8 = 0;
+    let mut bump_dst: i8 = 0;
     let mut reg_dst: u8 = 0;
 
     let mut negate_src1 = false;
@@ -48,6 +48,9 @@ impl Ins {
 
     match self.variant {
       Variant::Compute { dst, op, src1, src2 } => {
+        reg_dst = dst.reg.0;
+        bump_dst = dst.bump.0;
+
         match src1 {
           Src::Imm(ival) => {
             imm_src1 = true;
@@ -146,6 +149,15 @@ impl Ins {
           },
           Cflow::Return => {
             cflow = bitcode::ControlFlow::Ret;
+
+            op_kind = bitcode::OperationKind::Max;
+
+            reg_dst = register_file::SHADY_REG_PC;
+
+            reg_src1 = register_file::SHADY_REG_PC;
+
+            imm_src2 = true;
+            immval_src2 = 0;
           },
         }
       },
@@ -166,10 +178,14 @@ impl Ins {
         // Generate a jump-to-self.
         op_kind = bitcode::OperationKind::Max;
 
+        reg_dst = register_file::SHADY_REG_PC;
+
         reg_src1 = register_file::SHADY_REG_PC;
 
         imm_src2 = true;
         immval_src2 = 0;
+
+        cflow = bitcode::ControlFlow::Write;
       }
     };
 
@@ -185,7 +201,7 @@ impl Ins {
     let dst_word = bitcode::DstWord {
       reg: reg_dst,
       negate: negate_dst,
-      bump: 0,
+      bump: bump_dst,
     };
     let src1_word = if imm_src1 {
       bitcode::SrcWord::Immediate { value: immval_src1 }
