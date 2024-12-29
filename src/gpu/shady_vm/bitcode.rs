@@ -22,10 +22,15 @@ impl GpuBufferDataType for Instruction {
   fn to_native(&self) -> Self::NativeType {
     let w0 = self.op_word.to_u32() | (self.dst_word.to_u32() << 16);
     let w1 = self.src1_word.to_u32() | (self.src2_word.to_u32() << 16);
+    eprintln!("component parts: {:04x} {:04x} {:04x} {:04x}",
+      self.op_word.to_u32(), self.dst_word.to_u32(),
+      self.src1_word.to_u32(), self.src2_word.to_u32());
     [w0, w1]
   }
   fn from_native(parts: Self::NativeType) -> Self {
+    eprintln!("raw parts: {:x} {:x}", parts[0], parts[1]);
     let op_word = OpWord::from_u32(parts[0] & 0xFFFF);
+    eprintln!("parsed op_word: {:x} => {:?}", op_word.to_u32(), &op_word);
     let dst_word = DstWord::from_u32(parts[0] >> 16);
     let src1_word = op_word.parse_src1_word(parts[1] & 0xFFFF);
     let src2_word = op_word.parse_src2_word(parts[1] >> 16);
@@ -60,10 +65,10 @@ impl OpWord {
     let cond = Condition::from_u32(
       (bits >> SHADY_INS_OP_COND_OFFSET) & SHADY_INS_OP_COND_MASK
     );
-    let set_flags = (bits & SHADY_INS_OP_SETFLAGS_MASK) != 0;
-    let imm_src1 = (bits & SHADY_INS_OP_IMMSRC1_MASK) != 0;
-    let imm_src2 = (bits & SHADY_INS_OP_IMMSRC2_MASK) != 0;
-    let shift16_src2 = (bits & SHADY_INS_OP_SHIFT16_MASK) != 0;
+    let set_flags = ((bits >> SHADY_INS_OP_SETFLAGS_OFFSET) & SHADY_INS_OP_SETFLAGS_MASK) != 0;
+    let imm_src1 = ((bits >> SHADY_INS_OP_IMMSRC1_OFFSET) & SHADY_INS_OP_IMMSRC1_MASK) != 0;
+    let imm_src2 = ((bits >> SHADY_INS_OP_IMMSRC2_OFFSET) & SHADY_INS_OP_IMMSRC2_MASK) != 0;
+    let shift16_src2 = ((bits >> SHADY_INS_OP_SHIFT16_OFFSET) & SHADY_INS_OP_SHIFT16_MASK) != 0;
     let kind = OperationKind::from_u32(
       (bits >> SHADY_INS_OP_KIND_OFFSET) & SHADY_INS_OP_KIND_MASK
     );
@@ -106,7 +111,7 @@ impl DstWord {
 
   fn from_u32(bits: u32) -> Self {
     let reg = ((bits >> SHADY_INS_DST_REG_OFFSET) & SHADY_INS_DST_REG_MASK) as u8;
-    let negate = (bits & SHADY_INS_DST_NEGATE_MASK) != 0;
+    let negate = ((bits >> SHADY_INS_DST_NEGATE_OFFSET) & SHADY_INS_DST_NEGATE_MASK) != 0;
     let bump = (
       ((bits >> SHADY_INS_DST_BUMP_OFFSET) & SHADY_INS_DST_BUMP_MASK) as i32
         - SHADY_INS_DST_BUMP_BIAS
