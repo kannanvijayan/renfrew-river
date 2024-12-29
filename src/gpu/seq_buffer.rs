@@ -30,6 +30,22 @@ impl<T: GpuBufferDataType> GpuSeqBuffer<T> {
     }
   }
 
+  pub(crate) async fn from_iter_for_write<'a>(
+    device: &GpuDevice,
+    data: impl ExactSizeIterator<Item=&'a T>
+  ) -> GpuSeqBuffer<T>
+  where T: 'a
+  {
+    let length = data.len();
+    let opts = GpuBufferOptions::empty()
+      .with_label("GpuSeqBufferFromVecForWrite")
+      .with_copy_src(true)
+      .with_map_write(true);
+    let buffer = GpuSeqBuffer::new(device, length, opts);
+    buffer.write_iter(0, data).await;
+    buffer
+  }
+
   pub(crate) fn length(&self) -> usize {
     self.length
   }
@@ -48,7 +64,7 @@ impl<T: GpuBufferDataType> GpuSeqBuffer<T> {
   }
 
   /**
-   * Get a cpu-memory mappable copy of this buffer.
+   * Get a cpu-memory mappable read copy of this buffer.
    */
   pub(crate) async fn read_mappable_full_copy(&self, device: &GpuDevice)
     -> GpuSeqBuffer<T>
@@ -139,20 +155,99 @@ impl<T: GpuBufferDataType> GpuSeqBuffer<T> {
   pub(crate) async fn to_vec(&self) -> Vec<T> {
     let (mapped_send, mapped_recv) =
       futures::channel::oneshot::channel::<bool>();
-    let slice = self.buffer.slice(..);
-    slice.map_async(wgpu::MapMode::Read, |result| {
+    let result = {
+      let slice = self.wgpu_buffer().slice(..);
+      slice.map_async(wgpu::MapMode::Read, |result| {
+        if result.is_ok() {
+          mapped_send.send(true).unwrap();
+        } else {
+          panic!("Failed to map buffer for reading.");
+        }
+      });
+      mapped_recv.await.unwrap();
+      let view = slice.get_mapped_range();
+      eprintln!("KVKV to_vec: self.len()={} view.len()={}", self.length(), view.len());
+      bytemuck::cast_slice::<u8, T::NativeType>(&view)
+        .iter()
+        .copied()
+        .map(T::from_native)
+        .collect()
+    };
+    self.wgpu_buffer().unmap();
+    result
+  }
+
+  /**
+   * Write a vector of data to this buffer.  It must have flag MAP_WRITE for
+   * this to not panic.
+   */
+  pub(crate) async fn write_iter<'a>(&self,
+    offset: usize,
+    data: impl ExactSizeIterator<Item=&'a T>,
+  )
+  where T: 'a
+  {
+    let (mapped_send, mapped_recv) =
+      futures::channel::oneshot::channel::<bool>();
+    let slice = self.wgpu_buffer().slice(..);
+    slice.map_async(wgpu::MapMode::Write, |result| {
       if result.is_ok() {
         mapped_send.send(true).unwrap();
       } else {
-        panic!("Failed to map buffer for reading.");
+        panic!("Failed to map buffer for writing.");
       }
     });
     mapped_recv.await.unwrap();
-    let view = slice.get_mapped_range();
-    bytemuck::cast_slice::<u8, T::NativeType>(&view)
-      .iter()
-      .copied()
-      .map(T::from_native)
-      .collect()
+    {
+      let mut view = slice.get_mapped_range_mut();
+      let bytes: &mut [u8] = view.as_mut();
+      let elems: &mut [T::NativeType] = bytemuck::cast_slice_mut(bytes);
+      for (i, datum) in data.enumerate() {
+        elems[offset + i] = datum.to_native();
+      }
+    }
+    self.wgpu_buffer().unmap();
+  }
+
+  /**
+   * Write a vector of data to this buffer, by first copying the data
+   * into a temporary buffer.  This allows writing data into a buffer
+   * that is not mappable for writing.
+   */
+  pub(crate) async fn write_iter_staged<'a>(&self,
+    device: &GpuDevice,
+    offset: usize,
+    data: impl ExactSizeIterator<Item=&'a T>,
+  )
+  where T: 'a
+  {
+    let temp_buffer = GpuSeqBuffer::from_iter_for_write(device, data).await;
+
+    // Encode the commands.
+    let mut encoder = device.device().create_command_encoder(
+      &wgpu::CommandEncoderDescriptor {
+        label: Some("ReadMappalbeSubseqCopyEncoder"),
+      }
+    );
+
+    let native_size = T::NativeType::SIZE as u64;
+    let offset_u64 = offset as u64;
+    let length_u64 = temp_buffer.length() as u64;
+
+    eprintln!("KVKV write_iter_staged: native_size={}, offset={}, length={}",
+      native_size, offset_u64, length_u64);
+    encoder.copy_buffer_to_buffer(
+      &temp_buffer.wgpu_buffer(),
+      0,
+      self.wgpu_buffer(),
+      offset_u64 * native_size,
+      length_u64 * native_size,
+    );
+
+    // Submit the commands.
+    let submission_index = device.queue().submit(Some(encoder.finish()));
+
+    // Wait for the commands to finish.
+    device.device().poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
   }
 }

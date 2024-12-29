@@ -1,3 +1,4 @@
+use std::fmt;
 use bytemuck::Pod;
 
 /**
@@ -6,7 +7,7 @@ use bytemuck::Pod;
  * Shader code will need to know how to interpret the data
  * in the buffer.
  */
-pub(crate) trait GpuBufferNativeType: Sized + Pod + Copy + Clone + std::fmt::Debug {
+pub(crate) trait GpuBufferNativeType: Sized + Pod + Copy + Clone + fmt::Debug {
   // The size of the type in the gpu.
   const SIZE: usize;
 
@@ -135,6 +136,22 @@ impl GpuBufferNativeType for [u32; 2] {
   }
 }
 
+impl GpuBufferNativeType for [u32; 256] {
+  const SIZE: usize = 4 * 256;
+  fn write_to_slice(&self, slice: &mut [u8]) {
+    for i in 0..256 {
+      self[i].write_to_slice(&mut slice[i*4..(i+1)*4]);
+    }
+  }
+  fn read_from_slice(slice: &[u8]) -> Self {
+    let mut regs = [0u32; 256];
+    for i in 0..256 {
+      regs[i] = u32::read_from_slice(&slice[i*4..(i+1)*4]);
+    }
+    regs
+  }
+}
+
 /**
  * Types that map to a GpuBufferNativeType.
  *
@@ -142,7 +159,7 @@ impl GpuBufferNativeType for [u32; 2] {
  * directly by the GPU, just one that knows how to convert
  * itself into one.
  */
-pub(crate) trait GpuBufferDataType: Sized + Clone + std::fmt::Debug {
+pub(crate) trait GpuBufferDataType: Sized + Clone + fmt::Debug {
   // The gpu-native type this converts to.  The target native type must itself
   // implement GpuBufferDataType with itself as the native type.
   type NativeType: GpuBufferNativeType + GpuBufferDataType<NativeType=Self::NativeType>;
@@ -198,6 +215,12 @@ impl GpuBufferDataType for f32 {
 
 impl GpuBufferDataType for [u32; 2] {
   type NativeType = [u32; 2];
+  fn to_native(&self) -> Self::NativeType { *self }
+  fn from_native(data_type: Self::NativeType) -> Self { data_type }
+}
+
+impl GpuBufferDataType for [u32; 256] {
+  type NativeType = [u32; 256];
   fn to_native(&self) -> Self::NativeType { *self }
   fn from_native(data_type: Self::NativeType) -> Self { data_type }
 }

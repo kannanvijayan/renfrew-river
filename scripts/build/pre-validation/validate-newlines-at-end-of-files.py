@@ -10,12 +10,10 @@ def find_nonewline_files(path):
     for name in files:
       filename = os.path.join(root, name)
       with open(filename, 'rb') as f:
-        f.seek(-1, os.SEEK_END)
-        last_byte = f.read(1)
-        if last_byte != b'\n':
-          result.append(filename)
+        contents = f.read()
+        if not contents or contents[-1] != b'\n'[0]:
+          result.append(filename + " --- " + repr(contents[-1] if len(contents) > 0 else b'!'))
   return result
-
 
 def main():
   root_path = common.RUST_SRC_PATH

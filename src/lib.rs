@@ -14,3 +14,6 @@ pub use self::{
     NetworkServerConfig,
   }
 };
+
+#[cfg(test)]
+mod tests;

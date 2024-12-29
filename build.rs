@@ -73,12 +73,12 @@ fn run_pre_validation_script(script: PreValidationScript) -> bool {
         print_succeeded();
         true
       } else {
-        print_failed();
+        print_failed(&format!("Script failed: {} - {}", name, filename));
         false
       }
     },
-    Err(_) => {
-      print_failed();
+    Err(e) => {
+      print_failed(&format!("{:?}", e));
       false
     },
   };
@@ -87,8 +87,8 @@ fn run_pre_validation_script(script: PreValidationScript) -> bool {
   success
 }
 
-fn print_failed() {
-  println!(r#"**Failed!**"#);
+fn print_failed(msg: &str) {
+  println!(r#"**Failed!: {}**"#, msg);
 }
 fn print_succeeded() {
   println!(r#"**Succeeded!**"#);

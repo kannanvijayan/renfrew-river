@@ -6,6 +6,8 @@ mod initialize_animals;
 mod elevations_minimap;
 mod animal_moves;
 
+mod shady_interp;
+
 pub(crate) use self::{
   initialize_elevations::initialize_elevations,
   initialize_animals::initialize_animals,
@@ -14,5 +16,9 @@ pub(crate) use self::{
     compute_downhill_movement,
     resolve_animal_move_conflicts,
     apply_animal_moves,
+  },
+  shady_interp::{
+    VmInterpretInfo,
+    shady_interpret,
   },
 };

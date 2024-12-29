@@ -6,6 +6,8 @@ mod move_animals_downhill;
 mod resolve_animal_move_conflicts;
 mod apply_animal_moves;
 
+mod shady_interp;
+
 pub(crate) use self::{
   fill_map_u32::fill_map_u32_command,
   init_elevations::init_elevations_command,
@@ -14,4 +16,6 @@ pub(crate) use self::{
   move_animals_downhill::move_animals_downhill_command,
   resolve_animal_move_conflicts::resolve_animal_move_conflicts_command,
   apply_animal_moves::apply_animal_moves_command,
+
+  shady_interp::shady_interp_command,
 };

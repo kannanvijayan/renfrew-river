@@ -1,3 +1,5 @@
+
+// LIBRARY(shady_vm)
 /**
  * The shady VM is a small virtual machine that runs inside a shader.
  *
@@ -388,4 +390,153 @@ fn shady_machine_state_pop_ret(state_ptr: ShadyMachineStatePtr) {
   let return_pc = (*state_ptr).call_stack[call_depth - 1u];
   (*state_ptr).call_depth = call_depth - 1u;
   (*state_ptr).pc = return_pc;
+}
+// END_LIBRARY(shady_vm)
+
+struct Uniforms {
+  vm_count: u32,
+  ins_count: u32,
+};
+
+@group(0) @binding(0)
+var<uniform> uniforms: Uniforms;
+
+@group(0) @binding(1)
+var<storage, read> program_buffer: array<ShadyBufferInstruction>;
+
+@group(0) @binding(2)
+var<storage, read> start_pc_buffer: array<u32>;
+
+@group(0) @binding(3)
+var<storage, write> end_pc_buffer: array<u32>;
+
+@group(0) @binding(4)
+var<storage, read_write> register_file_buffer: array<ShadyRegisterFile>;
+
+var<private> machine_state: ShadyMachineState;
+
+@compute
+@workgroup_size(16)
+fn execute_instructions(
+  @builtin(global_invocation_id) global_id: vec3<u32>
+) {
+  let vm_id: u32 = global_id.x;
+  if (vm_id >= uniforms.vm_count) {
+    return;
+  }
+
+  machine_state = shady_machine_state_new(vm_id, start_pc_buffer[vm_id]);
+  vm_set_reg(SHADY_REG_VMID, vm_id);
+
+  let ins_count: u32 = uniforms.ins_count; 
+  for (var i: u32 = 0u; i < ins_count; i++) {
+    if (i >= ins_count) {
+      break;
+    }
+    invoke_instruction();
+  }
+
+  end_pc_buffer[vm_id] = machine_state.pc;
+}
+
+fn invoke_instruction() {
+  let ins = progbuf_get_ins(machine_state.pc);
+
+  // Check the condition flags.
+  let flags = machine_state.flags;
+  vm_set_reg(0u, flags);
+  if ((flags & shady_ins_op_cond(ins)) == 0u) {
+    return;
+  }
+
+  // Write the current PC to the PC register.
+  vm_set_reg(SHADY_REG_PC, machine_state.pc);
+
+  // Compute source operand values.
+  var src1_val: i32 = extractBits(i32(ins.src1), 0u, 15u);
+  if ! shady_ins_op_immsrc1(ins) {
+    let src1_reg = shady_src_reg_from_word(ins.src1);
+    src1_val = shady_src_reg_process(src1_reg, vm_get_reg(src1_reg.reg));
+  }
+
+  var src2_val: i32 = extractBits(i32(ins.src2), 0u, 15u);
+  if ! shady_ins_op_immsrc2(ins) {
+    let src2_reg = shady_src_reg_from_word(ins.src2);
+    src2_val = shady_src_reg_process(src2_reg, vm_get_reg(src2_reg.reg));
+  }
+
+  if shady_ins_op_shift16(ins) {
+    src2_val = src2_val << 16u;
+  }
+
+  // Perform operation.
+  let op_kind = shady_ins_op_kind(ins);
+  var result: i32 = 0i;
+  if (op_kind == SHADY_OPCODE_ADD) {
+    result = src1_val + src2_val;
+  } else if (op_kind == SHADY_OPCODE_MUL) {
+    result = src1_val * src2_val;
+  } else if (op_kind == SHADY_OPCODE_DIV) {
+    result = src1_val / src2_val;
+  } else if (op_kind == SHADY_OPCODE_MOD) {
+    result = src1_val % src2_val;
+  } else if (op_kind == SHADY_OPCODE_BITAND) {
+    result = src1_val & src2_val;
+  } else if (op_kind == SHADY_OPCODE_BITOR) {
+    result = src1_val | src2_val;
+  } else if (op_kind == SHADY_OPCODE_BITXOR) {
+    result = src1_val ^ src2_val;
+  } else { // if (op_kind == SHADY_OPCODE_MAX)
+    result = max(src1_val, src2_val);
+  }
+
+  // Apply destination processing.
+  let dst_reg = shady_dst_reg_from_word(ins.dst);
+  result = result + dst_reg.bump;
+  if dst_reg.negate {
+    result = -result;
+  }
+
+  // Write result to destination register.
+  vm_set_reg(dst_reg.reg, u32(result));
+
+  // Set flags if necessary.
+  if shady_ins_op_setflags(ins) {
+    var flags: u32 = 0u;
+    if result == 0i {
+      flags = flags | SHADY_COND_ZERO;
+    }
+    if result < 0i {
+      flags = flags | SHADY_COND_NEG;
+    }
+    if result > 0i {
+      flags = flags | SHADY_COND_POS;
+    }
+    machine_state.flags = flags;
+  }
+
+  // Handle control flow.
+  var target_pc = machine_state.pc + 1u;
+  let cflow = shady_ins_op_cflow(ins);
+  if ((cflow & SHADY_CFLOW_WRITE_BIT) != 0u) {
+    target_pc = vm_get_reg(SHADY_REG_PC);
+  }
+  if ((cflow & SHADY_CFLOW_CALL_BIT) != 0u) {
+    shady_machine_state_push_call(&machine_state);
+  }
+  if ((cflow & SHADY_CFLOW_RET_BIT) != 0u) {
+    shady_machine_state_pop_ret(&machine_state);
+  }
+  machine_state.pc = target_pc;
+}
+
+fn vm_get_reg(reg: u32) -> u32 {
+  return register_file_buffer[machine_state.vm_id].regs[reg];
+}
+fn vm_set_reg(reg: u32, val: u32) {
+  register_file_buffer[machine_state.vm_id].regs[reg] = val;
+}
+
+fn progbuf_get_ins(pc: u32) -> ShadyInstruction {
+  return shady_instruction_from_buffer(program_buffer[pc]);
 }
