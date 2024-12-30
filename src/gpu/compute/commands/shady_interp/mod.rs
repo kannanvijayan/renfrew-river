@@ -1,11 +1,7 @@
 use crate::gpu::{
   GpuDevice,
   GpuSeqBuffer,
-  GpuMapBuffer,
-  shady_vm::{
-    bitcode,
-    ShadyRegisterFile
-  },
+  shady_vm::{ ShadyProgramGpuBuffer, ShadyRegisterFile },
 };
 
 // The size of the workgroups.
@@ -16,7 +12,7 @@ pub(crate) fn shady_interp_command(
   encoder: &mut wgpu::CommandEncoder,
   num_vms: u32,
   num_ins: u32,
-  program_buffer: &GpuSeqBuffer<bitcode::Instruction>,
+  program_buffer: &ShadyProgramGpuBuffer,
   start_pc_buffer: &GpuSeqBuffer<u32>,
   end_pc_buffer: &GpuSeqBuffer<u32>,
   register_file_buffer: &GpuSeqBuffer<ShadyRegisterFile>,

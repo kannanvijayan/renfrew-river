@@ -16,7 +16,7 @@ impl ShadyProgram {
   pub(crate) async fn write_to_buffer(&self,
     device: &GpuDevice,
     offset: usize,
-    buffer: &mut GpuSeqBuffer<bitcode::Instruction>
+    buffer: &mut ShadyProgramGpuBuffer,
   ) {
     buffer.write_iter_staged(device, offset, self.bitcode.iter()).await;
   }
@@ -50,3 +50,5 @@ impl ShadyProgram {
     }
   }
 }
+
+pub(crate) type ShadyProgramGpuBuffer = GpuSeqBuffer<bitcode::Instruction>;

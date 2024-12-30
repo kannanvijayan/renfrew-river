@@ -6,6 +6,7 @@ use crate::gpu::{
   GpuSeqBuffer,
   ShadyAssembler,
   ShadyProgram,
+  ShadyProgramGpuBuffer,
   ShadyRegisterFile,
   compute::{ shady_interpret, ShadyInterpVmInfo },
 };
@@ -40,14 +41,13 @@ pub(crate) async fn run_program(
 ) {
   let num_vms = register_file_buffer.length();
 
-  let program_buffer =
-    GpuSeqBuffer::<bitcode::Instruction>::new(
-      &device,
-      1024,
-      GpuBufferOptions::empty()
-        .with_storage(true)
-        .with_copy_dst(true)
-    );
+  let program_buffer = ShadyProgramGpuBuffer::new(
+    &device,
+    1024,
+    GpuBufferOptions::empty()
+      .with_storage(true)
+      .with_copy_dst(true)
+  );
 
   program_buffer.write_iter_staged(
     &device,

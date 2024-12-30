@@ -2,10 +2,7 @@ use crate::gpu::{
   GpuDevice,
   GpuSeqBuffer,
   GpuBufferOptions,
-  shady_vm::{
-    bitcode,
-    ShadyRegisterFile
-  },
+  shady_vm::{ ShadyProgramGpuBuffer, ShadyRegisterFile },
 };
 use super::commands::shady_interp_command;
 
@@ -16,7 +13,7 @@ pub(crate) struct ShadyInterpVmInfo {
 
 pub(crate) async fn shady_interpret(
   device: &GpuDevice,
-  program_buffer: &GpuSeqBuffer<bitcode::Instruction>,
+  program_buffer: &ShadyProgramGpuBuffer,
   vms_info: Vec<ShadyInterpVmInfo>,
   register_file_buffer: &GpuSeqBuffer<ShadyRegisterFile>,
   num_ins: Option<u32>,

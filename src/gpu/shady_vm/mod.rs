@@ -9,5 +9,5 @@ pub(crate) mod bitcode;
 pub(crate) use self::{
   register_file::ShadyRegisterFile,
   assembler::ShadyAssembler,
-  program::ShadyProgram,
+  program::{ ShadyProgram, ShadyProgramGpuBuffer },
 };

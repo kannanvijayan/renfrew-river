@@ -1,14 +1,10 @@
 use futures::executor::block_on;
 
 use crate::gpu::{
-  bitcode,
-  bytecode,
-  compute::{ ShadyInterpVmInfo, shady_interpret },
   GpuBufferOptions,
   GpuDevice,
   GpuSeqBuffer,
-  ShadyProgram,
-  ShadyRegisterFile
+  ShadyRegisterFile,
 };
 use super::{ assemble_program, run_program };
 

@@ -41,7 +41,7 @@ use crate::{
  */
 pub(crate) struct GameServer {
   // The join-handle for the game thread.
-  join_handle: Option<JoinHandle<()>>,
+  _join_handle: Option<JoinHandle<()>>,
 
   // A mpsc channel for sending messages to the game thread.
   command_tx: mpsc::Sender<CommandEnvelope>,
@@ -88,7 +88,7 @@ impl GameServerInner {
     });
 
     GameServer {
-      join_handle: Some(join_handle),
+      _join_handle: Some(join_handle),
       command_tx,
       response_rx,
     }
@@ -349,7 +349,7 @@ impl GameServerInner {
       return TakeTurnStepRsp::Failed(FailedResponse::new_vec(validation_errors));
     }
 
-    let mut game = match self.game {
+    let game = match self.game {
       Some(ref mut game) => game,
       None => {
         log::warn!("GameServerInner::handle_take_turn_step_command: No game");

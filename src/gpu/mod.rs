@@ -23,5 +23,12 @@ pub(crate) use self::{
   map_buffer::GpuMapBuffer,
   seq_buffer::GpuSeqBuffer,
   world::{ GpuWorld, GpuWorldParams },
-  shady_vm::{ ShadyAssembler, ShadyProgram, ShadyRegisterFile, bytecode, bitcode },
+  shady_vm::{
+    ShadyAssembler,
+    ShadyProgram,
+    ShadyProgramGpuBuffer,
+    ShadyRegisterFile,
+    bytecode,
+    bitcode
+  },
 };
