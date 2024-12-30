@@ -96,7 +96,12 @@ impl ShadyAssembler {
     self.emit_std_compute(d, Op::Add, s1, s2)
   }
   pub(crate) fn emit_sub(&mut self, d: Dst, s1: Src, s2: Src) {
-    self.emit_std_compute(d, Op::Sub, s1, s2)
+    if let Src::Imm(ival) = s2 {
+      assert!(ival >= i16::MIN);
+      self.emit_std_compute(d, Op::Add, s1, Src::Imm(-ival))
+    } else {
+      self.emit_std_compute(d, Op::Sub, s1, s2)
+    }
   }
   pub(crate) fn emit_mul(&mut self, d: Dst, s1: Src, s2: Src) {
     self.emit_std_compute(d, Op::Mul, s1, s2)
