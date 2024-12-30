@@ -13,6 +13,10 @@ use crate::gpu::{
 use super::{ assemble_program, run_program };
 
 
+const ADJUST: u32 = 1001;
+const MODULUS: u32 = 4096;
+const STEPS: u32 = 3000;
+
 #[test]
 fn collatz_vmid() {
   let program = assemble_program(|asm| {
@@ -21,8 +25,8 @@ fn collatz_vmid() {
     asm.declare_label("collatz_step");
 
     // main: SET reg0 = (VM_ID % 5) + 1
-    /* 0 */ asm.emit_mod(asm.dreg(0), asm.sreg_vmid(), asm.immv(5));
-    /* 1 */ asm.emit_add(asm.dreg(0), asm.sreg(0), asm.immv(500));
+    /* 0 */ asm.emit_mod(asm.dreg(0), asm.sreg_vmid(), asm.immv(MODULUS as i16));
+    /* 1 */ asm.emit_add(asm.dreg(0), asm.sreg(0), asm.immv(ADJUST as i16));
     /* 2 */ asm.emit_load(asm.dreg(2), 0);
 
     asm.bind_label("loop_start");
@@ -62,7 +66,7 @@ fn collatz_vmid() {
 
   block_on(async {
     let device = GpuDevice::new().await;
-    let num_vms = 128 * 1024;
+    let num_vms = 64 * 1024;
 
     let register_file_buffer =
       GpuSeqBuffer::<ShadyRegisterFile>::new(
@@ -75,16 +79,15 @@ fn collatz_vmid() {
       );
 
     // parse an integer from the env variable "SHADY_VM_COLLATZ_ITERATIONS"
-    let ins_count = std::env::var("SHADY_VM_COLLATZ_ITERATIONS")
-      .ok()
-      .and_then(|s| s.parse::<u32>().ok())
-      .expect("SHADY_VM_COLLATZ_ITERATIONS must be set to a positive integer");
-    run_program(&device, program, &register_file_buffer, Some(ins_count)).await;
+    run_program(&device, program, &register_file_buffer, Some(STEPS)).await;
 
     let copy_regfiles = register_file_buffer.read_mappable_full_copy(&device).await;
     let regfiles = copy_regfiles.to_vec().await;
     for (i, regfile) in regfiles.iter().enumerate() {
-      assert_eq!((i, regfile.read_reg(241)), (i, count_collatz_steps(500 + i as u32)));
+      assert_eq!(
+        (i, regfile.read_reg(0)),
+        (i, count_collatz_steps(ADJUST + (i as u32 % MODULUS)))
+      );
     }
   });
 }

@@ -221,7 +221,6 @@ impl Ins {
         shift: shift_src2,
       }
     };
-    eprintln!("KVKV src2_word={:?}", src2_word);
     bitcode::Instruction::new(op_word, dst_word, src1_word, src2_word)
   }
 }
