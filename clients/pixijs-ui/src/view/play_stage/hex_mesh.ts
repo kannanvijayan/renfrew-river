@@ -352,11 +352,18 @@ function makeShader(opts: {
         gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
       } else if (elevation < 0.5) {
         // color blue, lower elevation is darker blue.
-        float blue = elevation * 1.2;
+        float xxx = elevation * 1000.0;
+        float hundreds = floor(xxx / 100.0);
+        float rem = xxx - (hundreds * 100.0);
+        float blue = 0.3 + (rem / 100.0) * 0.5;
         gl_FragColor = vec4(0.1, 0.1, blue, 1.0);
       } else {
         float level = (elevation - 0.5) * 2.0;
-        gl_FragColor = vec4(level, level, level, 1.0);
+        float xxx = level * 1000.0;
+        float hundreds = floor(xxx / 100.0);
+        float rem = xxx - (hundreds * 100.0);
+        level = 0.25 + (rem / 100.0) * 0.5;
+        gl_FragColor = vec4(level, level * 0.75, level * 0.75, 1.0);
       }
     }
     `,
