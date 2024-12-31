@@ -39,7 +39,7 @@ struct Buffer2D {
 };
 
 const PERLIN_OCTAVE_MAX_SCALE: f32 = 5.0;
-const PERLIN_OCTAVE_MIN: f32 = 128.0;
+const PERLIN_OCTAVE_MIN: f32 = 4.0;
 const PERLIN_OCTAVE_STEP: f32 = 2.0;
 const PERLIN_OCTAVE_CRAGGINESS: f32 = 1.05;
 
