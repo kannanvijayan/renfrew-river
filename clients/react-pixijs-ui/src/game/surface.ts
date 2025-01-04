@@ -81,6 +81,8 @@ export default class GameSurface {
       }
     });
     this.pixiApp_.stage.addChild(mainViz);
+
+    // Add ticker forwarding to any listeners.
     this.pixiApp_.ticker.add(delta => {
       this.absTime_ += delta;
       this.handleTick(delta, this.absTime_);
@@ -96,6 +98,14 @@ export default class GameSurface {
     };
     window.addEventListener("resize", this.windowResizeListener_);
     this.pixiApp_.renderer.resize(this.canvas.offsetWidth, this.canvas.offsetHeight);
+
+    // Suppress default action on keypresses.
+    window.addEventListener("keydown", (ev: KeyboardEvent) => {
+      ev.preventDefault();
+    });
+    window.addEventListener("keyup", (ev: KeyboardEvent) => {
+      ev.preventDefault();
+    });
   }
 
   public matchesCanvas(canvas: HTMLCanvasElement): boolean {
