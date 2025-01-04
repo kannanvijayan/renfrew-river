@@ -339,6 +339,7 @@ export default class WorldMapTiledData {
     tileIndex: number,
     generation: number
   ): Promise<TileLoadCompletion> {
+    console.warn("KVKV performTileLoad", { tileIndex, generation });
     const { tileColumn, tileRow } = this.tileColumnAndRow(tileIndex);
     // Get or create a tile load request.
     const topLeft: CellCoord = {
@@ -356,6 +357,7 @@ export default class WorldMapTiledData {
       ),
     };
     const areaData = await this.loaderApi.readMapArea({ topLeft, area });
+    console.warn("KVKV performTileLoad got areaData", { areaData });
 
     // If the generation has changed since the request was made, then
     // the data is stale and we should not write it.

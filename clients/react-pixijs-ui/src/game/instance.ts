@@ -42,6 +42,7 @@ export default class GameInstance {
             kinds: ["Elevation", "AnimalId"] as ["Elevation", "AnimalId"],
           });
           // TODO: assert(result.elevations !== null);
+          console.debug("KVKV readMapArea result", result);
           const { elevations, animalIds } = result;
           return { elevations, animalIds };
         },

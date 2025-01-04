@@ -93,9 +93,7 @@ export default class GameSurface {
     this.canvas.addEventListener("contextmenu", this.canvasContextMenuListener_);
 
     // Handle window resizing.
-    this.windowResizeListener_ = () => {
-      this.syncAfterResize();
-    };
+    this.windowResizeListener_ = this.syncAfterResize.bind(this);
     window.addEventListener("resize", this.windowResizeListener_);
     this.pixiApp_.renderer.resize(this.canvas.offsetWidth, this.canvas.offsetHeight);
 
@@ -113,13 +111,16 @@ export default class GameSurface {
   }
 
   public destroy(): void {
+    console.warn("KVKV GameSurface.destroy");
     this.pixiApp_.destroy();
     window.removeEventListener("resize", this.windowResizeListener_);
     this.canvas.removeEventListener("contextmenu", this.canvasContextMenuListener_);
+    this.viewObserver_ = null;
   }
 
   private syncAfterResize(): void {
     const { offsetWidth, offsetHeight } = this.canvas;
+    console.warn("KVKV syncAfterResize", { offsetWidth, offsetHeight });
     this.pixiApp_.renderer.resize(offsetWidth, offsetHeight);
     this.viewObserver_?.resize(offsetWidth, offsetHeight);
   }

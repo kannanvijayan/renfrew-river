@@ -19,7 +19,7 @@ export default class StageView extends PIXI.Container {
     this.initBackplane();
 
     this.removeResizeListener = this.viewObserver_.addResizeListener(
-      (width, height) => this.handleResize(width, height)
+      this.handleResize.bind(this)
     );
   }
 
@@ -28,6 +28,7 @@ export default class StageView extends PIXI.Container {
   }
 
   private handleResize(width: number, height: number): void {
+    console.debug("KVKV StageView.handleResize", width, height);
     this.preResize(width, height);
 
     this.removeChild(this.backplane);
