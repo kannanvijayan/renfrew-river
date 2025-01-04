@@ -102,12 +102,6 @@ export default class GameSurface {
     return this.canvas === canvas;
   }
 
-  public handleResize(): void {
-    const { offsetWidth, offsetHeight } = this.canvas;
-    this.pixiApp_.renderer.resize(offsetWidth, offsetHeight);
-    this.viewObserver_?.resize(offsetWidth, offsetHeight);
-  }
-
   public destroy(): void {
     this.pixiApp_.destroy();
     window.removeEventListener("resize", this.windowResizeListener_);
@@ -115,6 +109,9 @@ export default class GameSurface {
   }
 
   private syncAfterResize(): void {
+    const { offsetWidth, offsetHeight } = this.canvas;
+    this.pixiApp_.renderer.resize(offsetWidth, offsetHeight);
+    this.viewObserver_?.resize(offsetWidth, offsetHeight);
   }
 
   private handleTick(delta: number, absTime: number): void {

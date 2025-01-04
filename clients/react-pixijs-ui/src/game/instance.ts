@@ -97,8 +97,4 @@ export default class GameInstance {
       this.worldObserver_ = null;
     }
   }
-
-  public handleWindowResized(): void {
-    this.surface_?.handleResize();
-  }
 }
