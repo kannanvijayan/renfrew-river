@@ -10,12 +10,13 @@ RUST_LINES=$(count_loc ./src '*.rs')
 SHADER_LINES=$(count_loc ./src '*.wgsl')
 PROTOCOL_CLIENT_LINES=$(count_loc ./clients/protocol-client/src '*.ts')
 PIXIJS_UI_LINES=$(count_loc ./clients/pixijs-ui/src '*.ts')
+REACT_PIXIJS_UI_LINES=$(count_loc ./clients/react-pixijs-ui/src '*.ts')
 
-TOTAL=$(($RUST_LINES + $SHADER_LINES + $PROTOCOL_CLIENT_LINES + $PIXIJS_UI_LINES))
+TOTAL=$(($RUST_LINES + $SHADER_LINES + $PROTOCOL_CLIENT_LINES + $REACT_PIXIJS_UI_LINES))
 
 echo "Rust: $RUST_LINES"
 echo "Shader: $SHADER_LINES"
 echo "Protocol Client: $PROTOCOL_CLIENT_LINES"
-echo "PixiJS UI: $PIXIJS_UI_LINES"
+echo "PixiJS UI: $REACT_PIXIJS_UI_LINES"
 echo "========"
 echo "Total: $TOTAL"
