@@ -1,10 +1,12 @@
 import { useState } from "react";
 import GameClient from "renfrew-river-protocol-client";
-import GameServerSession from "./server_session";
+import GameServerSession from "./game/server_session";
+import GameInstance from "./game/instance";
 
-interface GameState {
+export default interface ViewState {
   client: GameClient | null;
   serverSession: GameServerSession | null;
+  instance: GameInstance | null;
 }
 
 class StateField<T> {
@@ -31,16 +33,19 @@ function useStateField<T>(initialValue: T): StateField<T> {
   return new StateField(value, setValue);
 }
 
-class GameStateImpl implements GameState {
+class ViewStateImpl implements ViewState {
   private readonly client_: StateField<GameClient|null>;
   private readonly serverSession_: StateField<GameServerSession|null>;
+  private instance_: StateField<GameInstance|null>;
 
   public constructor(args: {
     client: StateField<GameClient|null>,
     serverSession: StateField<GameServerSession|null>,
+    instance: StateField<GameInstance|null>,
   }) {
     this.client_ = args.client;
     this.serverSession_ = args.serverSession;
+    this.instance_ = args.instance;
   }
 
   public get client(): GameClient | null {
@@ -56,10 +61,18 @@ class GameStateImpl implements GameState {
   public set serverSession(serverSession: GameServerSession | null) {
     this.serverSession_.value = serverSession;
   }
+
+  public get instance(): GameInstance | null {
+    return this.instance_.value;
+  }
+  public set instance(instance: GameInstance | null) {
+    this.instance_.value = instance;
+  }
 }
 
-export function useGameState(): GameState {
+export function useViewState(): ViewState {
   const client = useStateField<GameClient|null>(null);
   const serverSession = useStateField<GameServerSession|null>(null);
-  return new GameStateImpl({ client, serverSession });
+  const instance = useStateField<GameInstance|null>(null);
+  return new ViewStateImpl({ client, serverSession, instance });
 }

@@ -9,6 +9,7 @@ mod vec_map;
 mod animal;
 mod turn_no;
 mod cell_info;
+mod unit;
 
 pub(crate) use self::{
   cell_coord::CellCoord,
@@ -21,4 +22,5 @@ pub(crate) use self::{
   animal::{ AnimalId, AnimalData },
   turn_no::TurnNo,
   cell_info::CellInfo,
+  unit::{ UnitId, UnitData },
 };

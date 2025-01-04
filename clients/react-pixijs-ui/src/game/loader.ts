@@ -10,22 +10,20 @@ export type GameLoaderEventListeners = {
  * Top-level manager of game.
  */
 export default class GameLoader {
-  private static readonly GLOBAL_NAME = "RENFREW_RIVER";
+  private static instance_: GameLoader | null = null;
 
-  private static instance: GameLoader | null = null;
-
-  private client: GameClient | null = null;
-  private session: GameServerSession | null = null;
-  private readonly eventListeners: GameLoaderEventListeners = {};
+  private client_: GameClient | null = null;
+  private session_: GameServerSession | null = null;
+  private readonly eventListeners_: GameLoaderEventListeners = {};
 
   private constructor() {
   }
 
   public static getInstance(): GameLoader {
-    if (this.instance === null) {
-      this.instance = new GameLoader();
+    if (GameLoader.instance_ === null) {
+      GameLoader.instance_ = new GameLoader();
     }
-    return this.instance;
+    return GameLoader.instance_;
   }
 
   public setOnDisconnect(listener: () => void): void {
@@ -33,7 +31,7 @@ export default class GameLoader {
   }
 
   public async connectToServer(serverAddr: string): Promise<GameServerSession> {
-    if (this.client) {
+    if (this.client_) {
       throw new Error("Game.connectToServer: Already connected to server");
     }
     const ws = new WebSocket(serverAddr);
@@ -91,7 +89,7 @@ export default class GameLoader {
         },
       });
     });
-    this.client = client;
+    this.client_ = client;
 
     // Get the game constants and settings limits.
     const constants = await client.getConstants();
@@ -102,28 +100,28 @@ export default class GameLoader {
     );
 
     // Create the server session.
-    this.session = new GameServerSession({
-      serverAddr, client, constants, settingsLimits
-    });
-    return this.session;
+    this.session_ = new GameServerSession(
+      { serverAddr, client, constants, settingsLimits }
+    );
+    return this.session_;
   }
 
   public async disconnectFromServer(): Promise<void> {
-    if (!this.client) {
+    if (!this.client_) {
       console.warn("Game.disconnectFromServer: Not connected to server");
       return;
     }
-    this.client.disconnect();
-    this.client = null;
+    this.client_.disconnect();
+    this.client_ = null;
     this.invokeListener("disconnect");
   }
 
   private handleRemoteDisconnect(): void {
-    if (this.client) {
-      this.client = null;
+    if (this.client_) {
+      this.client_ = null;
     }
-    if (this.session) {
-      this.session = null;
+    if (this.session_) {
+      this.session_ = null;
     }
     this.invokeListener("disconnect");
   }
@@ -132,12 +130,12 @@ export default class GameLoader {
     eventType: T,
     listener: GameLoaderEventListeners[T]
   ): void {
-    this.eventListeners[eventType] = listener;
+    this.eventListeners_[eventType] = listener;
   }
 
   private invokeListener<T extends keyof GameLoaderEventListeners>(
     eventType: T
   ): void {
-    this.eventListeners[eventType]?.();
+    this.eventListeners_[eventType]?.();
   }
 }

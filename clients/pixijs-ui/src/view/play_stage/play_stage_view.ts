@@ -101,11 +101,16 @@ export default class PlayStageView extends StageView {
 
   private bindBackplaneEvents(): void {
     this.backplane.eventMode = "static";
+    this.backplane.onrightclick = this.handleRightMouseDown.bind(this);
     this.backplane.onmousedown = this.handleMouseDown.bind(this);
     this.backplane.onmouseup = this.handleMouseUp.bind(this);
     this.backplane.onmouseupoutside = this.handleMouseUp.bind(this);
     this.backplane.onmousemove = this.handleMouseMove.bind(this);
     this.backplane.onwheel = this.handleWheel.bind(this);
+  }
+
+  private handleRightMouseDown(e: PIXI.FederatedMouseEvent): void {
+    this.mapView?.handleRightMouseDown(e);
   }
 
   private handleMouseDown(e: PIXI.FederatedMouseEvent): void {

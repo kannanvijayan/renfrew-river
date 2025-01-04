@@ -66,15 +66,22 @@ export default class TopView {
   constructor(opts: { callbackApi: TopViewCallbackApi }) {
     const { callbackApi } = opts;
 
+    const canvas = document.getElementById("game-canvas") as HTMLCanvasElement;
+    // Suppress right-click context menu on canvas.
+    canvas.addEventListener("contextmenu", (ev: MouseEvent) => {
+      ev.preventDefault();
+    });
+
     this.callbackApi = callbackApi;
     this.pixiApp = new PIXI.Application({
       backgroundColor: 0x000000,
       resolution: window.devicePixelRatio || 1,
-      view: document.getElementById("game-canvas") as HTMLCanvasElement,
+      view: canvas,
       resizeTo: window,
       eventMode: "passive",
       antialias: true,
     });
+
 
     this.attributes = new TopViewAttributes({
       areaWidth: window.innerWidth,

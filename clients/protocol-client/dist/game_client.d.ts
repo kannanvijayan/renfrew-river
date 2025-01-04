@@ -5,6 +5,7 @@ import { GameSettings } from "./types/game_settings";
 import { WorldDims } from "./types/world_dims";
 import { CellInfo } from "./types/cell_info";
 import { TurnStepResult } from "./types/turn_step_result";
+import { SettingsLimits } from "./types/settings_limits";
 import { ReadMapDataKind, ReadMapDataKindsToOutput } from "./protocol/commands/read_map_data_cmd";
 export type GameClientTransportListeners = {
     open: () => void;
@@ -40,11 +41,7 @@ export default class GameClient {
     constructor(args: GameClientArgs);
     disconnect(): void;
     getConstants(): Promise<GameConstants>;
-    defaultSettings(): Promise<{
-        settings: GameSettings;
-        minWorldDims: WorldDims;
-        maxWorldDims: WorldDims;
-    }>;
+    defaultSettings(): Promise<SettingsLimits>;
     hasGame(): Promise<GameSettings | false>;
     newGame(settings: GameSettings): Promise<void>;
     readMapData<Kinds extends ReadMapDataKind[]>(opts: {

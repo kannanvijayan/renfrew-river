@@ -23,11 +23,7 @@ impl<T: GpuBufferDataType> GpuSeqBuffer<T> {
   ) -> GpuSeqBuffer<T> {
     let size = (length as u64) * (T::NativeType::SIZE as u64);
     let buffer = opts.create_wgpu_buffer(device, size);
-    GpuSeqBuffer {
-      length,
-      buffer,
-      _phantom: PhantomData,
-    }
+    GpuSeqBuffer { length, buffer, _phantom: PhantomData }
   }
 
   pub(crate) async fn from_iter_for_write<'a>(

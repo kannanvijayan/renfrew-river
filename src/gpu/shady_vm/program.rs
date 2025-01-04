@@ -1,3 +1,4 @@
+use serde;
 use std::mem;
 use crate::gpu::{
   GpuDevice,
@@ -52,3 +53,22 @@ impl ShadyProgram {
 }
 
 pub(crate) type ShadyProgramGpuBuffer = GpuSeqBuffer<bitcode::Instruction>;
+
+/**
+ * Wrapper type for the position of a program in a buffer.
+ */
+#[derive(Clone, Copy, Debug)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct ShadyProgramIndex {
+  pub offset: u32,
+}
+impl GpuBufferDataType for ShadyProgramIndex {
+  type NativeType = u32;
+
+  fn from_native(data_type: Self::NativeType) -> Self {
+    ShadyProgramIndex { offset: data_type }
+  }
+  fn to_native(&self) -> Self::NativeType {
+    self.offset
+  }
+}

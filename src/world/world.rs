@@ -45,6 +45,7 @@ impl World {
     log::debug!("World::initialize");
     self.gpu_world.init_elevations();
     self.gpu_world.init_animals();
+    self.gpu_world.init_units();
   }
 
   pub(crate) fn world_dims(&self) -> WorldDims {

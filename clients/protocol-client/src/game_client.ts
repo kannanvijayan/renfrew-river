@@ -10,6 +10,7 @@ import { GameSettings } from "./types/game_settings";
 import { WorldDims } from "./types/world_dims";
 import { CellInfo } from "./types/cell_info";
 import { TurnStepResult } from "./types/turn_step_result";
+import { SettingsLimits } from "./types/settings_limits";
 import {
   ReadMapDataKind,
   ReadMapDataKindsToOutput,
@@ -90,13 +91,7 @@ export default class GameClient {
     throw new Error("GetConstants: unexpected response");
   }
 
-  public async defaultSettings()
-    : Promise<{
-        settings: GameSettings,
-        minWorldDims: WorldDims,
-        maxWorldDims: WorldDims,
-      }>
-  {
+  public async defaultSettings(): Promise<SettingsLimits> {
     const result = await this.sendCommand("DefaultSettings", {});
     if ("DefaultSettings" in result) {
       const settings = result.DefaultSettings.settings;

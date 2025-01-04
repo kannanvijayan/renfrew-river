@@ -13,6 +13,7 @@ use crate::{
       compute_downhill_movement,
       resolve_animal_move_conflicts,
       apply_animal_moves,
+      initialize_units,
     },
   },
   world::{
@@ -24,6 +25,7 @@ use crate::{
     AnimalId,
     AnimalData,
     CellInfo,
+    UnitData,
   },
   game::{
     constants,
@@ -58,6 +60,9 @@ pub(crate) struct GpuWorld {
 
   // Map from tiles to animals.
   animals_map: GpuMapBuffer<AnimalId>,
+
+  // The unit data buffer.
+  unit_data: GpuSeqBuffer<UnitData>,
 }
 impl GpuWorld {
   pub(crate) fn new(init_params: GpuWorldParams) -> GpuWorld {
@@ -87,6 +92,14 @@ impl GpuWorld {
         .with_storage(true)
         .with_copy_src(true)
     );
+    let unit_data = GpuSeqBuffer::new(
+      &device,
+      constants::MAX_UNITS,
+      GpuBufferOptions::empty()
+        .with_label("UnitData")
+        .with_storage(true)
+        .with_copy_src(true)
+    );
     GpuWorld {
       device,
       world_dims,
@@ -95,6 +108,7 @@ impl GpuWorld {
       elevation_map,
       animals_list,
       animals_map,
+      unit_data,
     }
   }
 
@@ -121,6 +135,12 @@ impl GpuWorld {
         &self.animals_list,
         &self.animals_map,
       ).await;
+    });
+  }
+
+  pub(crate) fn init_units(&self) {
+    futures::executor::block_on(async {
+      initialize_units(&self.device, &self.unit_data).await;
     });
   }
 

@@ -22,6 +22,9 @@ impl RandGenCategory {
 /** The maximum number of animals in the game. */
 pub(crate) const MAX_ANIMALS: usize = 1_000_000;
 
+/** The maximum number of units in the game. */
+pub(crate) const MAX_UNITS: usize = 50_000;
+
 /** The number of bits used to represent terrain elevation. */
 pub(crate) const ELEVATION_BITS: u32 = 12;
 

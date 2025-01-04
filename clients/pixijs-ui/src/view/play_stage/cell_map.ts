@@ -186,6 +186,10 @@ export default class CellMap extends PIXI.Container {
     // For animated sprites, update time in shader here.
   }
 
+  public handleRightPointerDown(_point: Readonly<PIXI.IPointData>): void {
+    console.log("TODO: Display a context menu!");
+  }
+
   public handlePointerDown(point: Readonly<PIXI.IPointData>): void {
     this.dragStart(point);
   }

@@ -1,5 +1,7 @@
 /target
 node_modules
 /clients/pixijs-ui/dist
+/clients/react-pixijs-ui/dist
+/clients/protocol-client/dist
 __pycache__
 *.swp

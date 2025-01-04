@@ -1,5 +1,7 @@
-import { Box, Button, Input, Typography } from '@mui/material';
 import React from 'react';
+import { Box, Button, Input } from '@mui/material';
+
+import MainMenuFrame, { MainMenuLabeledEntry } from './MainMenuFrame';
 
 // Accepts a callback function to call when "Connect" button is clicked.
 export default function ServerSelector(
@@ -22,29 +24,14 @@ export default function ServerSelector(
     /* Make a vertical layout of a title, a labeled server selector input,
      * and a connect button.
      */
-    <Box sx={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      backgroundColor: "secondary.light", p: 4, borderRadius: 1,
-      m: 4, boxShadow: 3,
-    }} width="fit-content">
-
-      { /* Title */ }
-      <Typography variant="h5" sx={{ mb: 2 }} color="textSecondary">
-        Connect to server
-      </Typography>
-
+    <MainMenuFrame title="Connect to server">
       { /* Server selector input (horizontal box) */ }
-      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-        <Typography
-          variant="body2" component="label" htmlFor="ws-server-input"
-          sx={{ mr: 2 }}
-        >
-          Server:
-        </Typography>
-        { /* <input type="text" id="ws-server-input" /> */ }
+      <MainMenuLabeledEntry label="Server" targetId="ws-server-input">
         <Input ref={serverAddrRef} id="ws-server-input"
-          onChange={e => { serverAddressChanged(e.target.value); }} />
-      </Box>
+          onChange={e => { serverAddressChanged(e.target.value); }}
+          onKeyUp={e => { if (e.key === "Enter") { connectClicked(); } }}
+        />
+      </MainMenuLabeledEntry>
 
       { /* Connect button */ }
       <Box sx={{ mt: 2 }}>
@@ -52,6 +39,6 @@ export default function ServerSelector(
           Connect
         </Button>
       </Box>
-    </Box>
+    </MainMenuFrame>
   );
 };

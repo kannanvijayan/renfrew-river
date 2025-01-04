@@ -5,6 +5,7 @@ use crate::{
     GpuBufferNativeType,
     GpuBufferOptions,
     GpuDevice,
+    GpuSeqBuffer,
   },
   world::{ WorldDims, CellCoord, VecMap },
 };

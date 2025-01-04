@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,15 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.GameClientConnectError = void 0;
-const read_map_data_cmd_1 = require("./protocol/commands/read_map_data_cmd");
-var GameClientConnectError;
+import { ReadMapDataOutputNameMap } from "./protocol/commands/read_map_data_cmd";
+export var GameClientConnectError;
 (function (GameClientConnectError) {
     // Failed to create connection.
     GameClientConnectError["CONNECTION_FAILED"] = "connection-failed";
-})(GameClientConnectError || (exports.GameClientConnectError = GameClientConnectError = {}));
-class GameClient {
+})(GameClientConnectError || (GameClientConnectError = {}));
+export default class GameClient {
     constructor(args) {
         const { transport, callbacks } = args;
         this.callbacks_ = callbacks;
@@ -76,7 +73,7 @@ class GameClient {
             if ("MapData" in result) {
                 const retval = {};
                 for (const kind of opts.kinds) {
-                    const name = read_map_data_cmd_1.ReadMapDataOutputNameMap[kind];
+                    const name = ReadMapDataOutputNameMap[kind];
                     retval[name] = result.MapData[name];
                 }
                 return retval;
@@ -205,5 +202,4 @@ class GameClient {
         awaiter.resolve(data);
     }
 }
-exports.default = GameClient;
 //# sourceMappingURL=game_client.js.map

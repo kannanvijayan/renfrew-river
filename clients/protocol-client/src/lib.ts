@@ -11,7 +11,10 @@ import { TurnNo } from "./types/turn_no";
 import { WorldDims } from "./types/world_dims";
 import { GameConstants } from "./types/game_constants";
 import { GameSettings } from "./types/game_settings";
+import { SettingsLimits } from "./types/settings_limits";
 import { TurnStepResult } from "./types/turn_step_result";
+
+import { GameClientTransportListeners } from "./game_client";
 
 export default GameClient;
 export {
@@ -25,5 +28,8 @@ export {
   TurnNo,
   GameConstants,
   GameSettings,
+  SettingsLimits,
   TurnStepResult,
+
+  GameClientTransportListeners
 };

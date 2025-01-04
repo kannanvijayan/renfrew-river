@@ -27,6 +27,7 @@ pub(crate) use self::{
     ShadyAssembler,
     ShadyProgram,
     ShadyProgramGpuBuffer,
+    ShadyProgramIndex,
     ShadyRegisterFile,
     bytecode,
     bitcode

@@ -1,11 +1,13 @@
 import { Box } from '@mui/material';
 
-import ServerSelector from './ServerSelector';
-import BannerLogo from './BannerLogo';
+import ServerSelector from '../components/ServerSelector';
+import BannerLogo from '../components/BannerLogo';
+import ViewState from '../ViewState';
 
-export default function UnconnectedScreen(
+export default function UnconnectedView(
   props: {
     onConnectClicked: (server: string) => void,
+    viewState: ViewState,
   }
 ) {
   return (

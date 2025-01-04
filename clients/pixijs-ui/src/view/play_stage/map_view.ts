@@ -139,6 +139,11 @@ export default class MapView extends PIXI.Container {
       this.topViewAttributes.areaHeight - this.cellInfoPanel.height;
   }
 
+  public handleRightMouseDown(ev: PIXI.FederatedMouseEvent): void {
+    const point = this.callbackApi.localizePointerPosition(ev.global);
+    this.cellMap.handleRightPointerDown(point);
+  }
+
   public handleMouseDown(ev: PIXI.FederatedMouseEvent): void {
     const point = this.callbackApi.localizePointerPosition(ev.global);
     this.cellMap.handlePointerDown(point);
