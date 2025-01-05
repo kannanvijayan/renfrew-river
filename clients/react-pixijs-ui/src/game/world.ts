@@ -1,4 +1,4 @@
-import {
+import GameClient, {
   CellCoord,
   GameConstants,
   AnimalData,
@@ -8,16 +8,6 @@ import WorldMapTiledData, { WorldMapTiledDataLoadResult } from "./world_map_tile
 import WorldObserver from "./world_observer";
 import WorldMinimapData from "./world_minimap_data";
 
-export type GameWorldLoaderApi = {
-  readMapArea: (opts: {
-    topLeft: CellCoord,
-    area: WorldDims
-  }) => Promise<{
-    elevations: number[][],
-    animalIds: number[][],
-  }>;
-};
-
 /** The game world. */
 export default class GameWorld {
   public readonly worldDims: WorldDims;
@@ -26,26 +16,42 @@ export default class GameWorld {
   public readonly minimapData: WorldMinimapData;
   public readonly animals: AnimalData[];
 
-  constructor(opts: {
+  private constructor(opts: {
+    client: GameClient,
     constants: GameConstants,
     worldDims: WorldDims,
     miniDims: WorldDims,
-    loaderApi: GameWorldLoaderApi,
+    minimapData: WorldMinimapData,
   }) {
-    const { constants, worldDims, miniDims, loaderApi } = opts;
+    const { client, constants, worldDims, miniDims } = opts;
     this.worldDims = worldDims;
     this.miniDims = miniDims;
     this.mapData = new WorldMapTiledData({
+      client,
       constants,
       worldDims,
-      loaderApi,
     });
-    this.minimapData = new WorldMinimapData({ constants, miniDims });
     this.animals = [];
+    this.minimapData = opts.minimapData;
+  }
+
+  public static async load(opts: {
+    client: GameClient,
+    constants: GameConstants,
+    worldDims: WorldDims,
+    miniDims: WorldDims,
+  }): Promise<GameWorld> {
+    const { client, constants, worldDims, miniDims } = opts;
+    const minimapData = await WorldMinimapData.load(
+      { client, constants, miniDims }
+    );
+    return new GameWorld(
+      { client, constants, worldDims, miniDims, minimapData }
+    );
   }
 
   public newObserver(): WorldObserver {
-    return new WorldObserver({ world: this });
+    return new WorldObserver(this);
   }
 
   public addAnimals(animals: AnimalData[]): void {

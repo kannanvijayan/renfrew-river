@@ -39,7 +39,7 @@ export default class GameServerSession {
       throw new Error("No game exists");
     }
 
-    const instance = new GameInstance({
+    const instance = await GameInstance.load({
       client: this.client_,
       serverSession: this,
       settings,
@@ -53,7 +53,7 @@ export default class GameServerSession {
       throw new Error("Already in a game");
     }
     await this.client_.newGame(settings);
-    const instance = new GameInstance({
+    const instance = await GameInstance.load({
       client: this.client_,
       serverSession: this,
       settings,

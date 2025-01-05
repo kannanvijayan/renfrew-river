@@ -1,4 +1,4 @@
-import { GameConstants, WorldDims } from "renfrew-river-protocol-client";
+import GameClient, { GameConstants, WorldDims } from "renfrew-river-protocol-client";
 import MapData from "./map_data";
 
 /**
@@ -9,7 +9,7 @@ export default class WorldMinimapData {
   public readonly miniDims: WorldDims;
   public readonly elevations: MapData<"uint8">;
 
-  constructor(opts: {
+  private constructor(opts: {
     constants: GameConstants,
     miniDims: WorldDims,
   }) {
@@ -18,7 +18,19 @@ export default class WorldMinimapData {
     this.elevations = new MapData("uint8", this.miniDims);
   }
 
-  public writeElevations(elevations: number[][]) {
+  public static async load(opts: {
+    client: GameClient,
+    constants: GameConstants,
+    miniDims: WorldDims,
+  }): Promise<WorldMinimapData> {
+    const { client, constants, miniDims } = opts;
+    const result = new WorldMinimapData({ constants, miniDims });
+    const miniElevs = await client.miniElevations({ miniDims });
+    result.writeElevations(miniElevs);
+    return result;
+  }
+
+  private writeElevations(elevations: number[][]) {
     // When writing elevations, we want to keep only the top 8 bits.
     // To know how many bits to shift, we need to know how many bits
     // are in the elevation values.

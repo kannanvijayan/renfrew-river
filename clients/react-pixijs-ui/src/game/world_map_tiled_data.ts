@@ -1,4 +1,4 @@
-import {
+import GameClient, {
   CellCoord,
   GameConstants,
   WorldDims,
@@ -6,16 +6,6 @@ import {
 } from "renfrew-river-protocol-client";
 import Deferred from "../util/deferred";
 import MapData from "./map_data";
-
-export type WorldMapTiledDataCallbackApi = {
-  readMapArea: (opts: {
-    topLeft: CellCoord,
-    area: WorldDims
-  }) => Promise<{
-    elevations: number[][],
-    animalIds: number[][],
-  }>,
-};
 
 export type WorldMapTiledDataLoadResult = {
   tilesUpdated: number,
@@ -42,7 +32,7 @@ export default class WorldMapTiledData {
   public readonly elevations: MapData<"uint8">;
   public readonly animalKinds: MapData<"uint8">;
 
-  private readonly loaderApi: WorldMapTiledDataCallbackApi;
+  private readonly client: GameClient;
   private readonly totalTileRows: number;
   private readonly totalTileColumns: number;
 
@@ -60,11 +50,11 @@ export default class WorldMapTiledData {
   private invalidationListeners: (() => void)[];
 
   constructor(opts: {
+    client: GameClient,
     constants: GameConstants,
     worldDims: WorldDims,
-    loaderApi: WorldMapTiledDataCallbackApi,
   }) {
-    const { worldDims, constants, loaderApi } = opts;
+    const { client, worldDims, constants } = opts;
 
     this.constants = constants;
     this.worldDims = worldDims;
@@ -72,7 +62,7 @@ export default class WorldMapTiledData {
     this.elevations = new MapData("uint8", this.worldDims);
     this.animalKinds = new MapData("uint8", this.worldDims);
 
-    this.loaderApi = loaderApi;
+    this.client = client;
 
     this.totalTileRows = Math.ceil(this.worldDims.rows / PER_TILE_DIMS.rows);
     this.totalTileColumns =
@@ -356,7 +346,7 @@ export default class WorldMapTiledData {
         PER_TILE_DIMS.rows
       ),
     };
-    const areaData = await this.loaderApi.readMapArea({ topLeft, area });
+    const areaData = await this.readMapData(topLeft, area);
     console.warn("KVKV performTileLoad got areaData", { areaData });
 
     // If the generation has changed since the request was made, then
@@ -385,6 +375,20 @@ export default class WorldMapTiledData {
     this.tileLoadStates[tileIndex] = "Loaded";
 
     return "updated";
+  }
+
+  private async readMapData(topLeft: CellCoord, area: WorldDims)
+    : Promise<{
+      elevations: number[][],
+      animalIds: number[][],
+    }>
+  {
+    const kinds = ["Elevation", "AnimalId"] as ["Elevation", "AnimalId"];
+    const result = await this.client.readMapData({ topLeft, area, kinds });
+    return {
+      elevations: result.elevations,
+      animalIds: result.animalIds,
+    };
   }
 
   private tileIndex(tileColumn: number, tileRow: number): number {

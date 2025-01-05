@@ -9,10 +9,7 @@ import WorldMinimapData from "./world_minimap_data";
 export default class WorldObserver {
   private readonly world: GameWorld;
 
-  constructor(opts: {
-    world: GameWorld,
-  }) {
-    const { world } = opts;
+  constructor(world: GameWorld) {
     this.world = world;
   }
 

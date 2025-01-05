@@ -14,47 +14,46 @@ export default class GameInstance {
   public readonly settings: GameSettings;
 
   private readonly world_: GameWorld;
-  private worldObserver_: WorldObserver | null = null;
+  private worldObserver_: WorldObserver;
   private surface_: GameSurface | null = null;
 
-  public constructor(args: {
+  private constructor(args: {
     client: GameClient,
     serverSession: GameServerSession,
     settings: GameSettings,
+    world: GameWorld,
   }) {
     this.client_ = args.client;
     this.serverSession = args.serverSession;
     this.settings = args.settings;
 
-    const worldDims = this.settings.worldDims;
+    this.world_ = args.world;
+    this.worldObserver_ = this.world_.newObserver();
+  }
+
+  public static async load(args: {
+    client: GameClient,
+    serverSession: GameServerSession,
+    settings: GameSettings,
+  }): Promise<GameInstance> {
+    const { client, serverSession, settings } = args;
+
+    const worldDims = settings.worldDims;
     const miniColumns = 500;
     const miniRows = 0|(worldDims.rows * miniColumns / worldDims.columns);
 
-    this.world_ = new GameWorld({
-      constants: this.serverSession.constants,
-      worldDims: this.settings.worldDims,
+    const world = await GameWorld.load({
+      client,
+      constants: serverSession.constants,
+      worldDims: settings.worldDims,
       miniDims: { columns: miniColumns, rows: miniRows },
-      loaderApi: {
-        readMapArea: async ({topLeft, area}) => {
-          const result = await this.client_.readMapData({
-            topLeft,
-            area,
-            kinds: ["Elevation", "AnimalId"] as ["Elevation", "AnimalId"],
-          });
-          // TODO: assert(result.elevations !== null);
-          console.debug("KVKV readMapArea result", result);
-          const { elevations, animalIds } = result;
-          return { elevations, animalIds };
-        },
-      },
     });
+    return new GameInstance({ client, serverSession, settings, world });
   }
 
   public handleCanvasMounted(canvas: HTMLCanvasElement): void {
-    console.log("KVKV Canvas mounted", canvas);
     // Mounted the same canvas.
     if (this.surface_?.matchesCanvas(canvas)) {
-      console.log("KVKV Canvas already mounted");
       return;
     }
 
@@ -64,24 +63,21 @@ export default class GameInstance {
       this.surface_.destroy();
     }
 
-    this.worldObserver_ = new WorldObserver({ world: this.world_ })
-
     this.surface_ = new GameSurface({
       canvas,
       worldObserver: this.worldObserver_,
       callbackApi: {
-        "ensureMapDataLoaded": async (topleft, area) => {
+        ensureMapDataLoaded: async (topleft, area) => {
           return this.world_.ensureViewAndQueueSurroundings(topleft, area);
         },
-        "getAnimalData": async (animalId) => {
+        getAnimalData: async (animalId) => {
           return this.client_.getAnimalData(animalId);
         },
-        "getCellInfo": async (cell) => {
+        getCellInfo: async (cell) => {
           return this.client_.getCellInfo(cell);
         },
-        "takeTurnStep": async () => {
-          const result = await this.client_.takeTurnStep();
-          console.log("KVKV takeTurnStep result", result);
+        takeTurnStep: async () => {
+          await this.client_.takeTurnStep();
         },
       }
     });
@@ -95,7 +91,6 @@ export default class GameInstance {
       }
       this.surface_.destroy();
       this.surface_ = null;
-      this.worldObserver_ = null;
     }
   }
 }
