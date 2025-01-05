@@ -359,8 +359,6 @@ struct ShadyMachineState {
   terminated: bool,
 }
 
-alias ShadyMachineStatePtr = ptr<private, ShadyMachineState>;
-
 fn shady_machine_state_new(vm_id: u32, pc: u32) -> ShadyMachineState {
   var state: ShadyMachineState;
   state.vm_id = vm_id;
@@ -372,7 +370,7 @@ fn shady_machine_state_new(vm_id: u32, pc: u32) -> ShadyMachineState {
   return state;
 }
 
-fn shady_machine_state_push_call(state_ptr: ShadyMachineStatePtr) {
+fn shady_machine_state_push_call(state_ptr: ptr<private, ShadyMachineState>) {
   let call_depth = (*state_ptr).call_depth;
   if (call_depth >= 4u) {
     // TODO: Log an error somehow.
@@ -383,7 +381,7 @@ fn shady_machine_state_push_call(state_ptr: ShadyMachineStatePtr) {
   (*state_ptr).call_depth = call_depth + 1u;
 }
 
-fn shady_machine_state_pop_ret(state_ptr: ShadyMachineStatePtr) -> u32 {
+fn shady_machine_state_pop_ret(state_ptr: ptr<private, ShadyMachineState>) -> u32 {
   let call_depth = (*state_ptr).call_depth;
   if (call_depth == 0u) {
     // TODO: Log an error somehow.

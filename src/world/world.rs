@@ -1,18 +1,18 @@
 use log;
 use crate::{
+  gpu::{ GpuWorld, GpuWorldParams, ShadyAssembler },
   world::{
+    AnimalData,
+    AnimalId,
     CellCoord,
-    WorldDims,
-    InitParams,
-    VecMap,
+    CellInfo,
     Elevation,
     ElevationValueType,
-    AnimalId,
-    AnimalData,
+    InitParams,
     TurnNo,
-    CellInfo,
-  },
-  gpu::{ GpuWorld, GpuWorldParams },
+    VecMap,
+    WorldDims,
+  }
 };
 
 pub(crate) struct World {

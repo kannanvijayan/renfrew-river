@@ -6,6 +6,7 @@ use crate::{
     GpuMapBuffer,
     GpuSeqBuffer,
     GpuBufferOptions,
+    GpuProgramStore,
     compute::{
       initialize_elevations,
       elevations_minimap,
@@ -15,6 +16,7 @@ use crate::{
       apply_animal_moves,
       initialize_units,
     },
+    shady_vm::{ ShadyProgram, ShadyProgramIndex },
   },
   world::{
     CellCoord,
@@ -63,6 +65,9 @@ pub(crate) struct GpuWorld {
 
   // The unit data buffer.
   unit_data: GpuSeqBuffer<UnitData>,
+
+  // The program store.
+  program_store: GpuProgramStore,
 }
 impl GpuWorld {
   pub(crate) fn new(init_params: GpuWorldParams) -> GpuWorld {
@@ -100,6 +105,7 @@ impl GpuWorld {
         .with_storage(true)
         .with_copy_src(true)
     );
+    let program_store = GpuProgramStore::new(&device);
     GpuWorld {
       device,
       world_dims,
@@ -109,6 +115,7 @@ impl GpuWorld {
       animals_list,
       animals_map,
       unit_data,
+      program_store,
     }
   }
 
@@ -135,6 +142,20 @@ impl GpuWorld {
         &self.animals_list,
         &self.animals_map,
       ).await;
+    });
+  }
+
+  pub(crate) fn add_program(&mut self, name: &str, program: ShadyProgram)
+    -> ShadyProgramIndex
+  {
+    let index = self.program_store.add_program(name.to_string(), program);
+    log::info!("Added program: name={} index={:?}", name, index);
+    index
+  }
+
+  pub(crate) fn sync_programs(&mut self) {
+    futures::executor::block_on(async {
+      self.program_store.sync_gpu_buffer(&self.device).await;
     });
   }
 

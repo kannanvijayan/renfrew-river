@@ -17,9 +17,13 @@ impl ShadyProgram {
   pub(crate) async fn write_to_buffer(&self,
     device: &GpuDevice,
     offset: usize,
-    buffer: &mut ShadyProgramGpuBuffer,
+    buffer: &ShadyProgramGpuBuffer,
   ) {
     buffer.write_iter_staged(device, offset, self.bitcode.iter()).await;
+  }
+
+  pub(crate) fn num_instrs(&self) -> usize {
+    self.bitcode.len()
   }
 
   pub(crate) fn encoded_len(&self) -> usize {
@@ -55,12 +59,17 @@ impl ShadyProgram {
 pub(crate) type ShadyProgramGpuBuffer = GpuSeqBuffer<bitcode::Instruction>;
 
 /**
- * Wrapper type for the position of a program in a buffer.
+ * Wrapper type for the position of a program in a ShadyProgramGpuBuffer
  */
 #[derive(Clone, Copy, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct ShadyProgramIndex {
   pub offset: u32,
+}
+impl ShadyProgramIndex {
+  pub(crate) fn from_u32(offset: u32) -> ShadyProgramIndex {
+    ShadyProgramIndex { offset }
+  }
 }
 impl GpuBufferDataType for ShadyProgramIndex {
   type NativeType = u32;

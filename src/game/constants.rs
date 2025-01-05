@@ -20,7 +20,7 @@ impl RandGenCategory {
 }
 
 /** The maximum number of animals in the game. */
-pub(crate) const MAX_ANIMALS: usize = 1_000_000;
+pub(crate) const MAX_ANIMALS: usize = 10_000;
 
 /** The maximum number of units in the game. */
 pub(crate) const MAX_UNITS: usize = 50_000;
