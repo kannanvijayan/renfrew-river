@@ -7,14 +7,24 @@ const SHADY_JUMP_OFFSET_MIN: i32 = -0x800;
 pub(crate) struct Ins {
   cond: Cond,
   set_flags: bool,
+  ind_src1: bool,
+  ind_src2: bool,
+  ind_dst: bool,
   variant: Variant,
 }
 impl Ins {
-  pub(crate) fn new(cond: Cond, set_flags: bool, variant: Variant) -> Self {
-    Self { cond, set_flags, variant }
+  pub(crate) fn new(
+    cond: Cond,
+    set_flags: bool,
+    ind_src1: bool,
+    ind_src2: bool,
+    ind_dst: bool,
+    variant: Variant,
+  ) -> Self {
+    Self { cond, set_flags, ind_src1, ind_src2, ind_dst, variant }
   }
   pub(crate) fn new_standard(variant: Variant) -> Self {
-    Self::new(Cond::Always, true, variant)
+    Self::new(Cond::Always, true, false, false, false, variant)
   }
   pub(crate) fn to_bitcode<F>(&self,
     offset: u32,
@@ -28,6 +38,9 @@ impl Ins {
     let mut imm_src1 = false;
     let mut imm_src2 = false;
     let mut shift16_src2 = false;
+    let mut ind_src1 = false;
+    let mut ind_src2 = false;
+    let mut ind_dst = false;
     let mut cflow = bitcode::ControlFlow::None;
 
     let mut negate_dst = false;
@@ -50,6 +63,9 @@ impl Ins {
       Variant::Compute { dst, op, src1, src2 } => {
         reg_dst = dst.reg.0;
         bump_dst = dst.bump.0;
+        ind_src1 = self.ind_src1;
+        ind_src2 = self.ind_src2;
+        ind_dst = self.ind_dst;
 
         match src1 {
           Src::Imm(ival) => {
@@ -195,6 +211,9 @@ impl Ins {
       imm_src1,
       imm_src2,
       shift16_src2,
+      ind_src1,
+      ind_src2,
+      ind_dst,
       kind: op_kind,
       cflow,
     };
@@ -247,6 +266,10 @@ impl Variant {
 
   pub(crate) fn new_terminate() -> Self {
     Self::Terminate
+  }
+
+  pub(crate) fn is_compute(&self) -> bool {
+    matches!(self, Self::Compute { .. })
   }
 }
 

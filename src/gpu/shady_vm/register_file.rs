@@ -24,8 +24,3 @@ pub(crate) const SHADY_REG_COUNT: usize = 256;
 pub(crate) const SHADY_REG_LAST_GP: u8 = 239;
 pub(crate) const SHADY_REG_VMID: u8 = 240;
 pub(crate) const SHADY_REG_PC: u8 = 241;
-
-pub(crate) const SHADY_REG_CALLSTACK_0: u8 = 252;
-pub(crate) const SHADY_REG_CALLSTACK_1: u8 = 251;
-pub(crate) const SHADY_REG_CALLSTACK_2: u8 = 250;
-pub(crate) const SHADY_REG_CALLSTACK_3: u8 = 249;

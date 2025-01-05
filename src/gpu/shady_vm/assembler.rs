@@ -12,6 +12,9 @@ pub(crate) struct ShadyAssembler {
   labels: Vec<Label>,
   set_flags_for_next: bool,
   cond_for_next: Cond,
+  indsrc1_for_next: bool,
+  indsrc2_for_next: bool,
+  inddst_for_next: bool,
 }
 impl ShadyAssembler {
   pub(crate) fn new() -> Self {
@@ -20,6 +23,9 @@ impl ShadyAssembler {
       labels: Vec::new(),
       set_flags_for_next: true,
       cond_for_next: Cond::Always,
+      indsrc1_for_next: false,
+      indsrc2_for_next: false,
+      inddst_for_next: false,
     }
   }
 
@@ -76,6 +82,19 @@ impl ShadyAssembler {
   }
   pub(crate) fn with_ifge(&mut self) -> &mut Self {
     self.with_cond(Cond::GreaterEqual)
+  }
+
+  pub(crate) fn with_indsrc1(&mut self) -> &mut Self {
+    self.indsrc1_for_next = true;
+    self
+  }
+  pub(crate) fn with_indsrc2(&mut self) -> &mut Self {
+    self.indsrc2_for_next = true;
+    self
+  }
+  pub(crate) fn with_inddst(&mut self) -> &mut Self {
+    self.inddst_for_next = true;
+    self
   }
 
   pub(crate) fn declare_label(&mut self, name: &'static str) {
@@ -155,10 +174,28 @@ impl ShadyAssembler {
   fn reset_after_emit(&mut self) {
     self.set_flags_for_next = true;
     self.cond_for_next = Cond::Always;
+    self.indsrc1_for_next = false;
+    self.indsrc2_for_next = false;
+    self.inddst_for_next = false;
   }
 
   fn emit_next_instruction(&mut self, variant: Variant) {
-    let ins = Ins::new(self.cond_for_next, self.set_flags_for_next, variant);
+    // For compute instructions, set the indirect flags.
+    let mut indsrc1 = false;
+    let mut indsrc2 = false;
+    let mut inddst = false;
+    if variant.is_compute() {
+      indsrc1 = self.indsrc1_for_next;
+      indsrc2 = self.indsrc2_for_next;
+      inddst = self.inddst_for_next;
+    };
+    let ins = Ins::new(
+      self.cond_for_next,
+      self.set_flags_for_next,
+      indsrc1,
+      indsrc2,
+      inddst,
+      variant);
     self.buffer.push(ins);
     self.reset_after_emit();
   }

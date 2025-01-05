@@ -40,6 +40,9 @@ pub(crate) struct OpWord {
   pub(crate) imm_src1: bool,
   pub(crate) imm_src2: bool,
   pub(crate) shift16_src2: bool,
+  pub(crate) ind_src1: bool,
+  pub(crate) ind_src2: bool,
+  pub(crate) ind_dst: bool,
   pub(crate) kind: OperationKind,
   pub(crate) cflow: ControlFlow,
 }
@@ -51,6 +54,9 @@ impl OpWord {
     bits |= (self.imm_src1 as u32) << SHADY_INS_OP_IMMSRC1_OFFSET;
     bits |= (self.imm_src2 as u32) << SHADY_INS_OP_IMMSRC2_OFFSET;
     bits |= (self.shift16_src2 as u32) << SHADY_INS_OP_SHIFT16_OFFSET;
+    bits |= (self.ind_src1 as u32) << SHADY_INS_OP_INDSRC1_OFFSET;
+    bits |= (self.ind_src2 as u32) << SHADY_INS_OP_INDSRC2_OFFSET;
+    bits |= (self.ind_dst as u32) << SHADY_INS_OP_INDDST_OFFSET;
     bits |= (self.kind as u32) << SHADY_INS_OP_KIND_OFFSET;
     bits |= (self.cflow as u32) << SHADY_INS_OP_CFLOW_OFFSET;
     bits
@@ -64,13 +70,21 @@ impl OpWord {
     let imm_src1 = ((bits >> SHADY_INS_OP_IMMSRC1_OFFSET) & SHADY_INS_OP_IMMSRC1_MASK) != 0;
     let imm_src2 = ((bits >> SHADY_INS_OP_IMMSRC2_OFFSET) & SHADY_INS_OP_IMMSRC2_MASK) != 0;
     let shift16_src2 = ((bits >> SHADY_INS_OP_SHIFT16_OFFSET) & SHADY_INS_OP_SHIFT16_MASK) != 0;
+    let ind_src1 = ((bits >> SHADY_INS_OP_INDSRC1_OFFSET) & SHADY_INS_OP_INDSRC1_MASK) != 0;
+    let ind_src2 = ((bits >> SHADY_INS_OP_INDSRC2_OFFSET) & SHADY_INS_OP_INDSRC2_MASK) != 0;
+    let ind_dst = ((bits >> SHADY_INS_OP_INDDST_OFFSET) & SHADY_INS_OP_INDDST_MASK) != 0;
     let kind = OperationKind::from_u32(
       (bits >> SHADY_INS_OP_KIND_OFFSET) & SHADY_INS_OP_KIND_MASK
     );
     let cflow = ControlFlow::from_u32(
       (bits >> SHADY_INS_OP_CFLOW_OFFSET) & SHADY_INS_OP_CFLOW_MASK
     );
-    Self { cond, set_flags, imm_src1, imm_src2, shift16_src2, kind, cflow }
+    Self {
+      cond, set_flags,
+      imm_src1, imm_src2, shift16_src2,
+      ind_src1, ind_src2, ind_dst,
+      kind, cflow
+    }
   }
 
   fn parse_src1_word(&self, bits: u32) -> SrcWord {
@@ -149,6 +163,117 @@ impl SrcWord {
   }
 }
 
+/*
+ * The following is copy-pasted from `shady_vm.wgsl`.
+ */
+
+//// Operation: ?VVV-?PPP ?KJI-DCCC
+
+/** Offset and mask to extract the condition flags. */
+const SHADY_INS_OP_COND_OFFSET: u32 = 0;
+const SHADY_INS_OP_COND_MASK: u32 = 0x7;
+
+/** Offset and mask to extract the set flags bit. */
+const SHADY_INS_OP_SETFLAGS_OFFSET: u32 = 3;
+const SHADY_INS_OP_SETFLAGS_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the immediate source 1 bit. */
+const SHADY_INS_OP_IMMSRC1_OFFSET: u32 = 4;
+const SHADY_INS_OP_IMMSRC1_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the immediate source 2 bit. */
+const SHADY_INS_OP_IMMSRC2_OFFSET: u32 = 5;
+const SHADY_INS_OP_IMMSRC2_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the shift-16 source 2 bit. */
+const SHADY_INS_OP_SHIFT16_OFFSET: u32 = 6;
+const SHADY_INS_OP_SHIFT16_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the indirect source-1 bit. */
+const SHADY_INS_OP_INDSRC1_OFFSET: u32 = 7;
+const SHADY_INS_OP_INDSRC1_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the indirect source-2 bit. */
+const SHADY_INS_OP_INDSRC2_OFFSET: u32 = 8;
+const SHADY_INS_OP_INDSRC2_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the indirect destination bit. */
+const SHADY_INS_OP_INDDST_OFFSET: u32 = 9;
+const SHADY_INS_OP_INDDST_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the operation kind. */
+const SHADY_INS_OP_KIND_OFFSET: u32 = 10;
+const SHADY_INS_OP_KIND_MASK: u32 = 0x7;
+
+/** Offset and mask to extract the control flow bits. */
+const SHADY_INS_OP_CFLOW_OFFSET: u32 = 13;
+const SHADY_INS_OP_CFLOW_MASK: u32 = 0x7;
+
+//// Destination: BBBB-BBBN RRRR-RRRR
+
+/** Offset and mask to extract the destination register. */
+const SHADY_INS_DST_REG_OFFSET: u32 = 0;
+const SHADY_INS_DST_REG_MASK: u32 = 0xFF;
+
+/** Offset and mask to extract the negate result bit. */
+const SHADY_INS_DST_NEGATE_OFFSET: u32 = 8;
+const SHADY_INS_DST_NEGATE_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the bump value. */
+const SHADY_INS_DST_BUMP_OFFSET: u32 = 9;
+const SHADY_INS_DST_BUMP_MASK: u32 = 0x7F;
+
+pub(crate) const SHADY_INS_DST_BUMP_MAX: i8 =
+  (SHADY_INS_DST_BUMP_MASK >> 1) as i8;
+
+pub(crate) const SHADY_INS_DST_BUMP_MIN: i8 =
+  SHADY_INS_DST_BUMP_MAX - (SHADY_INS_DST_BUMP_MASK as i8);
+
+pub(crate) const SHADY_INS_DST_BUMP_BIAS: i32 = 64;
+
+//// Source: HHHH-HH?N RRRR-RRRR
+
+/** Offset and mask to extract the source register. */
+const SHADY_INS_SRC_REG_OFFSET: u32 = 0;
+const SHADY_INS_SRC_REG_MASK: u32 = 0xFF;
+
+/** Offset and mask to extract the negate source bit. */
+const SHADY_INS_SRC_NEGATE_OFFSET: u32 = 8;
+const SHADY_INS_SRC_NEGATE_MASK: u32 = 0x1;
+
+/** Offset and mask to extract the shift amount. */
+const SHADY_INS_SRC_SHIFT_OFFSET: u32 = 10;
+const SHADY_INS_SRC_SHIFT_MASK: u32 = 0x3F;
+
+pub(crate) const SHADY_INS_SRC_SHIFT_MAX: i8 =
+  (SHADY_INS_SRC_SHIFT_MASK >> 1) as i8;
+
+pub(crate) const SHADY_INS_SRC_SHIFT_MIN: i8 =
+  SHADY_INS_SRC_SHIFT_MAX - (SHADY_INS_SRC_SHIFT_MASK as i8);
+
+pub(crate) const SHADY_INS_SRC_SHIFT_BIAS: i32 = 32;
+
+/** Opcode definitions. */
+const SHADY_OPCODE_ADD: u32 = 0;
+const SHADY_OPCODE_MUL: u32 = 1;
+const SHADY_OPCODE_DIV: u32 = 2;
+const SHADY_OPCODE_MOD: u32 = 3;
+const SHADY_OPCODE_BITAND: u32 = 4;
+const SHADY_OPCODE_BITOR: u32 = 5;
+const SHADY_OPCODE_BITXOR: u32 = 6;
+const SHADY_OPCODE_MAX: u32 = 7;
+
+/** Condition flag definitions. */
+const SHADY_COND_ZERO: u32 = 1;
+const SHADY_COND_NEG: u32 = 2;
+const SHADY_COND_POS: u32 = 4;
+
+/** Control flow definitions. */
+const SHADY_CFLOW_WRITE_BIT: u32 = 0;
+const SHADY_CFLOW_CALL_BIT: u32 = 1;
+const SHADY_CFLOW_RET_BIT: u32 = 2;
+
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub(crate) enum Condition {
@@ -224,101 +349,3 @@ impl ControlFlow {
     }
   }
 }
-
-/*
- * The following is copy-pasted from `shady_vm.wgsl`.
- */
-
-//// Operation: ?VVV-?PPP ?KJI-DCCC
-
-/** Offset and mask to extract the condition flags. */
-const SHADY_INS_OP_COND_OFFSET: u32 = 0;
-const SHADY_INS_OP_COND_MASK: u32 = 0x7;
-
-/** Offset and mask to extract the set flags bit. */
-const SHADY_INS_OP_SETFLAGS_OFFSET: u32 = 3;
-const SHADY_INS_OP_SETFLAGS_MASK: u32 = 0x1;
-
-/** Offset and mask to extract the immediate source 1 bit. */
-const SHADY_INS_OP_IMMSRC1_OFFSET: u32 = 4;
-const SHADY_INS_OP_IMMSRC1_MASK: u32 = 0x1;
-
-/** Offset and mask to extract the immediate source 2 bit. */
-const SHADY_INS_OP_IMMSRC2_OFFSET: u32 = 5;
-const SHADY_INS_OP_IMMSRC2_MASK: u32 = 0x1;
-
-/** Offset and mask to extract the shift-16 source 2 bit. */
-const SHADY_INS_OP_SHIFT16_OFFSET: u32 = 6;
-const SHADY_INS_OP_SHIFT16_MASK: u32 = 0x1;
-
-/** Offset and mask to extract the operation kind. */
-const SHADY_INS_OP_KIND_OFFSET: u32 = 8;
-const SHADY_INS_OP_KIND_MASK: u32 = 0x7;
-
-/** Offset and mask to extract the control flow bits. */
-const SHADY_INS_OP_CFLOW_OFFSET: u32 = 12;
-const SHADY_INS_OP_CFLOW_MASK: u32 = 0x7;
-
-//// Destination: BBBB-BBBN RRRR-RRRR
-
-/** Offset and mask to extract the destination register. */
-const SHADY_INS_DST_REG_OFFSET: u32 = 0;
-const SHADY_INS_DST_REG_MASK: u32 = 0xFF;
-
-/** Offset and mask to extract the negate result bit. */
-const SHADY_INS_DST_NEGATE_OFFSET: u32 = 8;
-const SHADY_INS_DST_NEGATE_MASK: u32 = 0x1;
-
-/** Offset and mask to extract the bump value. */
-const SHADY_INS_DST_BUMP_OFFSET: u32 = 9;
-const SHADY_INS_DST_BUMP_MASK: u32 = 0x7F;
-
-pub(crate) const SHADY_INS_DST_BUMP_MAX: i8 =
-  (SHADY_INS_DST_BUMP_MASK >> 1) as i8;
-
-pub(crate) const SHADY_INS_DST_BUMP_MIN: i8 =
-  SHADY_INS_DST_BUMP_MAX - (SHADY_INS_DST_BUMP_MASK as i8);
-
-pub(crate) const SHADY_INS_DST_BUMP_BIAS: i32 = 64;
-
-//// Source: HHHH-HH?N RRRR-RRRR
-
-/** Offset and mask to extract the source register. */
-const SHADY_INS_SRC_REG_OFFSET: u32 = 0;
-const SHADY_INS_SRC_REG_MASK: u32 = 0xFF;
-
-/** Offset and mask to extract the negate source bit. */
-const SHADY_INS_SRC_NEGATE_OFFSET: u32 = 8;
-const SHADY_INS_SRC_NEGATE_MASK: u32 = 0x1;
-
-/** Offset and mask to extract the shift amount. */
-const SHADY_INS_SRC_SHIFT_OFFSET: u32 = 10;
-const SHADY_INS_SRC_SHIFT_MASK: u32 = 0x3F;
-
-pub(crate) const SHADY_INS_SRC_SHIFT_MAX: i8 =
-  (SHADY_INS_SRC_SHIFT_MASK >> 1) as i8;
-
-pub(crate) const SHADY_INS_SRC_SHIFT_MIN: i8 =
-  SHADY_INS_SRC_SHIFT_MAX - (SHADY_INS_SRC_SHIFT_MASK as i8);
-
-pub(crate) const SHADY_INS_SRC_SHIFT_BIAS: i32 = 32;
-
-/** Opcode definitions. */
-const SHADY_OPCODE_ADD: u32 = 0;
-const SHADY_OPCODE_MUL: u32 = 1;
-const SHADY_OPCODE_DIV: u32 = 2;
-const SHADY_OPCODE_MOD: u32 = 3;
-const SHADY_OPCODE_BITAND: u32 = 4;
-const SHADY_OPCODE_BITOR: u32 = 5;
-const SHADY_OPCODE_BITXOR: u32 = 6;
-const SHADY_OPCODE_MAX: u32 = 7;
-
-/** Condition flag definitions. */
-const SHADY_COND_ZERO: u32 = 1;
-const SHADY_COND_NEG: u32 = 2;
-const SHADY_COND_POS: u32 = 4;
-
-/** Control flow definitions. */
-const SHADY_CFLOW_WRITE_BIT: u32 = 0;
-const SHADY_CFLOW_CALL_BIT: u32 = 1;
-const SHADY_CFLOW_RET_BIT: u32 = 2;

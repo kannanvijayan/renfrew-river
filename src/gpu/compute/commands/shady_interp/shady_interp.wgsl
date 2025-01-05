@@ -25,6 +25,7 @@
 
 /** General config. */
 const SHADY_REG_COUNT: u32 = 256u;
+const SHADY_REGS_MASK: u32 = 0xFFu;
 
 /**
  * The register file.
@@ -35,11 +36,6 @@ struct ShadyRegisterFile {
 
 const SHADY_REG_VMID: u32 = 240u;
 const SHADY_REG_PC: u32 = 241u;
-
-const SHADY_REG_CALLSTACK_0: u32 = 252u;
-const SHADY_REG_CALLSTACK_1: u32 = 251u;
-const SHADY_REG_CALLSTACK_2: u32 = 250u;
-const SHADY_REG_CALLSTACK_3: u32 = 249u;
 
 /*
  *
@@ -61,7 +57,7 @@ const SHADY_REG_CALLSTACK_3: u32 = 249u;
  *
  *       COMPONENT    BITS(high to low)
  * ======================================
- *       Operation    ?VVV-?PPP ?KJI-DCCC
+ *       Operation    VVVP-PPUT SKJI-DCCC
  *       Destination  BBBB-BBBN RRRR-RRRR
  *       Source[R]    HHHH-HH?N RRRR-RRRR
  *       Source[I]    IIII-IIII IIII-IIII
@@ -78,6 +74,14 @@ const SHADY_REG_CALLSTACK_3: u32 = 249u;
  * J = Treat source 2 as immediate value (1 bit)
  * K = Shift source 2 left by 16 bits (after load)
  *
+ * S = Indirect source 1 operand
+ * T = Indirect source 2 operand
+ * U = Indirect destination operand
+ *   - An indirect source reads from the register named by the low 8 bits of the 
+ *     value in the source register.
+ *   - An indirect destination writes to the register named by the low 8 bits of
+ *     value in the destination register.
+ *
  * PPP = Operation kind (3 bits)
  *   - 000 - Add (see "negate" bit for subtract operation)
  *   - 001 - Multiply
@@ -86,8 +90,9 @@ const SHADY_REG_CALLSTACK_3: u32 = 249u;
  *   - 100 - Bitwise AND
  *   - 101 - Bitwise OR
  *   - 110 - Bitwise XOR
+ *   - 111 - Max
  *
- * VVV = control flow bits.
+ * VVV = control flow bits (3 bits)
  *   - bit 0 - write-back: tells VM to use the PC register as the destination.
  *   - bit 1 - call: tells VM to push current continuation.
  *   - bit 2 - return: tells VM to pop call stack into current continuation.
@@ -130,12 +135,24 @@ const SHADY_INS_OP_IMMSRC2_MASK: u32 = 0x1u;
 const SHADY_INS_OP_SHIFT16_OFFSET: u32 = 6u;
 const SHADY_INS_OP_SHIFT16_MASK: u32 = 0x1u;
 
+/** Offset and mask to extract the indirect-source 1 bit. */
+const SHADY_INS_OP_INDSRC1_OFFSET: u32 = 7u;
+const SHADY_INS_OP_INDSRC1_MASK: u32 = 0x1u;
+
+/** Offset and mask to extract the indirect-source 2 bit. */
+const SHADY_INS_OP_INDSRC2_OFFSET: u32 = 8u;
+const SHADY_INS_OP_INDSRC2_MASK: u32 = 0x1u;
+
+/** Offset and mask to extract the indirect-destination bit. */
+const SHADY_INS_OP_INDDST_OFFSET: u32 = 9u;
+const SHADY_INS_OP_INDDST_MASK: u32 = 0x1u;
+
 /** Offset and mask to extract the operation kind. */
-const SHADY_INS_OP_KIND_OFFSET: u32 = 8u;
+const SHADY_INS_OP_KIND_OFFSET: u32 = 10u;
 const SHADY_INS_OP_KIND_MASK: u32 = 0x7u;
 
 /** Offset and mask to extract the control flow bits. */
-const SHADY_INS_OP_CFLOW_OFFSET: u32 = 12u;
+const SHADY_INS_OP_CFLOW_OFFSET: u32 = 13u;
 const SHADY_INS_OP_CFLOW_MASK: u32 = 0x7u;
 
 //// Destination: BBBB-BBBN RRRR-RRRR
@@ -223,11 +240,6 @@ fn shady_instruction_to_buffer(ins: ShadyInstruction) -> ShadyBufferInstruction 
   return bufins;
 }
 
-/** Extract the operation kind from the instruction.  */
-fn shady_ins_op_kind(ins: ShadyInstruction) -> u32 {
-  return (ins.op >> SHADY_INS_OP_KIND_OFFSET) & SHADY_INS_OP_KIND_MASK;
-}
-
 /** Extract the condition flags from the instruction.  */
 fn shady_ins_op_cond(ins: ShadyInstruction) -> u32 {
   return (ins.op >> SHADY_INS_OP_COND_OFFSET) & SHADY_INS_OP_COND_MASK;
@@ -251,6 +263,26 @@ fn shady_ins_op_immsrc2(ins: ShadyInstruction) -> bool {
 /** Extract the shift-16 source 2 bit from the instruction.  */
 fn shady_ins_op_shift16(ins: ShadyInstruction) -> bool {
   return bool((ins.op >> SHADY_INS_OP_SHIFT16_OFFSET) & SHADY_INS_OP_SHIFT16_MASK);
+}
+
+/** Extract the indirect-source 1 bit from the instruction.  */
+fn shady_ins_op_indsrc1(ins: ShadyInstruction) -> bool {
+  return bool((ins.op >> SHADY_INS_OP_INDSRC1_OFFSET) & SHADY_INS_OP_INDSRC1_MASK);
+}
+
+/** Extract the indirect-source 2 bit from the instruction.  */
+fn shady_ins_op_indsrc2(ins: ShadyInstruction) -> bool {
+  return bool((ins.op >> SHADY_INS_OP_INDSRC2_OFFSET) & SHADY_INS_OP_INDSRC2_MASK);
+}
+
+/** Extract the indirect-destination bit from the instruction.  */
+fn shady_ins_op_inddst(ins: ShadyInstruction) -> bool {
+  return bool((ins.op >> SHADY_INS_OP_INDDST_OFFSET) & SHADY_INS_OP_INDDST_MASK);
+}
+
+/** Extract the operation kind from the instruction.  */
+fn shady_ins_op_kind(ins: ShadyInstruction) -> u32 {
+  return (ins.op >> SHADY_INS_OP_KIND_OFFSET) & SHADY_INS_OP_KIND_MASK;
 }
 
 /** Extract the control flow bits from the instruction.  */
@@ -456,13 +488,21 @@ fn invoke_instruction() {
   // Compute source operand values.
   var src1_val: i32 = extractBits(i32(ins.src1), 0u, 16u);
   if ! shady_ins_op_immsrc1(ins) {
-    let src1_reg = shady_src_reg_from_word(ins.src1);
+    var src1_reg = shady_src_reg_from_word(ins.src1);
+    // Handle indirect source operands.
+    if (shady_ins_op_indsrc1(ins)) {
+      src1_reg.reg = u32(vm_get_reg(src1_reg.reg)) & SHADY_REGS_MASK;
+    }
     src1_val = shady_src_reg_process(src1_reg, vm_get_reg(src1_reg.reg));
   }
 
   var src2_val: i32 = extractBits(i32(ins.src2), 0u, 16u);
   if ! shady_ins_op_immsrc2(ins) {
-    let src2_reg = shady_src_reg_from_word(ins.src2);
+    var src2_reg = shady_src_reg_from_word(ins.src2);
+    // Handle indirect source operands.
+    if (shady_ins_op_indsrc2(ins)) {
+      src2_reg.reg = u32(vm_get_reg(src2_reg.reg)) & SHADY_REGS_MASK;
+    }
     src2_val = shady_src_reg_process(src2_reg, vm_get_reg(src2_reg.reg));
   }
 
@@ -499,8 +539,13 @@ fn invoke_instruction() {
     result = -result;
   }
 
+  var target_reg = dst_reg.reg;
+  if shady_ins_op_inddst(ins) {
+    target_reg = u32(vm_get_reg(u32(dst_reg.reg))) & SHADY_REGS_MASK;
+  }
+
   // Write result to destination register.
-  vm_set_reg(dst_reg.reg, result);
+  vm_set_reg(target_reg, result);
 
   // Set flags if necessary.
   if shady_ins_op_setflags(ins) {
