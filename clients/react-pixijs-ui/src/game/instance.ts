@@ -78,6 +78,7 @@ export default class GameInstance {
         },
         takeTurnStep: async () => {
           await this.client_.takeTurnStep();
+          this.world_.invalidateMapData();
         },
       }
     });

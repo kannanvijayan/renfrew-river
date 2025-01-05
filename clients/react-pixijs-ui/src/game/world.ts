@@ -50,6 +50,10 @@ export default class GameWorld {
     );
   }
 
+  public invalidateMapData(): void {
+    this.mapData.invalidate();
+  }
+
   public newObserver(): WorldObserver {
     return new WorldObserver(this);
   }
