@@ -69,5 +69,4 @@ pub(crate) async fn shady_interpret(
 
   let elapsed = prior_time.elapsed();
   log::info!("shady_interp(elapsed_ms={})", elapsed.as_millis());
-  eprintln!("KVKV shady_interp(elapsed_ms={})", elapsed.as_millis());
 }

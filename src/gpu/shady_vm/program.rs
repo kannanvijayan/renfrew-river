@@ -70,6 +70,10 @@ impl ShadyProgramIndex {
   pub(crate) fn from_u32(offset: u32) -> ShadyProgramIndex {
     ShadyProgramIndex { offset }
   }
+
+  pub(crate) fn to_u32(&self) -> u32 {
+    self.offset
+  }
 }
 impl GpuBufferDataType for ShadyProgramIndex {
   type NativeType = u32;

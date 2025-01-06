@@ -12,6 +12,7 @@ use crate::{
       elevations_minimap,
       initialize_animals,
       compute_downhill_movement,
+      compute_downhill_movement_with_shady_vm,
       resolve_animal_move_conflicts,
       apply_animal_moves,
       initialize_units,
@@ -168,8 +169,9 @@ impl GpuWorld {
   pub(crate) fn move_animals(&self) {
     let prior_time = std::time::Instant::now();
     futures::executor::block_on(async {
-      let target_positions_buffer = compute_downhill_movement(
+      let target_positions_buffer = compute_downhill_movement_with_shady_vm(
         &self.device,
+        &self.program_store,
         &self.elevation_map,
         &self.animals_list,
       ).await;

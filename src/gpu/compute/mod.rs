@@ -16,6 +16,7 @@ pub(crate) use self::{
   elevations_minimap::elevations_minimap,
   animal_moves::{
     compute_downhill_movement,
+    compute_downhill_movement_with_shady_vm,
     resolve_animal_move_conflicts,
     apply_animal_moves,
   },

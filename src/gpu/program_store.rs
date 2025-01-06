@@ -1,12 +1,17 @@
-use std::collections::HashMap;
+use std::{
+  collections::HashMap,
+  mem,
+};
 use crate::gpu::{
   shady_vm::{
     ShadyProgram,
     ShadyProgramIndex,
     ShadyProgramGpuBuffer,
+    bitcode as bc,
   },
   GpuBufferOptions,
   GpuDevice,
+  GpuBufferDataType,
 };
 
 /**
@@ -38,8 +43,9 @@ impl GpuProgramStore {
       Self::INIT_BUFFER_INSTRS,
       GpuBufferOptions::empty()
         .with_label("GpuProgramStoreBuffer")
+        .with_storage(true)
         .with_copy_src(true)
-        .with_map_write(true)
+        .with_copy_dst(true)
     );
 
     GpuProgramStore { programs, name_to_position, buffer }
@@ -60,17 +66,17 @@ impl GpuProgramStore {
     index
   }
 
-  pub(crate) fn lookup_program(&mut self, name: &str) -> Option<&ShadyProgram> {
-    let pos = self.name_to_position.get(name)?.offset as usize;
-    Some(&self.programs[pos].program)
+  pub(crate) fn lookup_program_index(&self, name: &str) -> Option<ShadyProgramIndex> {
+    self.name_to_position.get(name).copied()
   }
 
   pub(crate) async fn sync_gpu_buffer(&self, device: &GpuDevice) {
+    type GpuNativeInsType = <bc::Instruction as GpuBufferDataType>::NativeType;
     // TODO: resize buffer if too small.
-    let mut offset = 0;
     for info in self.programs.iter() {
+      let index = info.index.to_u32() as usize;
+      let offset = index * mem::size_of::<GpuNativeInsType>();
       info.program.write_to_buffer(device, offset, &self.buffer).await;
-      offset += info.program.num_instrs();
     }
   }
 

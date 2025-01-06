@@ -13,7 +13,11 @@ pub(crate) use self::{
   init_elevations::init_elevations_command,
   minify_elevations::minify_elevations_command,
   init_animals::init_animals_command,
-  move_animals_downhill::move_animals_downhill_command,
+  move_animals_downhill::{
+    move_animals_downhill_command,
+    fill_registers_for_animal_move,
+    readout_registers_for_animal_move,
+  },
   resolve_animal_move_conflicts::resolve_animal_move_conflicts_command,
   apply_animal_moves::apply_animal_moves_command,
 
