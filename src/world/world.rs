@@ -146,7 +146,6 @@ impl World {
     // Store the elevation of the current cell in MIN_ELEV_REG.
     // Store direction -1 (self) in MIN_DIR_REG.
     asm.emit_mov(asm.dreg(MIN_DIR_REG), asm.immv(-1));
-    asm.emit_mov(asm.dreg(MIN_DIR_REG), asm.immv(-1));
     asm.emit_mov(asm.dreg(MIN_ELEV_REG), asm.sreg(THIS_ELEV_CELL_REG));
 
     // Loop over all directions and call "check_dir" subroutine.
