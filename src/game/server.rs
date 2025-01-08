@@ -1,8 +1,9 @@
-use log;
 use std::{
   thread::JoinHandle,
   sync::mpsc,
 };
+use log;
+use serde_json;
 use crate::{
   game::{
     GameSettings,
@@ -21,6 +22,7 @@ use crate::{
       TakeTurnStepCmd, TakeTurnStepRsp, TurnTakenResponse,
       GetCellInfoCmd, GetCellInfoRsp,
       GetAnimalDataCmd, GetAnimalDataRsp,
+      SnapshotGameCmd, SnapshotGameRsp,
     },
     response::{
       ResponseEnvelope,
@@ -159,6 +161,10 @@ impl GameServerInner {
       CommandEnvelope::GetAnimalData(get_animal_data_command) => {
         let resp = self.handle_get_animal_data_command(*get_animal_data_command);
         return GetAnimalDataCmd::embed_response(resp);
+      }
+      CommandEnvelope::SnapshotGame(snapshot_game_command) => {
+        let resp = self.handle_snapshot_game_command(*snapshot_game_command);
+        return SnapshotGameCmd::embed_response(resp);
       }
     };
   }
@@ -426,5 +432,35 @@ impl GameServerInner {
     let animal_id = get_animal_data_cmd.animal_id;
     let animal_data = game.world().read_animal_data(animal_id);
     GetAnimalDataRsp::AnimalData(animal_data)
+  }
+
+  fn handle_snapshot_game_command(&mut self,
+    _snapshot_game_cmd: SnapshotGameCmd
+  ) -> SnapshotGameRsp {
+    log::debug!("GameServerInner::handle_snapshot_game_command");
+    let game = match self.game {
+      Some(ref game) => game,
+      None => {
+        log::warn!("GameServerInner::handle_snapshot_game_command: No game");
+        return SnapshotGameRsp::Failed(
+          FailedResponse::new("No game to snapshot")
+        );
+      }
+    };
+
+    let persist = game.to_persist();
+    match serde_json::to_string(&persist) {
+      Ok(serialized) => {
+        SnapshotGameRsp::GameSnapshot(serialized)
+      },
+      Err(err) => {
+        log::error!(
+          "GameServerInner::handle_snapshot_game_command: Failed to serialize: {:?}", err
+        );
+        return SnapshotGameRsp::Failed(
+          FailedResponse::new("Failed to serialize game")
+        );
+      }
+    }
   }
 }

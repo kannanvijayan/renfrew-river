@@ -57,17 +57,17 @@ impl Command for MiniElevationsCmd {
         ResponseEnvelope::Error(Box::new(failure)),
     }
   }
-  fn validate(&self, _errors: &mut Vec<String>) -> bool {
+  fn validate(&self, errors: &mut Vec<String>) -> bool {
     let mut errored = false;
     if (self.mini_dims.columns % Self::MINI_DIMS_COLUMNS_MULTIPLE) != 0 {
-      _errors.push(format!(
+      errors.push(format!(
         "Area columns must be a multiple of {}",
         Self::MINI_DIMS_COLUMNS_MULTIPLE
       ));
       errored = true;
     }
     if (self.mini_dims.rows % Self::MINI_DIMS_ROWS_MULTIPLE) != 0 {
-      _errors.push(format!(
+      errors.push(format!(
         "Area rows must be a multiple of {}",
         Self::MINI_DIMS_ROWS_MULTIPLE
       ));

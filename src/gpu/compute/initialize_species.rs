@@ -1,36 +1,33 @@
-use std::mem;
 use crate::{
-  world::UnitData,
   gpu::{
     GpuDevice,
     GpuSeqBuffer,
-    GpuBufferDataType,
-    world::GpuUnitsList,
+    ShadyProgramIndex,
+    world::GpuSpeciesList,
   },
+  world::SpeciesData,
 };
-use super::commands::fill_u32_command;
+use super::commands::fill_seq_u32_command;
 
 /**
- * Initialize animals.
+ * Initialize species.
  */
-pub(crate) async fn initialize_units(
+pub(crate) async fn initialize_species(
   device: &GpuDevice,
-  units_list: &GpuUnitsList,
+  species_list: &GpuSpeciesList,
 ) {
 
   let mut encoder = device.device().create_command_encoder(
     &wgpu::CommandEncoderDescriptor {
-      label: Some("InitializeAnimalsEncoder"),
+      label: Some("InitializeSpeciesEncoder"),
     }
   );
 
-  fill_u32_command(
+  fill_seq_u32_command(
     device,
     &mut encoder,
-    units_list.buffer().wgpu_buffer(),
-    0,
-    units_list.buffer().wgpu_buffer().size() as usize / 4,
-    u32::max_value(),
+    species_list.buffer().cast_as_native_type(),
+    ShadyProgramIndex::INVALID.to_u32(),
   );
 
   let prior_time = std::time::Instant::now();
@@ -42,5 +39,5 @@ pub(crate) async fn initialize_units(
   device.device().poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
 
   let elapsed = prior_time.elapsed();
-  log::info!("initialize_units(elapsed_ms={})", elapsed.as_millis());
+  log::info!("initialize_species(elapsed_ms={})", elapsed.as_millis());
 }

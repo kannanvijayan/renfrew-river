@@ -12,7 +12,8 @@ use crate::{
     TurnNo,
     VecMap,
     WorldDims,
-  }
+  },
+  persist::WorldPersist,
 };
 
 pub(crate) struct World {
@@ -191,6 +192,20 @@ impl World {
     asm.emit_ret();
 
     asm.assemble_program().expect("Failed to assemble 'move_animals' program")
+  }
+
+  pub(crate) fn to_persist(&self) -> WorldPersist {
+    WorldPersist::new(
+      self.world_dims,
+      self.turn_no,
+      self.gpu_world.rand_seed(),
+      self.gpu_world.extra_flags().clone(),
+      self.gpu_world.elevation_map_persist(),
+      self.gpu_world.animals_list_persist(),
+      self.gpu_world.species_list_persist(),
+      self.gpu_world.units_list_persist(),
+      self.gpu_world.program_store_persist(),
+    )
   }
 }
 

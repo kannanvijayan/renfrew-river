@@ -5,6 +5,7 @@ use crate::{
     GpuDevice,
     GpuBufferDataType,
     GpuMapBuffer,
+    world::GpuElevationMap,
   },
   world::Elevation,
 };
@@ -16,7 +17,7 @@ use super::commands::init_elevations_command;
 pub(crate) async fn initialize_elevations(
   device: &GpuDevice,
   seed: u32,
-  target_buffer: &GpuMapBuffer<Elevation>,
+  elev_map: &GpuElevationMap,
   test_pattern: Option<&str>,
 ) {
   debug_assert!(
@@ -37,7 +38,7 @@ pub(crate) async fn initialize_elevations(
     device,
     &mut encoder,
     seed,
-    target_buffer,
+    elev_map.buffer(),
     test_pattern
   );
 

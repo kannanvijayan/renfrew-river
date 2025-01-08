@@ -3,10 +3,10 @@ use crate::{
     GpuBufferOptions,
     GpuDevice,
     GpuMapBuffer,
-    GpuProgramStore,
     GpuSeqBuffer,
     ShadyProgramIndex,
     ShadyRegisterFile,
+    world::{ GpuProgramStore, GpuElevationMap, GpuAnimalsList, GpuAnimalsMap },
   },
   world::{ AnimalData, AnimalId, CellCoord, Elevation, WorldDims },
 };
@@ -22,8 +22,8 @@ use super::commands::{
 
 pub(crate) async fn compute_downhill_movement(
   device: &GpuDevice,
-  elevations_map_buffer: &GpuMapBuffer<Elevation>,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
+  elevations_map: &GpuElevationMap,
+  animals_list: &GpuAnimalsList,
 ) -> GpuSeqBuffer<CellCoord> {
   let mut encoder = device.device().create_command_encoder(
     &wgpu::CommandEncoderDescriptor {
@@ -34,8 +34,8 @@ pub(crate) async fn compute_downhill_movement(
   let output_buffer = move_animals_downhill_command(
     device,
     &mut encoder,
-    elevations_map_buffer,
-    animals_list_buffer,
+    elevations_map,
+    animals_list,
   );
 
   let prior_time = std::time::Instant::now();
@@ -55,12 +55,12 @@ pub(crate) async fn compute_downhill_movement(
 pub(crate) async fn compute_downhill_movement_with_shady_vm(
   device: &GpuDevice,
   program_store: &GpuProgramStore,
-  elevations_map_buffer: &GpuMapBuffer<Elevation>,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
+  elevations_map: &GpuElevationMap,
+  animals_list: &GpuAnimalsList,
 ) -> GpuSeqBuffer<CellCoord> {
   let start_pc_buffer = GpuSeqBuffer::<u32>::new(
     device,
-    animals_list_buffer.length(),
+    animals_list.num_animals(),
     GpuBufferOptions::empty()
       .with_label("ComputeDownhillMovementStartPcBuffer")
       .with_storage(true)
@@ -72,8 +72,8 @@ pub(crate) async fn compute_downhill_movement_with_shady_vm(
 
   let register_file_buffer = fill_registers(
     device,
-    elevations_map_buffer,
-    animals_list_buffer,
+    elevations_map,
+    animals_list,
     program_index,
     &start_pc_buffer,
   ).await;
@@ -81,7 +81,7 @@ pub(crate) async fn compute_downhill_movement_with_shady_vm(
   let _end_pc_buffer = run_program(
     device,
     program_store,
-    animals_list_buffer.length() as u32,
+    animals_list.num_animals() as u32,
     /* num_ins */ 100,
     &start_pc_buffer,
     &register_file_buffer,
@@ -89,8 +89,8 @@ pub(crate) async fn compute_downhill_movement_with_shady_vm(
 
   let output_buffer = read_program_result(
     device,
-    elevations_map_buffer.dims(),
-    animals_list_buffer,
+    elevations_map.dims(),
+    animals_list,
     &start_pc_buffer,
     &register_file_buffer,
   ).await;
@@ -100,8 +100,8 @@ pub(crate) async fn compute_downhill_movement_with_shady_vm(
 
 async fn fill_registers(
   device: &GpuDevice,
-  elevations_map_buffer: &GpuMapBuffer<Elevation>,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
+  elevations_map: &GpuElevationMap,
+  animals_list: &GpuAnimalsList,
   start_pc: ShadyProgramIndex,
   start_pc_buffer: &GpuSeqBuffer<u32>,
 ) -> GpuSeqBuffer<ShadyRegisterFile> {
@@ -114,8 +114,8 @@ async fn fill_registers(
   let register_file_buffer = fill_registers_for_animal_move(
     device,
     &mut encoder,
-    elevations_map_buffer,
-    animals_list_buffer,
+    elevations_map,
+    animals_list,
     start_pc,
     start_pc_buffer,
   );
@@ -186,7 +186,7 @@ async fn run_program(
 async fn read_program_result(
   device: &GpuDevice,
   world_dims: WorldDims,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
+  animals_list: &GpuAnimalsList,
   start_pc_buffer: &GpuSeqBuffer<u32>,
   register_file_buffer: &GpuSeqBuffer<ShadyRegisterFile>,
 ) -> GpuSeqBuffer<CellCoord> {
@@ -200,7 +200,7 @@ async fn read_program_result(
     device,
     &mut encoder,
     world_dims,
-    animals_list_buffer,
+    animals_list.buffer(),
     start_pc_buffer,
     register_file_buffer,
   );
@@ -216,11 +216,11 @@ async fn read_program_result(
 
 pub(crate) async fn resolve_animal_move_conflicts(
   device: &GpuDevice,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
-  animal_positions_map_buffer: &GpuMapBuffer<AnimalId>,
+  animals_list: &GpuAnimalsList,
+  animal_positions_map: &GpuAnimalsMap,
   target_positions_buffer: &GpuSeqBuffer<CellCoord>,
-) -> GpuMapBuffer<AnimalId> {
-  let world_dims = animal_positions_map_buffer.dims();
+) -> GpuAnimalsMap {
+  let world_dims = animal_positions_map.dims();
 
   let mut encoder = device.device().create_command_encoder(
     &wgpu::CommandEncoderDescriptor {
@@ -230,28 +230,26 @@ pub(crate) async fn resolve_animal_move_conflicts(
 
   let prior_time = std::time::Instant::now();
 
-  let conflicts_buffer = GpuMapBuffer::<AnimalId>::new(
+  let conflicts = GpuAnimalsMap::new(
     device,
     world_dims,
-    GpuBufferOptions::empty()
-      .with_label("ComputeDownhillMovementConflicts")
-      .with_storage(true)
+    "ComputeDownhillMovementConflicts"
   );
 
   fill_map_u32_command(
     device,
     &mut encoder,
-    conflicts_buffer.cast_as_native_type(),
+    conflicts.buffer().cast_as_native_type(),
     AnimalId::INVALID.to_u32(),
   );
 
   resolve_animal_move_conflicts_command(
     device,
     &mut encoder,
-    animals_list_buffer,
-    animal_positions_map_buffer,
+    animals_list,
+    animal_positions_map,
     target_positions_buffer,
-    &conflicts_buffer,
+    &conflicts,
   );
 
   // Submit the commands.
@@ -263,15 +261,15 @@ pub(crate) async fn resolve_animal_move_conflicts(
   let elapsed = prior_time.elapsed();
   log::info!("resolve_animal_move_conflicts(elapsed_ms={})", elapsed.as_millis());
 
-  conflicts_buffer
+  conflicts
 }
 
 pub(crate) async fn apply_animal_moves(
   device: &GpuDevice,
   target_positions_buffer: &GpuSeqBuffer<CellCoord>,
-  conflicts_map_buffer: &GpuMapBuffer<AnimalId>,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
-  animal_positions_map_buffer: &GpuMapBuffer<AnimalId>,
+  conflicts_map: &GpuAnimalsMap,
+  animals_list: &GpuAnimalsList,
+  animal_positions_map: &GpuAnimalsMap,
 ) {
   let mut encoder = device.device().create_command_encoder(
     &wgpu::CommandEncoderDescriptor {
@@ -283,7 +281,7 @@ pub(crate) async fn apply_animal_moves(
 
   let why_buffer = GpuSeqBuffer::<u32>::new(
     device,
-    animals_list_buffer.length(),
+    animals_list.num_animals(),
     GpuBufferOptions::empty()
       .with_copy_src(true)
       .with_storage(true),
@@ -294,9 +292,9 @@ pub(crate) async fn apply_animal_moves(
     device,
     &mut encoder,
     target_positions_buffer,
-    conflicts_map_buffer,
-    animals_list_buffer,
-    animal_positions_map_buffer,
+    conflicts_map,
+    animals_list,
+    animal_positions_map,
     &why_buffer,
   );
 

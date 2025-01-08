@@ -1,6 +1,10 @@
 use crate::{
-  world::{ AnimalId, AnimalData, CellCoord },
-  gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer }
+  world::CellCoord,
+  gpu::{
+    GpuDevice,
+    GpuSeqBuffer,
+    world::{ GpuAnimalsList, GpuAnimalsMap },
+  },
 };
 
 // The size of the workgroups.
@@ -9,15 +13,15 @@ const RESOLVE_ANIMAL_MOVE_CONFLICTS_WORKGROUP: u32 = 64;
 pub(crate) fn resolve_animal_move_conflicts_command(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
-  animal_positions_map_buffer: &GpuMapBuffer<AnimalId>,
+  animals_list: &GpuAnimalsList,
+  animal_positions_map: &GpuAnimalsMap,
   target_positions_buffer: &GpuSeqBuffer<CellCoord>,
-  conflicts_buffer: &GpuMapBuffer<AnimalId>,
+  conflicts: &GpuAnimalsMap,
 ) {
-  let world_dims = animal_positions_map_buffer.dims();
+  let world_dims = animal_positions_map.dims();
   let world_columns = world_dims.columns_u32();
   let world_rows = world_dims.rows_u32();
-  let num_animals = animals_list_buffer.length() as u32;
+  let num_animals = animals_list.num_animals() as u32;
 
   // Create the uniform buffer.
   let config_uniforms_u32: [u32; 4] = [
@@ -56,11 +60,11 @@ pub(crate) fn resolve_animal_move_conflicts_command(
         },
         wgpu::BindGroupEntry {
           binding: 1,
-          resource: animals_list_buffer.wgpu_buffer().as_entire_binding(),
+          resource: animals_list.buffer().wgpu_buffer().as_entire_binding(),
         },
         wgpu::BindGroupEntry {
           binding: 2,
-          resource: animal_positions_map_buffer.wgpu_buffer().as_entire_binding(),
+          resource: animal_positions_map.buffer().wgpu_buffer().as_entire_binding(),
         },
         wgpu::BindGroupEntry {
           binding: 3,
@@ -68,7 +72,7 @@ pub(crate) fn resolve_animal_move_conflicts_command(
         },
         wgpu::BindGroupEntry {
           binding: 4,
-          resource: conflicts_buffer.wgpu_buffer().as_entire_binding(),
+          resource: conflicts.buffer().wgpu_buffer().as_entire_binding(),
         },
       ],
     }

@@ -17,6 +17,7 @@ export default class GameLoader {
   private readonly eventListeners_: GameLoaderEventListeners = {};
 
   private constructor() {
+    (window as unknown as Record<string, unknown>).GameLoader = this;
   }
 
   public static getInstance(): GameLoader {

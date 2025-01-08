@@ -2,6 +2,7 @@
 mod commands;
 
 mod initialize_elevations;
+mod initialize_species;
 mod initialize_animals;
 mod initialize_units;
 mod elevations_minimap;
@@ -11,6 +12,7 @@ mod shady_interp;
 
 pub(crate) use self::{
   initialize_elevations::initialize_elevations,
+  initialize_species::initialize_species,
   initialize_animals::initialize_animals,
   initialize_units::initialize_units,
   elevations_minimap::elevations_minimap,

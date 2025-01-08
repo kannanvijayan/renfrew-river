@@ -3,6 +3,7 @@ mod game;
 mod world;
 mod network;
 mod gpu;
+mod persist;
 
 pub use self::{
   game::{

@@ -64,9 +64,12 @@ pub(crate) type ShadyProgramGpuBuffer = GpuSeqBuffer<bitcode::Instruction>;
 #[derive(Clone, Copy, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct ShadyProgramIndex {
-  pub offset: u32,
+  offset: u32,
 }
 impl ShadyProgramIndex {
+  pub(crate) const INVALID: ShadyProgramIndex =
+    ShadyProgramIndex { offset: 0xffff_ffff };
+
   pub(crate) fn from_u32(offset: u32) -> ShadyProgramIndex {
     ShadyProgramIndex { offset }
   }

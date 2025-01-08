@@ -46,17 +46,17 @@ impl Command for NewGameCmd {
     }
   }
 
-  fn validate(&self, _errors: &mut Vec<String>) -> bool {
+  fn validate(&self, errors: &mut Vec<String>) -> bool {
     let mut errored = false;
     if (self.settings.world_dims().columns % Self::WORLD_COLUMNS_MULTIPLE) != 0 {
-      _errors.push(format!(
+      errors.push(format!(
         "World columns must be a multiple of {}",
         Self::WORLD_COLUMNS_MULTIPLE
       ));
       errored = true;
     }
     if (self.settings.world_dims().rows % Self::WORLD_ROWS_MULTIPLE) != 0 {
-      _errors.push(format!(
+      errors.push(format!(
         "World rows must be a multiple of {}",
         Self::WORLD_ROWS_MULTIPLE
       ));

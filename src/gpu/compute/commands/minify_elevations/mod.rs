@@ -9,7 +9,8 @@ use crate::{
     GpuBufferDataType,
     GpuBufferNativeType,
     GpuMapBuffer,
-    GpuBufferOptions
+    GpuBufferOptions,
+    world::GpuElevationMap,
   },
   world::Elevation,
 };
@@ -24,28 +25,28 @@ const WORKGROUP_Y: u32 = 8;
 pub(crate) fn minify_elevations_command(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
-  src_buffer: &GpuMapBuffer<Elevation>,
-  dst_buffer: &GpuMapBuffer<Elevation>,
+  src_map: &GpuElevationMap,
+  dst_map: &GpuElevationMap,
 ) {
   debug_assert!(
     std::mem::size_of::<<Elevation as GpuBufferDataType>::NativeType >() == 2
   );
   debug_assert!(ELEVATION_BITS <= 16);
 
-  let src_dims = src_buffer.dims();
+  let src_dims = src_map.dims();
   let src_columns = src_dims.columns_u32();
   let src_rows = src_dims.rows_u32();
 
   let mid_buffer = GpuMapBuffer::<Elevation>::new(
     device,
-    dst_buffer.dims(),
+    dst_map.dims(),
     GpuBufferOptions::empty()
       .with_label("MiniElevationsMidBuffer")
       .with_storage(true)
       .with_copy_src(true)
   );
 
-  let dst_dims = dst_buffer.dims();
+  let dst_dims = dst_map.dims();
   let dst_columns = dst_dims.columns_u32();
   let dst_rows = dst_dims.rows_u32();
 
@@ -88,7 +89,7 @@ pub(crate) fn minify_elevations_command(
         },
         wgpu::BindGroupEntry {
           binding: 1,
-          resource: src_buffer.wgpu_buffer().as_entire_binding()
+          resource: src_map.buffer().wgpu_buffer().as_entire_binding()
         },
         wgpu::BindGroupEntry {
           binding: 2,
@@ -127,7 +128,7 @@ pub(crate) fn minify_elevations_command(
       <Elevation as GpuBufferDataType>::NativeType::SIZE as u64;
     encoder.copy_buffer_to_buffer(
       &mid_buffer.wgpu_buffer(), 0,
-      &dst_buffer.wgpu_buffer(), 0,
+      &dst_map.buffer().wgpu_buffer(), 0,
       size,
     );
   }

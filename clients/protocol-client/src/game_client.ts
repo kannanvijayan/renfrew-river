@@ -189,6 +189,15 @@ export default class GameClient {
     }
   }
 
+  public async snapshotGame(): Promise<string> {
+    const result = await this.sendCommand("SnapshotGame", {});
+    if ("GameSnapshot" in result) {
+      return result.GameSnapshot;
+    } else {
+      throw new Error(result.Error.messages.join(", "));
+    }
+  }
+
   private async sendCommand<T extends ProtocolCommandName>(
     command: T,
     params: ProtocolCommandParams<T>,

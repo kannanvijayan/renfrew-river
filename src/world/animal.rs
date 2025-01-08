@@ -38,6 +38,11 @@ pub(crate) struct AnimalData {
   // Position of entity.
   pub(crate) position: CellCoord,
 }
+impl AnimalData {
+  pub(crate) fn is_invalid(&self) -> bool {
+    self.position.is_invalid()
+  }
+}
 
 impl GpuBufferDataType for AnimalData {
   type NativeType = u32;

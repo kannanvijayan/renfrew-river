@@ -6,6 +6,7 @@ use crate::{
     GpuSeqBuffer,
     ShadyProgramIndex,
     ShadyRegisterFile,
+    world::{ GpuElevationMap, GpuAnimalsList },
   },
   world::{ AnimalData, CellCoord, Elevation, WorldDims }
 };
@@ -19,13 +20,13 @@ const READOUT_REGISTERS_WORKGROUP: u32 = 64;
 pub(crate) fn move_animals_downhill_command(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
-  elevations_map_buffer: &GpuMapBuffer<Elevation>,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
+  elevations_map: &GpuElevationMap,
+  animals_list: &GpuAnimalsList,
 ) -> GpuSeqBuffer<CellCoord> {
-  let world_dims = elevations_map_buffer.dims();
+  let world_dims = elevations_map.dims();
   let world_columns = world_dims.columns_u32();
   let world_rows = world_dims.rows_u32();
-  let num_animals = animals_list_buffer.length() as u32;
+  let num_animals = animals_list.num_animals() as u32;
 
   // Create the uniform buffer.
   let config_uniforms_u32: [u32; 4] = [
@@ -40,7 +41,7 @@ pub(crate) fn move_animals_downhill_command(
   // Create the output buffer.
   let output_buffer = GpuSeqBuffer::<CellCoord>::new(
     device,
-    animals_list_buffer.length(),
+    animals_list.num_animals(),
     GpuBufferOptions::empty()
       .with_label("MoveAnimalsDownhillComputedTargets")
       .with_storage(true)
@@ -74,11 +75,11 @@ pub(crate) fn move_animals_downhill_command(
         },
         wgpu::BindGroupEntry {
           binding: 1,
-          resource: elevations_map_buffer.wgpu_buffer().as_entire_binding(),
+          resource: elevations_map.buffer().wgpu_buffer().as_entire_binding(),
         },
         wgpu::BindGroupEntry {
           binding: 2,
-          resource: animals_list_buffer.wgpu_buffer().as_entire_binding(),
+          resource: animals_list.buffer().wgpu_buffer().as_entire_binding(),
         },
         wgpu::BindGroupEntry {
           binding: 3,
@@ -108,20 +109,20 @@ pub(crate) fn move_animals_downhill_command(
 pub(crate) fn fill_registers_for_animal_move(
   device: &GpuDevice,
   encoder: &mut wgpu::CommandEncoder,
-  elevations_map_buffer: &GpuMapBuffer<Elevation>,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
+  elevations_map: &GpuElevationMap,
+  animals_list: &GpuAnimalsList,
   start_pc: ShadyProgramIndex,
   start_pc_buffer: &GpuSeqBuffer<u32>,
 ) -> GpuSeqBuffer<ShadyRegisterFile> {
-  let world_dims = elevations_map_buffer.dims();
+  let world_dims = elevations_map.dims();
   let world_columns = world_dims.columns_u32();
   let world_rows = world_dims.rows_u32();
-  let num_animals = animals_list_buffer.length() as u32;
+  let num_animals = animals_list.num_animals() as u32;
 
   // Create the uniform buffer.
   let config_uniforms_u32: [u32; 4] = [
     world_columns, world_rows,
-    num_animals, start_pc.offset,
+    num_animals, start_pc.to_u32(),
   ];
   let config_uniforms_u8: &[u8] = bytemuck::cast_slice(&config_uniforms_u32);
   let uniform_buffer = device.create_uniform_buffer(
@@ -131,7 +132,7 @@ pub(crate) fn fill_registers_for_animal_move(
   // Create the output buffer.
   let output_buffer = GpuSeqBuffer::<ShadyRegisterFile>::new(
     device,
-    animals_list_buffer.length(),
+    animals_list.num_animals(),
     GpuBufferOptions::empty()
       .with_label("FillRegistersForAnimalMoveComputedTargets")
       .with_storage(true)
@@ -165,11 +166,11 @@ pub(crate) fn fill_registers_for_animal_move(
         },
         wgpu::BindGroupEntry {
           binding: 1,
-          resource: elevations_map_buffer.wgpu_buffer().as_entire_binding(),
+          resource: elevations_map.buffer().wgpu_buffer().as_entire_binding(),
         },
         wgpu::BindGroupEntry {
           binding: 2,
-          resource: animals_list_buffer.wgpu_buffer().as_entire_binding(),
+          resource: animals_list.buffer().wgpu_buffer().as_entire_binding(),
         },
         wgpu::BindGroupEntry {
           binding: 3,

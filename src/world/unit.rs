@@ -40,7 +40,11 @@ pub(crate) struct UnitData {
   // The program for the unit.
   pub(crate) program: ShadyProgramIndex,
 }
-
+impl UnitData {
+  pub(crate) fn is_invalid(&self) -> bool {
+    self.position.is_invalid()
+  }
+}
 impl GpuBufferDataType for UnitData {
   type NativeType = [u32; 2];
 

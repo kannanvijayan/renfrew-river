@@ -7,6 +7,7 @@ mod elevation;
 mod terrain;
 mod vec_map;
 mod animal;
+mod species;
 mod turn_no;
 mod cell_info;
 mod unit;
@@ -20,6 +21,7 @@ pub(crate) use self::{
   elevation::{ Elevation, ElevationValueType },
   terrain::TerrainKind,
   animal::{ AnimalId, AnimalData },
+  species::{ SpeciesId, SpeciesData, SpeciesInfo },
   turn_no::TurnNo,
   cell_info::CellInfo,
   unit::{ UnitId, UnitData },

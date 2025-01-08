@@ -10,7 +10,6 @@ mod buffer_options;
 mod map_buffer;
 mod seq_buffer;
 mod world;
-mod program_store;
 
 mod shady_vm;
 
@@ -22,7 +21,6 @@ pub(crate) use self::{
   buffer_data_type::{ GpuBufferNativeType, GpuBufferDataType },
   buffer_options::GpuBufferOptions,
   map_buffer::GpuMapBuffer,
-  program_store::GpuProgramStore,
   seq_buffer::GpuSeqBuffer,
   world::{ GpuWorld, GpuWorldParams },
   shady_vm::{

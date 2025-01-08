@@ -13,6 +13,8 @@ pub(crate) struct CellCoord {
   pub(crate) row: u16,
 }
 impl CellCoord {
+  const INVALID: CellCoord = CellCoord { col: 0xffff, row: 0xffff };
+
   pub(crate) const fn new(x: u16, y: u16) -> CellCoord {
     CellCoord { col: x, row: y }
   }
@@ -33,6 +35,10 @@ impl CellCoord {
     let col = (encoded & 0x0000_ffff) as u16;
     let row = (encoded >> 16) as u16;
     CellCoord { col, row }
+  }
+
+  pub(crate) fn is_invalid(&self) -> bool {
+    *self == CellCoord::INVALID
   }
 }
 /**

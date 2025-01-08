@@ -71,31 +71,31 @@ impl Command for ReadMapDataCmd {
         ResponseEnvelope::Error(Box::new(failure)),
     }
   }
-  fn validate(&self, _errors: &mut Vec<String>) -> bool {
+  fn validate(&self, errors: &mut Vec<String>) -> bool {
     let mut errored = false;
     if (self.top_left.col % Self::TOP_LEFT_COL_MULTIPLE) != 0 {
-      _errors.push(format!(
+      errors.push(format!(
         "Top left col must be a multiple of {}",
         Self::TOP_LEFT_COL_MULTIPLE
       ));
       errored = true;
     }
     if (self.top_left.row % Self::TOP_LEFT_ROW_MULTIPLE) != 0 {
-      _errors.push(format!(
+      errors.push(format!(
         "Top left row must be a multiple of {}",
         Self::TOP_LEFT_ROW_MULTIPLE
       ));
       errored = true;
     }
     if (self.area.columns % Self::AREA_COLUMNS_MULTIPLE) != 0 {
-      _errors.push(format!(
+      errors.push(format!(
         "Area columns must be a multiple of {}",
         Self::AREA_COLUMNS_MULTIPLE
       ));
       errored = true;
     }
     if (self.area.rows % Self::AREA_ROWS_MULTIPLE) != 0 {
-      _errors.push(format!(
+      errors.push(format!(
         "Area rows must be a multiple of {}",
         Self::AREA_ROWS_MULTIPLE
       ));

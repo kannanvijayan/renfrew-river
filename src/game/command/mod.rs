@@ -11,6 +11,7 @@ mod read_animals_cmd;
 mod take_turn_step_cmd;
 mod get_cell_info_cmd;
 mod get_animal_data_cmd;
+mod snapshot_game_cmd;
 
 mod envelope;
 
@@ -67,6 +68,10 @@ pub(crate) use self::{
   get_animal_data_cmd::{
     GetAnimalDataCmd,
     GetAnimalDataRsp,
+  },
+  snapshot_game_cmd::{
+    SnapshotGameCmd,
+    SnapshotGameRsp,
   },
   envelope::CommandEnvelope,
 };

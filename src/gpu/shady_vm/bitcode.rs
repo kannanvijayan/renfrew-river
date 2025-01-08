@@ -1,6 +1,8 @@
+use serde::{ Serialize, Deserialize };
 use crate::gpu::GpuBufferDataType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct Instruction {
   op_word: OpWord,
   dst_word: DstWord,
@@ -34,6 +36,7 @@ impl GpuBufferDataType for Instruction {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct OpWord {
   pub(crate) cond: Condition,
   pub(crate) set_flags: bool,
@@ -104,6 +107,7 @@ impl OpWord {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct DstWord {
   pub(crate) reg: u8,
   pub(crate) negate: bool,
@@ -130,6 +134,7 @@ impl DstWord {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize)]
 pub(crate) enum SrcWord {
   Register { reg: u8, negate: bool, shift: i8 },
   Immediate { value: i16 },
@@ -275,6 +280,7 @@ const SHADY_CFLOW_RET_BIT: u32 = 2;
 
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize)]
 #[repr(u8)]
 pub(crate) enum Condition {
   Never = 0b000,
@@ -303,6 +309,7 @@ impl Condition {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize)]
 #[repr(u8)]
 pub(crate) enum OperationKind {
   Add = 0,
@@ -331,6 +338,7 @@ impl OperationKind {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize)]
 #[repr(u8)]
 pub(crate) enum ControlFlow {
   None = 0b000,

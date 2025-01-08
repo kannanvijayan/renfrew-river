@@ -1,6 +1,11 @@
 use crate::{
   world::{ AnimalId, AnimalData },
-  gpu::{ GpuDevice, GpuSeqBuffer, GpuMapBuffer }
+  gpu::{
+    GpuDevice,
+    GpuSeqBuffer,
+    GpuMapBuffer,
+    world::{ GpuAnimalsList, GpuAnimalsMap },
+  }
 };
 use super::commands::{ fill_map_u32_command, init_animals_command };
 
@@ -10,8 +15,8 @@ use super::commands::{ fill_map_u32_command, init_animals_command };
 pub(crate) async fn initialize_animals(
   device: &GpuDevice,
   rand_seed: u32,
-  animals_list_buffer: &GpuSeqBuffer<AnimalData>,
-  animals_map_buffer: &GpuMapBuffer<AnimalId>,
+  animals_list: &GpuAnimalsList,
+  animals_map: &GpuAnimalsMap,
 ) {
 
   let mut encoder = device.device().create_command_encoder(
@@ -23,7 +28,7 @@ pub(crate) async fn initialize_animals(
   fill_map_u32_command(
     device,
     &mut encoder,
-    animals_map_buffer.cast_as_native_type(),
+    animals_map.buffer().cast_as_native_type(),
     AnimalId::INVALID.to_u32()
   );
 
@@ -31,8 +36,8 @@ pub(crate) async fn initialize_animals(
     device,
     &mut encoder,
     rand_seed,
-    animals_list_buffer,
-    animals_map_buffer,
+    animals_list.buffer(),
+    animals_map.buffer(),
   );
 
   let prior_time = std::time::Instant::now();

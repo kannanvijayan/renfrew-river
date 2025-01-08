@@ -2,6 +2,7 @@ use log;
 use crate::{
   game::GameSettings,
   world::World,
+  persist::GamePersist,
 };
 
 pub(crate) struct Game {
@@ -33,5 +34,9 @@ impl Game {
   }
   pub(crate) fn world_mut(&mut self) -> &mut World {
     &mut self.world
+  }
+
+  pub(crate) fn to_persist(&self) -> GamePersist {
+    GamePersist::new(self.settings.clone(), self.world.to_persist())
   }
 }

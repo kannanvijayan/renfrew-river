@@ -6,6 +6,7 @@ use crate::{
     GpuDevice,
     GpuBufferDataType,
     GpuMapBuffer,
+    world::GpuElevationMap,
   },
   world::Elevation,
   game::constants::ELEVATION_BITS,
@@ -17,8 +18,8 @@ use super::commands::minify_elevations_command;
  */
 pub(crate) async fn elevations_minimap(
   device: &GpuDevice,
-  src_buffer: &GpuMapBuffer<Elevation>,
-  dst_buffer: &GpuMapBuffer<Elevation>,
+  src_buffer: &GpuElevationMap,
+  dst_buffer: &GpuElevationMap,
 ) {
   debug_assert!(
     std::mem::size_of::<

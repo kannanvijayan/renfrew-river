@@ -8,7 +8,6 @@ export default function WorldCanvas(
     canvasRef: React.RefObject<HTMLCanvasElement>,
   }
 ) {
-  console.log("KVKV WorldCanvas", { canvas: props.canvasRef.current });
   return (
     /* Make a vertical layout of a title, a labeled server selector input,
      * and a connect button.

@@ -1,6 +1,11 @@
 use std::collections::HashMap;
+use serde::{ Serialize, Deserialize };
 
+/**
+ * Extra flags that can be passed to the game.
+ */
 #[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize)]
 pub(crate) struct ExtraFlags {
   flags_map: HashMap<String, ExtraFlagsValue>,
 }
@@ -67,6 +72,7 @@ impl ExtraFlags {
 }
 
 #[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize)]
 pub(crate) enum ExtraFlagsValue {
   Bool(bool),
   String(String),
