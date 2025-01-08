@@ -168,6 +168,11 @@ fn cell_coord_get_row(cell_coord: CellCoord) -> u32 {
   return cell_coord.col_row.y;
 }
 
+/** Get colum and row as a vec2. */
+fn cell_coord_to_vec2(cell_coord: CellCoord) -> vec2<u32> {
+  return cell_coord.col_row;
+}
+
 // PackedCellCoord
 ////////////////////////////////////////////////////////////
 
@@ -258,6 +263,23 @@ fn animal_id_from_u32(value: u32) -> AnimalId {
 /** Get the animal id value. */
 fn animal_id_get_value(animal_id: AnimalId) -> u32 {
   return animal_id.value;
+}
+
+
+/** Persisted animal data. */
+struct AnimalDataPersist {
+  id: AnimalId,
+  position: PackedCellCoord,
+}
+
+/** Get the animal id from persisted animal data. */
+fn animal_data_persist_get_id(data: AnimalDataPersist) -> AnimalId {
+  return data.id;
+}
+
+/** Get the position from persisted animal data. */
+fn animal_data_persist_get_position(data: AnimalDataPersist) -> PackedCellCoord {
+  return data.position;
 }
 // END_LIBRARY(game_types)
 

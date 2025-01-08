@@ -23,6 +23,7 @@ impl GpuSpeciesList {
         .with_label(label)
         .with_storage(true)
         .with_copy_src(true)
+        .with_copy_dst(true)
     );
     GpuSpeciesList { vec, buffer }
   }
@@ -33,5 +34,21 @@ impl GpuSpeciesList {
 
   pub(crate) fn to_persist(&self) -> SpeciesListPersist {
     SpeciesListPersist::new(self.vec.clone())
+  }
+
+  pub(crate) fn from_persist(device: &GpuDevice, persist: &SpeciesListPersist)
+    -> Self
+  {
+    let species_list = GpuSpeciesList::new(
+      device,
+      persist.as_slice().len(),
+      "GpuSpeciesListFromPersist"
+    );
+    species_list.buffer().write_iter_staged(
+      device,
+      0,
+      persist.as_slice().iter().map(|info| &info.data)
+    );
+    species_list
   }
 }

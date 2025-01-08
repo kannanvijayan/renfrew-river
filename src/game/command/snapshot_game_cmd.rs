@@ -1,6 +1,5 @@
 use serde;
 use crate::game::{
-  GameSettings,
   response::{ResponseEnvelope, FailedResponse},
   command::{Command, CommandEnvelope},
 };
@@ -13,23 +12,40 @@ pub(crate) struct SnapshotGameCmd {
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) enum SnapshotGameRsp {
-  GameSnapshot(String),
+  GameSnapshot(GameSnapshotResponse),
   Failed(FailedResponse),
 }
+
+#[derive(Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct GameSnapshotResponse {
+  data: String,
+}
+impl GameSnapshotResponse {
+  pub(crate) fn new(data: String) -> GameSnapshotResponse {
+    GameSnapshotResponse { data }
+  }
+
+  pub(crate) fn data(&self) -> &String {
+    &self.data
+  }
+}
+
 impl Command for SnapshotGameCmd {
   type Response = SnapshotGameRsp;
   fn name() -> &'static str {
-    "NewGame"
+    "SnapshotGame"
   }
   fn description() -> &'static str {
-    "Start a new game with the given game settings."
+    "Obtain a snapshot of the current game."
   }
   fn to_queue_command(&self) -> CommandEnvelope {
     CommandEnvelope::SnapshotGame(Box::new(self.clone()))
   }
   fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response> {
     match response {
-      ResponseEnvelope::GameSnapshot(game_snapshot) => Some(*game_snapshot.clone()),
+      ResponseEnvelope::GameSnapshot(game_snapshot) =>
+        Some(SnapshotGameRsp::GameSnapshot(*game_snapshot.clone())),
       ResponseEnvelope::Error(response) => Some(SnapshotGameRsp::Failed(*response.clone())),
       _ => None,
     }
@@ -37,9 +53,7 @@ impl Command for SnapshotGameCmd {
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     match response {
       SnapshotGameRsp::GameSnapshot(game_snapshot) =>
-        ResponseEnvelope::GameSnapshot(
-          Box::new(SnapshotGameRsp::GameSnapshot(game_snapshot))
-        ),
+        ResponseEnvelope::GameSnapshot(Box::new(game_snapshot)),
       SnapshotGameRsp::Failed(response) =>
         ResponseEnvelope::Error(Box::new(response)),
     }
@@ -53,7 +67,7 @@ impl Command for SnapshotGameCmd {
     let snapshot_game_example = SnapshotGameCmd {};
 
     let game_snapshot_response_example = SnapshotGameRsp::GameSnapshot(
-      "Game snapshot data".to_string()
+      GameSnapshotResponse::new("Game snapshot data".to_string())
     );
     let game_snapshot_failed_example = SnapshotGameRsp::Failed(
       FailedResponse::new("Failed to snapshot game".to_string())

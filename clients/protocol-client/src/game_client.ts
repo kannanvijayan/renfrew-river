@@ -11,6 +11,7 @@ import { WorldDims } from "./types/world_dims";
 import { CellInfo } from "./types/cell_info";
 import { TurnStepResult } from "./types/turn_step_result";
 import { SettingsLimits } from "./types/settings_limits";
+import { GameSnapshot } from "./types/game_snapshot";
 import {
   ReadMapDataKind,
   ReadMapDataKindsToOutput,
@@ -189,10 +190,20 @@ export default class GameClient {
     }
   }
 
-  public async snapshotGame(): Promise<string> {
+  public async snapshotGame(): Promise<GameSnapshot> {
     const result = await this.sendCommand("SnapshotGame", {});
+    console.log("KVKV snapshotGame result", result);
     if ("GameSnapshot" in result) {
       return result.GameSnapshot;
+    } else {
+      throw new Error(result.Error.messages.join(", "));
+    }
+  }
+
+  public async restoreGame(snapshot: string): Promise<void> {
+    const result = await this.sendCommand("RestoreGame", { snapshot });
+    if ("Ok" in result) {
+      return;
     } else {
       throw new Error(result.Error.messages.join(", "));
     }

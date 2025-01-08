@@ -1,13 +1,16 @@
 use std::marker::PhantomData;
 use futures;
 
-use crate::gpu::{
-  GpuBufferDataType,
-  GpuBufferNativeType,
-  GpuBufferOptions,
-  GpuDevice,
+use crate::{
+  gpu::{
+    GpuBufferDataType,
+    GpuBufferNativeType,
+    GpuBufferOptions,
+    GpuDevice,
+    GpuMapBuffer,
+  },
+  world::WorldDims,
 };
-
 
 pub(crate) struct GpuSeqBuffer<T: GpuBufferDataType> {
   length: usize,
@@ -242,5 +245,16 @@ impl<T: GpuBufferDataType> GpuSeqBuffer<T> {
 
     // Wait for the commands to finish.
     device.device().poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
+  }
+
+
+  /**
+   * Convert this seq buffer into a map buffer of the given dimensions.
+   */
+  pub(crate) fn into_map_buffer(self, dims: WorldDims) -> GpuMapBuffer<T> {
+    let buffer = self.buffer;
+    let length = self.length;
+    assert!(length == dims.area() as usize);
+    GpuMapBuffer::from_dims_and_buffer(dims, buffer)
   }
 }

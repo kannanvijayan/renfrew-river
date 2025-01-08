@@ -14,6 +14,10 @@ pub(crate) struct ShadyProgram {
   pub bitcode: Vec<bitcode::Instruction>,
 }
 impl ShadyProgram {
+  pub(crate) fn new(bitcode: Vec<bitcode::Instruction>) -> ShadyProgram {
+    ShadyProgram { bitcode }
+  }
+
   pub(crate) async fn write_to_buffer(&self,
     device: &GpuDevice,
     offset: usize,

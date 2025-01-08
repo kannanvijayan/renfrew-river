@@ -13,6 +13,7 @@ import { GameConstants } from "./types/game_constants";
 import { GameSettings } from "./types/game_settings";
 import { SettingsLimits } from "./types/settings_limits";
 import { TurnStepResult } from "./types/turn_step_result";
+import { GameSnapshot } from "./types/game_snapshot";
 
 import { GameClientTransportListeners } from "./game_client";
 
@@ -30,6 +31,7 @@ export {
   GameSettings,
   SettingsLimits,
   TurnStepResult,
+  GameSnapshot,
 
   GameClientTransportListeners
 };

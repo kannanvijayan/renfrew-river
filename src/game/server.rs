@@ -22,7 +22,8 @@ use crate::{
       TakeTurnStepCmd, TakeTurnStepRsp, TurnTakenResponse,
       GetCellInfoCmd, GetCellInfoRsp,
       GetAnimalDataCmd, GetAnimalDataRsp,
-      SnapshotGameCmd, SnapshotGameRsp,
+      SnapshotGameCmd, SnapshotGameRsp, GameSnapshotResponse,
+      RestoreGameCmd, RestoreGameRsp,
     },
     response::{
       ResponseEnvelope,
@@ -34,6 +35,7 @@ use crate::{
     AnimalId,
     TakeTurnStepResult,
   },
+  persist::GamePersist,
 };
 
 /**
@@ -161,11 +163,15 @@ impl GameServerInner {
       CommandEnvelope::GetAnimalData(get_animal_data_command) => {
         let resp = self.handle_get_animal_data_command(*get_animal_data_command);
         return GetAnimalDataCmd::embed_response(resp);
-      }
+      },
       CommandEnvelope::SnapshotGame(snapshot_game_command) => {
         let resp = self.handle_snapshot_game_command(*snapshot_game_command);
         return SnapshotGameCmd::embed_response(resp);
-      }
+      },
+      CommandEnvelope::RestoreGame(restore_game_command) => {
+        let resp = self.handle_restore_game_command(*restore_game_command);
+        return RestoreGameCmd::embed_response(resp);
+      },
     };
   }
 
@@ -442,25 +448,52 @@ impl GameServerInner {
       Some(ref game) => game,
       None => {
         log::warn!("GameServerInner::handle_snapshot_game_command: No game");
-        return SnapshotGameRsp::Failed(
-          FailedResponse::new("No game to snapshot")
-        );
+        return SnapshotGameRsp::Failed(FailedResponse::new("No game to snapshot"));
       }
     };
 
     let persist = game.to_persist();
     match serde_json::to_string(&persist) {
       Ok(serialized) => {
-        SnapshotGameRsp::GameSnapshot(serialized)
+        SnapshotGameRsp::GameSnapshot(GameSnapshotResponse::new(serialized))
       },
       Err(err) => {
         log::error!(
           "GameServerInner::handle_snapshot_game_command: Failed to serialize: {:?}", err
         );
-        return SnapshotGameRsp::Failed(
-          FailedResponse::new("Failed to serialize game")
-        );
+        SnapshotGameRsp::Failed(FailedResponse::new("Failed to serialize game"))
       }
     }
+  }
+
+  fn handle_restore_game_command(&mut self,
+    restore_game_cmd: RestoreGameCmd,
+  ) -> RestoreGameRsp {
+    log::debug!("GameServerInner::handle_restore_game_command");
+
+    // If a game already exists, do not restore.
+    if self.game.is_some() {
+      log::warn!("GameServerInner::handle_restore_game_command: Game already exists");
+      return RestoreGameRsp::Failed(
+        FailedResponse::new("Cannot restore game while one is running")
+      );
+    }
+
+    let game_persist =
+      match serde_json::from_str::<GamePersist>(&restore_game_cmd.snapshot) {
+        Ok(persist) => persist,
+        Err(err) => {
+          log::error!(
+            "GameServerInner::handle_restore_game_command: Failed to deserialize: {:?}", err
+          );
+          return RestoreGameRsp::Failed(
+            FailedResponse::new("Failed to deserialize game")
+          );
+        },
+      };
+    
+    let game = Game::from_persist(game_persist);
+    self.game = Some(game);
+    RestoreGameRsp::Ok
   }
 }

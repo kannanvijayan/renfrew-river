@@ -12,6 +12,7 @@ mod take_turn_step_cmd;
 mod get_cell_info_cmd;
 mod get_animal_data_cmd;
 mod snapshot_game_cmd;
+mod restore_game_cmd;
 
 mod envelope;
 
@@ -72,6 +73,11 @@ pub(crate) use self::{
   snapshot_game_cmd::{
     SnapshotGameCmd,
     SnapshotGameRsp,
+    GameSnapshotResponse,
+  },
+  restore_game_cmd::{
+    RestoreGameCmd,
+    RestoreGameRsp,
   },
   envelope::CommandEnvelope,
 };

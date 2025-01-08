@@ -10,7 +10,7 @@ use super::command::{
   MiniElevationsResponse,
   AnimalsResponse,
   TurnTakenResponse,
-  SnapshotGameRsp,
+  GameSnapshotResponse,
 };
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ pub(crate) enum ResponseEnvelope {
   TurnTaken(Box<TurnTakenResponse>),
   CellInfo(Box<CellInfo>),
   AnimalData(Box<AnimalData>),
-  GameSnapshot(Box<SnapshotGameRsp>),
+  GameSnapshot(Box<GameSnapshotResponse>),
 }
 
 #[derive(Debug, Clone)]

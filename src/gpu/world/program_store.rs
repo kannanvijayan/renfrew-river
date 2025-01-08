@@ -96,6 +96,19 @@ impl GpuProgramStore {
     }).collect();
     ProgramStorePersist::new(programs)
   }
+
+  pub(crate) fn from_persist(device: &GpuDevice, persist: &ProgramStorePersist) -> GpuProgramStore {
+    let mut store = GpuProgramStore::new(device);
+    for program in persist.programs() {
+      let name = program.name().to_string();
+      let index = program.index();
+      let instrs = program.instructions().to_vec();
+      let program = ShadyProgram::new(instrs);
+      store.programs.push(ShadyProgramInfo { name: name.clone(), index, program });
+      store.name_to_position.insert(name, index);
+    }
+    store
+  }
 }
 
 struct ShadyProgramInfo {

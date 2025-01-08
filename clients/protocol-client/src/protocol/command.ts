@@ -10,6 +10,7 @@ import { TakeTurnStepCmd } from "./commands/take_turn_step_cmd";
 import { GetCellInfoCmd } from "./commands/get_cell_info_cmd";
 import { GetAnimalDataCmd } from "./commands/get_animal_data_cmd";
 import { SnapshotGameCmd } from "./commands/snapshot_game_cmd";
+import { RestoreGameCmd } from "./commands/restore_game_cmd";
 
 /**
  * Protocol commands.
@@ -27,6 +28,7 @@ export type ProtocolCommand = {
   GetCellInfo: GetCellInfoCmd,
   GetAnimalData: GetAnimalDataCmd,
   SnapshotGame: SnapshotGameCmd,
+  RestoreGame: RestoreGameCmd,
 };
 
 export type ProtocolCommandName = keyof ProtocolCommand;

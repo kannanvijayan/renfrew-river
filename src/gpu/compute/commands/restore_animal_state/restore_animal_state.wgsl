@@ -1,4 +1,3 @@
-
 // LIBRARY(hex_geometry)
 // Hexagon directions
 const HEX_DIR_N: u32 = 0u;
@@ -286,107 +285,43 @@ fn animal_data_persist_get_position(data: AnimalDataPersist) -> PackedCellCoord 
 struct Uniforms {
   world_dims: vec2<u32>,
   animal_count: u32,
+  live_animal_count: u32,
 };
 
-struct AnimalDataList {
-  values: array<AnimalData>,
-};
-struct TargetPositionList {
-  values: array<PackedCellCoord>,
+struct AnimalsMap {
+  animal_ids: array<AnimalId>,
 }
-struct CurrentPositionMap {
-  values: array<AnimalId>,
-}
-struct ResolvedConflictsMap {
-  values: array<AnimalId>,
-}
-struct WhyList {
-  values: array<u32>,
-}
-
-const WHY_DOES_NOT_EXIST: u32 = 0x10000000u;
-const WHY_DOES_STAY_PUT: u32 = 0x20000000u;
-const WHY_HAD_CONFLICT: u32 = 0x40000000u;
-const WHY_OK: u32 = 0x80000000u;
 
 @group(0) @binding(0)
 var<uniform> uniforms: Uniforms;
 
 @group(0) @binding(1)
-var<storage, read> in_target_positions: TargetPositionList;
+var<storage, read> in_animals: array<AnimalDataPersist>;
 
 @group(0) @binding(2)
-var<storage, read> in_conflicts_map: ResolvedConflictsMap;
+var<storage, write> out_animals: array<AnimalData>;
 
 @group(0) @binding(3)
-var<storage, read_write> inout_animal_data: AnimalDataList;
-
-@group(0) @binding(4)
-var<storage, read_write> out_animal_position_map: CurrentPositionMap;
-
-@group(0) @binding(5)
-var<storage, read_write> out_why_list: WhyList;
+var<storage, write> out_animals_map: AnimalsMap;
 
 @compute
 @workgroup_size(64)
-fn apply_animal_moves(
+fn restore_animal_state(
   @builtin(global_invocation_id) global_id: vec3<u32>
 ) {
-  let animal_id = global_id.x;
-  if (animal_id >= uniforms.animal_count) {
+  let animal_persist_no = global_id.x;
+  if (animal_persist_no >= uniforms.live_animal_count) {
     return;
   }
 
-  // Skip animals that don't exist.
-  let animal_data = inout_animal_data.values[animal_id];
-  if (packed_cell_coord_is_invalid(animal_data.position)) {
-    out_why_list.values[animal_id] = WHY_DOES_NOT_EXIST;
-    return;
-  }
+  let animal_id = animal_data_persist_get_id(in_animals[animal_persist_no]);
+  let animal_position = animal_data_persist_get_position(in_animals[animal_persist_no]);
 
-  let current_position = animal_data.position;
-  let target_position = in_target_positions.values[animal_id];
-  if (packed_cell_coord_equal(current_position, target_position)) {
-    // Animal is already at target position.
-    out_why_list.values[animal_id] = WHY_DOES_STAY_PUT;
-    return;
-  }
+  let animal_idval = animal_id_get_value(animal_id);
+  let animal_coord = packed_cell_coord_to_cell_coord(animal_position);
+  let animal_xy = cell_coord_to_vec2(animal_coord);
+  let map_idx = hexcell_index(uniforms.world_dims, animal_xy);
 
-  // Check the conflicts map to see if this animal gets to move to its
-  // target position.
-  let target_coord = packed_cell_coord_to_cell_coord(target_position);
-  let target_position_map_idx = hexcell_index(
-    uniforms.world_dims,
-    target_coord.col_row
-  );
-  let target_position_winning_animal_id =
-    in_conflicts_map.values[target_position_map_idx];
-  if (
-    !animal_id_equal(
-      target_position_winning_animal_id,
-      animal_id_from_u32(animal_id)
-    )
-  ) {
-    // Animal lost the conflict.
-    out_why_list.values[animal_id] = WHY_HAD_CONFLICT | animal_id;
-    return;
-  }
-
-  out_why_list.values[animal_id] = WHY_OK;
-
-  // Update the animal data to reflect the new position.
-  inout_animal_data.values[animal_id].position = target_position;
-
-  // Update the animal position map at the target position to be the animal id.
-  out_animal_position_map.values[target_position_map_idx] =
-    animal_id_from_u32(animal_id);
-
-  // Clear the animal position map at the current position to be invalid.
-  let current_coord = packed_cell_coord_to_cell_coord(current_position);
-  let current_position_map_idx = hexcell_index(
-    uniforms.world_dims,
-    current_coord.col_row
-  );
-  out_animal_position_map.values[current_position_map_idx] =
-    animal_id_new_invalid();
+  out_animals[animal_idval] = AnimalData(animal_position);
+  out_animals_map.animal_ids[map_idx] = animal_id;
 }

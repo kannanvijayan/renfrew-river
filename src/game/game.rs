@@ -39,4 +39,11 @@ impl Game {
   pub(crate) fn to_persist(&self) -> GamePersist {
     GamePersist::new(self.settings.clone(), self.world.to_persist())
   }
+
+  pub(crate) fn from_persist(persist: GamePersist) -> Game {
+    Game {
+      settings: persist.settings().clone(),
+      world: World::from_persist(persist.world()),
+    }
+  }
 }

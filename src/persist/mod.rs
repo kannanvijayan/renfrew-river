@@ -3,7 +3,6 @@ mod world;
 mod elevation_map;
 mod animals_list;
 mod species_list;
-mod units_list;
 mod program_store;
 
 pub(crate) use self::{
@@ -12,6 +11,5 @@ pub(crate) use self::{
   elevation_map::ElevationMapPersist,
   animals_list::{ AnimalsListPersist, AnimalPersist },
   species_list::SpeciesListPersist,
-  units_list::{ UnitsListPersist, UnitPersist },
   program_store::{ ProgramStorePersist, ProgramPersist },
 };

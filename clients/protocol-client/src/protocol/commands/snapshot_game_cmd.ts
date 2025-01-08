@@ -1,9 +1,9 @@
-import { CellCoord } from "../../types/cell_coord";
-import { CellInfo } from "../../types/cell_info";
+import { GameSnapshot } from "../../types/game_snapshot";
+import { EmptyObject } from "../../util/empty_object";
 
 export type SnapshotGameCmd = {
-  params: Record<string, never>;
+  params: EmptyObject;
   response: {
-    GameSnapshot: string;
+    GameSnapshot: GameSnapshot;
   };
 };

@@ -1,4 +1,4 @@
-import GameClient, { GameSettings } from "renfrew-river-protocol-client";
+import GameClient, { GameSettings, GameSnapshot } from "renfrew-river-protocol-client";
 import GameServerSession from "./server_session";
 import GameSurface from './surface';
 import WorldObserver from "./world_observer";
@@ -49,6 +49,10 @@ export default class GameInstance {
       miniDims: { columns: miniColumns, rows: miniRows },
     });
     return new GameInstance({ client, serverSession, settings, world });
+  }
+
+  public async snapshotGame(): Promise<GameSnapshot> {
+    return this.client_.snapshotGame();
   }
 
   public handleCanvasMounted(canvas: HTMLCanvasElement): void {

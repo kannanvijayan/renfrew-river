@@ -20,6 +20,15 @@ const theme = createTheme({
       default: '#c58b29',
     },
   },
+  components: {
+    MuiMenu: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: '#ccf084',
+        },
+      },
+    }
+  }
 });
 
 export default theme;

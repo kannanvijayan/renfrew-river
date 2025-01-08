@@ -46,7 +46,6 @@ impl World {
     log::debug!("World::initialize");
     self.gpu_world.init_elevations();
     self.gpu_world.init_animals();
-    self.gpu_world.init_units();
 
     self.init_programs();
   }
@@ -203,9 +202,15 @@ impl World {
       self.gpu_world.elevation_map_persist(),
       self.gpu_world.animals_list_persist(),
       self.gpu_world.species_list_persist(),
-      self.gpu_world.units_list_persist(),
       self.gpu_world.program_store_persist(),
     )
+  }
+
+  pub(crate) fn from_persist(world_persist: &WorldPersist) -> World {
+    let world_dims = world_persist.world_dims();
+    let gpu_world = GpuWorld::from_persist(world_persist);
+    let turn_no = world_persist.turn_no();
+    World { world_dims, gpu_world, turn_no }
   }
 }
 

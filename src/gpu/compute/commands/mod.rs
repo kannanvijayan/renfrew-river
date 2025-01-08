@@ -5,6 +5,7 @@ mod init_animals;
 mod move_animals_downhill;
 mod resolve_animal_move_conflicts;
 mod apply_animal_moves;
+mod restore_animal_state;
 
 mod shady_interp;
 
@@ -20,6 +21,7 @@ pub(crate) use self::{
   },
   resolve_animal_move_conflicts::resolve_animal_move_conflicts_command,
   apply_animal_moves::apply_animal_moves_command,
+  restore_animal_state::restore_animal_state_command,
 
   shady_interp::shady_interp_command,
 };

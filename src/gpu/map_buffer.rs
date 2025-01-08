@@ -31,6 +31,17 @@ impl<T: GpuBufferDataType> GpuMapBuffer<T> {
     }
   }
 
+  pub(crate) fn from_dims_and_buffer(
+    dims: WorldDims,
+    buffer: wgpu::Buffer,
+  ) -> GpuMapBuffer<T> {
+    GpuMapBuffer {
+      dims,
+      buffer,
+      _phantom: PhantomData,
+    }
+  }
+
   pub(crate) fn wgpu_buffer(&self) -> &wgpu::Buffer {
     &self.buffer
   }

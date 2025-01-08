@@ -2,7 +2,6 @@ mod elevation_map;
 mod animals_list;
 mod animals_map;
 mod species_list;
-mod units_list;
 mod program_store;
 
 use log;
@@ -21,7 +20,7 @@ use crate::{
       compute_downhill_movement_with_shady_vm,
       resolve_animal_move_conflicts,
       apply_animal_moves,
-      initialize_units,
+      restore_animal_state,
     },
     shady_vm::{ ShadyProgram, ShadyProgramIndex },
   },
@@ -40,10 +39,10 @@ use crate::{
     ExtraFlags
   },
   persist::{
+    WorldPersist,
     AnimalsListPersist,
     ElevationMapPersist,
     SpeciesListPersist,
-    UnitsListPersist,
     ProgramStorePersist,
   },
 };
@@ -53,7 +52,6 @@ pub(crate) use self::{
   species_list::GpuSpeciesList,
   animals_list::GpuAnimalsList,
   animals_map::GpuAnimalsMap,
-  units_list::GpuUnitsList,
   program_store::GpuProgramStore,
 };
 
@@ -88,9 +86,6 @@ pub(crate) struct GpuWorld {
   // The species list.
   species_list: GpuSpeciesList,
 
-  // The unit data buffer.
-  units_list: GpuUnitsList,
-
   // The program store.
   program_store: GpuProgramStore,
 }
@@ -103,7 +98,6 @@ impl GpuWorld {
     let animals_list = GpuAnimalsList::new(&device, constants::MAX_ANIMALS, "AnimalsList");
     let animals_map = GpuAnimalsMap::new(&device, world_dims, "AnimalsMap");
     let species_list = GpuSpeciesList::new(&device, constants::MAX_SPECIES, "SpeciesData");
-    let units_list = GpuUnitsList::new(&device, constants::MAX_UNITS, "UnitData");
 
     let program_store = GpuProgramStore::new(&device);
     GpuWorld {
@@ -115,7 +109,6 @@ impl GpuWorld {
       animals_list,
       animals_map,
       species_list,
-      units_list,
       program_store,
     }
   }
@@ -157,12 +150,6 @@ impl GpuWorld {
   pub(crate) fn init_species(&self) {
     futures::executor::block_on(async {
       initialize_species(&self.device, &self.species_list).await;
-    });
-  }
-
-  pub(crate) fn init_units(&self) {
-    futures::executor::block_on(async {
-      initialize_units(&self.device, &self.units_list).await;
     });
   }
 
@@ -356,10 +343,40 @@ impl GpuWorld {
   pub(crate) fn species_list_persist(&self) -> SpeciesListPersist {
     self.species_list.to_persist()
   }
-  pub(crate) fn units_list_persist(&self) -> UnitsListPersist {
-    self.units_list.to_persist(&self.device)
-  }
   pub(crate) fn program_store_persist(&self) -> ProgramStorePersist {
     self.program_store.to_persist()
+  }
+
+  pub(crate) fn from_persist(world_persist: &WorldPersist) -> Self {
+    let device = futures::executor::block_on(GpuDevice::new());
+    let world_dims = world_persist.world_dims();
+    let rand_seed = world_persist.rand_seed();
+    let extra_flags = world_persist.extra_flags().clone();
+    let elevation_map = GpuElevationMap::from_persist(
+      &device,
+      world_dims,
+      world_persist.elevation_map()
+    );
+
+    let (animals_list, animals_map) =
+      futures::executor::block_on(restore_animal_state(
+        &device,
+        world_dims,
+        world_persist.animals_list().as_slice().iter(),
+      ));
+
+    let species_list = GpuSpeciesList::from_persist(&device, world_persist.species_list());
+    let program_store = GpuProgramStore::from_persist(&device, world_persist.program_store());
+    GpuWorld {
+      device,
+      world_dims,
+      rand_seed,
+      extra_flags,
+      elevation_map,
+      animals_list,
+      animals_map,
+      species_list,
+      program_store,
+    }
   }
 }
