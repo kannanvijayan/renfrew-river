@@ -26,7 +26,7 @@ fn collatz_vmid() {
     /* 2 */ asm.emit_load(asm.dreg(2), 0);
 
     asm.bind_label("loop_start");
-    /* 3 */ asm.emit_sub(asm.dreg(99), asm.sreg_ind(0), asm.immv(1));
+    /* 3 */ asm.emit_sub(asm.dreg(99), asm.sreg(0), asm.immv(1));
     /* 4 */ asm.with_ifz().emit_jump("loop_end");
     // main: CALL collatz_step()
     /* 5 */ asm.emit_call("collatz_step");
