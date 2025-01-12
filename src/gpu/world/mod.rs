@@ -366,7 +366,9 @@ impl GpuWorld {
       ));
 
     let species_list = GpuSpeciesList::from_persist(&device, world_persist.species_list());
+
     let program_store = GpuProgramStore::from_persist(&device, world_persist.program_store());
+
     GpuWorld {
       device,
       world_dims,

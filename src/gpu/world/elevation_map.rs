@@ -54,18 +54,31 @@ impl GpuElevationMap {
   ) -> Self {
     let elevation_map = GpuElevationMap::new(device, world_dims, "ElevationMap");
 
-    let buffer = futures::executor::block_on(async {
+    futures::executor::block_on(async {
       let elev_vec: Vec<_> =
         persist.elevations()
           .iter()
           .flat_map(|v| v.iter())
           .copied()
           .collect();
-      let buffer = GpuSeqBuffer::from_iter_for_write(
+      let tmp_buffer = GpuSeqBuffer::from_iter_for_write(
         device,
         elev_vec.as_slice().iter()
       ).await;
-      let tmp_map = buffer.into_map_buffer(world_dims);
+
+      let mut encoder = device.device().create_command_encoder(
+        &wgpu::CommandEncoderDescriptor {
+          label: Some("ElevationMapFromPersistEncoder"),
+        }
+      );
+      encoder.copy_buffer_to_buffer(
+        tmp_buffer.wgpu_buffer(), 0,
+        elevation_map.buffer().wgpu_buffer(), 0,
+        tmp_buffer.wgpu_buffer().size()
+      );
+
+      let submission_index = device.queue().submit(Some(encoder.finish()));
+      device.device().poll(wgpu::Maintain::WaitForSubmissionIndex(submission_index));
     });
 
     elevation_map

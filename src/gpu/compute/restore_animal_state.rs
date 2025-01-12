@@ -4,6 +4,7 @@ use crate::{
   gpu::{
     GpuDevice,
     GpuSeqBuffer,
+    GpuBufferOptions,
     world::{ GpuAnimalsList, GpuAnimalsMap },
   },
   persist::AnimalPersist,
@@ -29,20 +30,37 @@ pub(crate) async fn restore_animal_state(
     world_dims,
     "RestoreAnimalStateAnimalsMap",
   );
-  let animals_list = GpuAnimalsList::new(
-    device,
-    constants::MAX_ANIMALS,
-    "RestoreAnimalStateOutAnimalsList"
-  );
-
-  let animals_list_persist_buffer =
-    GpuSeqBuffer::from_iter_for_write(device, animals_list_persist).await;
 
   fill_map_u32_command(
     device,
     &mut encoder,
     animals_map.buffer().cast_as_native_type(),
     AnimalId::INVALID.to_u32()
+  );
+
+  let animals_list = GpuAnimalsList::new(
+    device,
+    constants::MAX_ANIMALS,
+    "RestoreAnimalStateOutAnimalsList"
+  );
+
+  let animals_list_persist_tmp_buffer =
+    GpuSeqBuffer::from_iter_for_write(device, animals_list_persist).await;
+  
+  let animals_list_persist_buffer = GpuSeqBuffer::<AnimalPersist>::new(
+    device,
+    animals_list_persist_tmp_buffer.length(),
+    GpuBufferOptions::empty()
+      .with_label("RestoreAnimalStateAnimalsListPersistBuffer")
+      .with_storage(true)
+      .with_copy_dst(true)
+  );
+  encoder.copy_buffer_to_buffer(
+    animals_list_persist_tmp_buffer.wgpu_buffer(),
+    0,
+    animals_list_persist_buffer.wgpu_buffer(),
+    0,
+    animals_list_persist_tmp_buffer.wgpu_buffer().size(),
   );
 
   restore_animal_state_command(

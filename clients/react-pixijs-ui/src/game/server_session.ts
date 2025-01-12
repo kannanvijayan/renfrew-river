@@ -1,4 +1,4 @@
-import GameClient, { GameConstants, GameSettings, SettingsLimits }
+import GameClient, { GameConstants, GameSettings, SettingsLimits, GameSnapshot }
   from "renfrew-river-protocol-client"
 import GameInstance from "./instance";
 
@@ -53,6 +53,34 @@ export default class GameServerSession {
       throw new Error("Already in a game");
     }
     await this.client_.newGame(settings);
+    const instance = await GameInstance.load({
+      client: this.client_,
+      serverSession: this,
+      settings,
+    });
+    this.currentGame_ = instance;
+    return instance;
+  }
+
+  public async serverLoadGameFromSnapshot(snapshot: GameSnapshot)
+    : Promise<GameInstance>
+  {
+    // Restore the game
+    if (this.currentGame_) {
+      throw new Error("Already in a game");
+    }
+    try {
+      await this.client_.restoreGame(snapshot.data);
+    } catch (e) {
+      throw new Error(`Failed to load game: ${e}`);
+    }
+
+    // Join the restored game.
+    const settings = await this.serverHasGameInstance();
+    if (settings === null) {
+      throw new Error("No game exists");
+    }
+
     const instance = await GameInstance.load({
       client: this.client_,
       serverSession: this,

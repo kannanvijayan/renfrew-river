@@ -47,7 +47,7 @@ pub(crate) fn restore_animal_state_command(
       label: Some("RestoreAnimalStatePipeline"),
       layout: None,
       module: &shader,
-      entry_point: "init_animals",
+      entry_point: "restore_animal_state",
     }
   );
 

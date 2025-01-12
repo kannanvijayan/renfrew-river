@@ -107,6 +107,7 @@ impl GpuProgramStore {
       store.programs.push(ShadyProgramInfo { name: name.clone(), index, program });
       store.name_to_position.insert(name, index);
     }
+    futures::executor::block_on(store.sync_gpu_buffer(device));
     store
   }
 }
