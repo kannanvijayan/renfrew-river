@@ -1,6 +1,9 @@
 use serde;
 
-use crate::world::{CellInfo, AnimalData};
+use crate::{
+  game::mode::create_world::response::CreateWorldSubcmdResponse,
+  world::{CellInfo, AnimalData},
+};
 
 use super::command::{
   GetConstantsRsp,
@@ -29,6 +32,7 @@ pub(crate) enum ResponseEnvelope {
   CellInfo(Box<CellInfo>),
   AnimalData(Box<AnimalData>),
   GameSnapshot(Box<GameSnapshotResponse>),
+  CreateWorldSubcmd(CreateWorldSubcmdResponse),
 }
 
 #[derive(Debug, Clone)]

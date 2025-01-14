@@ -9,6 +9,7 @@ import ViewState from '../ViewState';
 import Screen from '../components/Screen';
 import ConnectedTopBar from '../components/ConnectedTopBar';
 import MainMenuFrame, { MainMenuLabeledEntry } from '../components/MainMenuFrame';
+import DefRulesGameMode from '../game/mode/def_rules';
 
 type ConnectedMainScreenViewMode =
   | "menu"
@@ -45,6 +46,10 @@ export default function ConnectedMainView(
     props.viewState.instance = instance
   }
 
+  const onDefineRulesetClicked = () => {
+    props.viewState.instance = new DefRulesGameMode(props.session);
+  }
+
   return (
     <Screen>
       <ConnectedTopBar
@@ -58,7 +63,8 @@ export default function ConnectedMainView(
         onStartGameClicked={onNewGameStartClicked}
         onNewGameClicked={onNewGameClicked}
         onLoadGameClicked={onLoadGameClicked}
-        onLoadGameConfirm={onLoadGameConfirm} />
+        onLoadGameConfirm={onLoadGameConfirm}
+        onDefineRulesetClicked={onDefineRulesetClicked}/>
     </Screen>
   );
 };
@@ -72,13 +78,16 @@ function ViewMode(
 
     onLoadGameClicked: () => void,
     onLoadGameConfirm: (file: string) => void,
+
+    onDefineRulesetClicked: () => void,
   }
 ) {
   switch (props.mode) {
     case "menu":
       return <ConnectedMainSelectionMenu
                onNewGameClicked={props.onNewGameClicked}
-               onLoadGameClicked={props.onLoadGameClicked} />;
+               onLoadGameClicked={props.onLoadGameClicked}
+               onDefineRulesetClicked={props.onDefineRulesetClicked} />;
     case "new_game":
       return <ConnectedNewGameDialog settingsLimits={props.settingsLimits}
                 onStartGameClicked={props.onStartGameClicked} />;
@@ -91,6 +100,7 @@ function ConnectedMainSelectionMenu(
   props: {
     onNewGameClicked: () => void,
     onLoadGameClicked: () => void,
+    onDefineRulesetClicked: () => void,
   }
 ) {
   // Box is centered vertically.
@@ -108,6 +118,9 @@ function ConnectedMainSelectionMenu(
         </Button>
         <Button variant="text" fullWidth onClick={props.onLoadGameClicked}>
           Load Game
+        </Button>
+        <Button variant="text" fullWidth onClick={props.onDefineRulesetClicked}>
+          Define Ruleset
         </Button>
       </Box>
     </Box>
@@ -269,18 +282,15 @@ function ConnectedLoadGameDialog(
   };
   async function computeValidations(): Promise<Validations> {
     const files = filesRef.current;
-    console.log("KVKV computeValidations files", files);
     const errors = [];
     if (!files || files.length == 0) {
       errors.push("No file selected");
     } else if (files && files.length > 1) {
       errors.push("Only one file allowed");
     } else {
-      console.log("KVKV computeValidations read file", files[0]);
       const fileReader = new FileReader();
       return new Promise((resolve, reject) => {
         fileReader.onload = (ev) => {
-          console.log("KVKV computeValidations fileReader.onLoad", ev);
           if (ev.target && ev.target.result) {
             const result = ev.target.result;
             if (typeof result !== "string") {
@@ -291,7 +301,6 @@ function ConnectedLoadGameDialog(
           }
         };
         fileReader.onerror = (err) => {
-          console.log("KVKV computeValidations fileReader.onError", err);
           reject(err);
         }
         fileReader.readAsText(files[0]);

@@ -1,5 +1,17 @@
 use crate::gpu::GpuBufferDataType;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct ShadyRegister(u8);
+impl ShadyRegister {
+  pub(crate) fn new(val: u8) -> Self {
+    ShadyRegister(val)
+  }
+}
+impl From<u8> for ShadyRegister {
+  fn from(reg: u8) -> Self { Self(reg) }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct ShadyRegisterFile {
   regs: [i32; SHADY_REG_COUNT]

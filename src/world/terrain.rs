@@ -1,20 +1,25 @@
-use crate::gpu::GpuBufferDataType;
-
-
 #[derive(Clone, Copy, Debug)]
-#[repr(u8)]
-pub(crate) enum TerrainKind {
-  Empty = 0_u8,
-  Land = 1_u8,
-  Ocean = 2_u8,
+pub(crate) struct TerrainInfo {
+  data: [i32; Self::NUM_WORDS],
 }
-impl TerrainKind {
-  pub(crate) fn default() -> TerrainKind {
-    TerrainKind::Empty
+impl TerrainInfo {
+  const NUM_WORDS: usize = 16;
+  pub(crate) fn new() -> TerrainInfo {
+    TerrainInfo { data: [0; Self::NUM_WORDS] }
   }
 }
-impl Default for TerrainKind {
+impl Default for TerrainInfo {
   fn default() -> Self {
-    TerrainKind::default()
+    TerrainInfo::new()
+  }
+}
+impl From<[i32; Self::NUM_WORDS]> for TerrainInfo {
+  fn from(data: [i32; Self::NUM_WORDS]) -> TerrainInfo {
+    TerrainInfo { data }
+  }
+}
+impl Into<[i32; Self::NUM_WORDS]> for TerrainInfo {
+  fn into(self) -> [i32; Self::NUM_WORDS] {
+    self.data
   }
 }

@@ -7,6 +7,7 @@ import GameInstance from '../game/instance';
 import ViewState from '../ViewState';
 
 import './ConnectedTopBar.css';
+import DefRulesGameMode from '../game/mode/def_rules';
 
 export default function ConnectedTopBar(
   props: {
@@ -19,7 +20,7 @@ export default function ConnectedTopBar(
   const instance = props.viewState.instance;
   return (
     <Box display="flex" flexDirection="row" width="100%" height="auto"
-      className="ConnectedTopBar"
+      className="ConnectedTopBar" mt={1}
       sx={{ backgroundColor: 'primary.dark' }}
     >
       <GameEmblem />
@@ -27,22 +28,29 @@ export default function ConnectedTopBar(
       <ConnectionInfo serverAddr={props.session.serverAddr}
           onDisconnectClicked={props.onDisconnectClicked} />
 
-      { instance ? 
-          (<>
-            <ConnectedGameInfo instance={instance} />
-            <GameMenuButton instance={instance} />
-          </>)
-        : null
-      }
+      {instance ? <ModeSpecificInfo instance={instance} /> : null}
     </Box>
   );
 };
+
+function ModeSpecificInfo(props: { instance: GameInstance | DefRulesGameMode }) {
+  const { instance } = props;
+  if (instance instanceof GameInstance) {
+    return (
+      <>
+        <ConnectedGameInfo instance={instance} />
+        <GameMenuButton instance={instance} />
+      </>
+    );
+  }
+}
 
 function GameEmblem() {
   return (
       <Container sx={{
         backgroundColor: 'primary.light',
         m: 0,
+        ml: 1,
         marginRight: '10px',
         width: 'auto',
         height: 'auto',

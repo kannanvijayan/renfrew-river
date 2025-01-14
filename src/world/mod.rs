@@ -19,7 +19,7 @@ pub(crate) use self::{
   world::{ World, TakeTurnStepResult },
   vec_map::VecMap,
   elevation::{ Elevation, ElevationValueType },
-  terrain::TerrainKind,
+  terrain::TerrainInfo,
   animal::{ AnimalId, AnimalData },
   species::{ SpeciesId, SpeciesData, SpeciesInfo },
   turn_no::TurnNo,

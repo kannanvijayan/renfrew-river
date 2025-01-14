@@ -13,6 +13,7 @@ mod get_cell_info_cmd;
 mod get_animal_data_cmd;
 mod snapshot_game_cmd;
 mod restore_game_cmd;
+mod define_ruleset_command;
 
 mod envelope;
 
@@ -78,6 +79,10 @@ pub(crate) use self::{
   restore_game_cmd::{
     RestoreGameCmd,
     RestoreGameRsp,
+  },
+  define_ruleset_command::{
+    DefineRulesetCmd,
+    DefineRulesetRsp,
   },
   envelope::CommandEnvelope,
 };

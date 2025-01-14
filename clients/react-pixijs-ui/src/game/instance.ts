@@ -89,10 +89,9 @@ export default class GameInstance {
   }
 
   public handleCanvasUnmounted(canvas: HTMLCanvasElement): void {
-    console.log("KVKV Canvas unmounted", canvas);
     if (this.surface_) {
       if (! this.surface_.matchesCanvas(canvas)) {
-        console.error("KVKV Canvas does not match on unmount");
+        console.error("Canvas does not match on unmount");
       }
       this.surface_.destroy();
       this.surface_ = null;

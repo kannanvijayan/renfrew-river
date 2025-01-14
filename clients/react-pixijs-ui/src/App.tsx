@@ -11,6 +11,8 @@ import { useViewState } from './ViewState';
 
 import GameLoader from './game/loader';
 import GameInstance from './game/instance';
+import DefRulesGameMode from './game/mode/def_rules';
+import DefRulesView from './views/DefRulesView';
 
 export default function App() {
   const viewState = useViewState();
@@ -45,13 +47,28 @@ export default function App() {
   const session = viewState.serverSession;
   const instance = viewState.instance;
 
-  return (
-    session === null ?
-      <UnconnectedView onConnectClicked={onConnectClicked} viewState={viewState}/>
-    : instance === null ?
-      <ConnectedMainView session={session}
+  if (session === null) {
+    return (
+      <UnconnectedView
+        onConnectClicked={onConnectClicked}
         viewState={viewState}
-        onDisconnectClicked={onDisconnectClicked} />
-    : <GameplayView instance={instance} viewState={viewState} />
-  );
+      />
+    )
+  }
+
+  if (instance === null) {
+    return (
+      <ConnectedMainView
+        session={session}
+        viewState={viewState}
+        onDisconnectClicked={onDisconnectClicked}
+      />
+    )
+  }
+
+  if (instance instanceof GameInstance) {
+    return <GameplayView instance={instance} viewState={viewState} />;
+  } else if (instance instanceof DefRulesGameMode) {
+    return <DefRulesView instance={instance} viewState={viewState} />;
+  }
 };

@@ -4,6 +4,7 @@ mod extra_flags;
 mod game;
 mod server;
 mod command;
+mod mode;
 mod response;
 mod protocol_documentation;
 

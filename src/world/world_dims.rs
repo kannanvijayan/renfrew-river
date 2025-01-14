@@ -31,6 +31,9 @@ impl WorldDims {
   pub(crate) const fn contains_coord(&self, coord: CellCoord) -> bool {
     coord.col < self.columns && coord.row < self.rows
   }
+  pub(crate) const fn contains_or_bounded_by_coord(&self, coord: CellCoord) -> bool {
+    coord.col <= self.columns && coord.row <= self.rows
+  }
   pub(crate) const fn coord_index(&self, coord: CellCoord) -> u32 {
     (coord.row_u32() * self.columns_u32()) + coord.col_u32()
   }

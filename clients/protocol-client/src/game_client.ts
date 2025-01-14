@@ -17,6 +17,7 @@ import {
   ReadMapDataKindsToOutput,
   ReadMapDataOutputNameMap
 } from "./protocol/commands/read_map_data_cmd";
+import Ruleset from "./types/ruleset";
 
 export type GameClientTransportListeners = {
   open: () => void;
@@ -192,7 +193,6 @@ export default class GameClient {
 
   public async snapshotGame(): Promise<GameSnapshot> {
     const result = await this.sendCommand("SnapshotGame", {});
-    console.log("KVKV snapshotGame result", result);
     if ("GameSnapshot" in result) {
       return result.GameSnapshot;
     } else {
@@ -202,6 +202,24 @@ export default class GameClient {
 
   public async restoreGame(snapshot: string): Promise<void> {
     const result = await this.sendCommand("RestoreGame", { snapshot });
+    if ("Ok" in result) {
+      return;
+    } else {
+      throw new Error(result.Error.messages.join(", "));
+    }
+  }
+
+  public async defineRuleset(args: {
+    name: string,
+    description?: string,
+    ruleset: Ruleset,
+  }): Promise<void> {
+    let { name, description, ruleset } = args;
+    const result = await this.sendCommand("DefineRuleset", {
+      name,
+      description: description || "",
+      ruleset,
+    });
     if ("Ok" in result) {
       return;
     } else {

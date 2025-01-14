@@ -10,6 +10,8 @@ use crate::gpu::{
 /**
  * An assembled program.
  */
+#[derive(Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct ShadyProgram {
   pub bitcode: Vec<bitcode::Instruction>,
 }

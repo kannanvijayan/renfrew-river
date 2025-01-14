@@ -1,18 +1,22 @@
 use serde;
-use crate::game::command::{
-  GetConstantsCmd,
-  DefaultSettingsCmd,
-  HasGameCmd,
-  NewGameCmd,
-  StopGameCmd,
-  ReadMapDataCmd,
-  MiniElevationsCmd,
-  ReadAnimalsCmd,
-  TakeTurnStepCmd,
-  GetCellInfoCmd,
-  GetAnimalDataCmd,
-  SnapshotGameCmd,
-  RestoreGameCmd,
+use crate::game::{
+  command::{
+    GetConstantsCmd,
+    DefaultSettingsCmd,
+    HasGameCmd,
+    NewGameCmd,
+    StopGameCmd,
+    ReadMapDataCmd,
+    MiniElevationsCmd,
+    ReadAnimalsCmd,
+    TakeTurnStepCmd,
+    GetCellInfoCmd,
+    GetAnimalDataCmd,
+    SnapshotGameCmd,
+    RestoreGameCmd,
+    DefineRulesetCmd,
+  },
+  mode::create_world::command::CreateWorldSubcmdEnvelope,
 };
 
 /** Tagged union type for commands sent over transport channels. */
@@ -32,4 +36,6 @@ pub(crate) enum CommandEnvelope {
   GetAnimalData(Box<GetAnimalDataCmd>),
   SnapshotGame(Box<SnapshotGameCmd>),
   RestoreGame(Box<RestoreGameCmd>),
+  DefineRuleset(Box<DefineRulesetCmd>),
+  CreateWorldSubcmd(Box<CreateWorldSubcmdEnvelope>),
 }

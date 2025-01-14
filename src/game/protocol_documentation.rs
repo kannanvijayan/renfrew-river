@@ -10,6 +10,11 @@ use crate::game::command::{
   MiniElevationsCmd,
   ReadAnimalsCmd,
   TakeTurnStepCmd,
+  GetCellInfoCmd,
+  GetAnimalDataCmd,
+  SnapshotGameCmd,
+  RestoreGameCmd,
+  DefineRulesetCmd,
 };
 
 pub struct ProtocolDocumentation {
@@ -33,6 +38,11 @@ pub fn get_protocol_docs() -> Vec<ProtocolDocumentation> {
   result.push(make_example::<MiniElevationsCmd>());
   result.push(make_example::<ReadAnimalsCmd>());
   result.push(make_example::<TakeTurnStepCmd>());
+  result.push(make_example::<GetCellInfoCmd>());
+  result.push(make_example::<GetAnimalDataCmd>());
+  result.push(make_example::<SnapshotGameCmd>());
+  result.push(make_example::<RestoreGameCmd>());
+  result.push(make_example::<DefineRulesetCmd>());
   return result;
 }
 

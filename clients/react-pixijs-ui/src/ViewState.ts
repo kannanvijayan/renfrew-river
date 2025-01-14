@@ -2,11 +2,12 @@ import { useState } from "react";
 import GameClient from "renfrew-river-protocol-client";
 import GameServerSession from "./game/server_session";
 import GameInstance from "./game/instance";
+import DefRulesGameMode from "./game/mode/def_rules";
 
 export default interface ViewState {
   client: GameClient | null;
   serverSession: GameServerSession | null;
-  instance: GameInstance | null;
+  instance: GameInstance | DefRulesGameMode | null;
 }
 
 class StateField<T> {
@@ -34,14 +35,14 @@ function useStateField<T>(initialValue: T): StateField<T> {
 }
 
 class ViewStateImpl implements ViewState {
-  private readonly client_: StateField<GameClient|null>;
-  private readonly serverSession_: StateField<GameServerSession|null>;
-  private instance_: StateField<GameInstance|null>;
+  private readonly client_: StateField<GameClient | null>;
+  private readonly serverSession_: StateField<GameServerSession | null>;
+  private instance_: StateField<GameInstance | DefRulesGameMode | null>;
 
   public constructor(args: {
-    client: StateField<GameClient|null>,
-    serverSession: StateField<GameServerSession|null>,
-    instance: StateField<GameInstance|null>,
+    client: StateField<GameClient | null>,
+    serverSession: StateField<GameServerSession | null>,
+    instance: StateField<GameInstance | DefRulesGameMode | null>,
   }) {
     this.client_ = args.client;
     this.serverSession_ = args.serverSession;
@@ -62,17 +63,17 @@ class ViewStateImpl implements ViewState {
     this.serverSession_.value = serverSession;
   }
 
-  public get instance(): GameInstance | null {
+  public get instance(): GameInstance | DefRulesGameMode | null {
     return this.instance_.value;
   }
-  public set instance(instance: GameInstance | null) {
+  public set instance(instance: GameInstance | DefRulesGameMode | null) {
     this.instance_.value = instance;
   }
 }
 
 export function useViewState(): ViewState {
-  const client = useStateField<GameClient|null>(null);
-  const serverSession = useStateField<GameServerSession|null>(null);
-  const instance = useStateField<GameInstance|null>(null);
+  const client = useStateField<GameClient | null>(null);
+  const serverSession = useStateField<GameServerSession | null>(null);
+  const instance = useStateField<GameInstance | DefRulesGameMode | null>(null);
   return new ViewStateImpl({ client, serverSession, instance });
 }

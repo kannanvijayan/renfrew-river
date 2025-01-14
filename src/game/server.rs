@@ -8,6 +8,7 @@ use crate::{
   game::{
     GameSettings,
     Game,
+    mode::GameMode,
     constants::{ ELEVATION_BITS, MIN_WORLD_DIMS, MAX_WORLD_DIMS },
     command::{
       Command, CommandEnvelope,
@@ -24,6 +25,7 @@ use crate::{
       GetAnimalDataCmd, GetAnimalDataRsp,
       SnapshotGameCmd, SnapshotGameRsp, GameSnapshotResponse,
       RestoreGameCmd, RestoreGameRsp,
+      DefineRulesetCmd, DefineRulesetRsp,
     },
     response::{
       ResponseEnvelope,
@@ -36,6 +38,10 @@ use crate::{
     TakeTurnStepResult,
   },
   persist::GamePersist,
+};
+use super::mode::create_world::{
+  command::CreateWorldSubcmdEnvelope,
+  response::CreateWorldSubcmdResponse,
 };
 
 /**
@@ -74,7 +80,7 @@ impl GameServer {
 pub(crate) struct GameServerInner {
   command_rx: mpsc::Receiver<CommandEnvelope>,
   response_tx: mpsc::Sender<ResponseEnvelope>,
-  game: Option<Game>,
+  mode: GameModeWrap,
   stop: bool,
 }
 impl GameServerInner {
@@ -85,7 +91,7 @@ impl GameServerInner {
       let mut inner = GameServerInner {
         command_rx,
         response_tx,
-        game: None,
+        mode: GameModeWrap::Empty,
         stop: false,
       };
       inner.run();
@@ -172,6 +178,14 @@ impl GameServerInner {
         let resp = self.handle_restore_game_command(*restore_game_command);
         return RestoreGameCmd::embed_response(resp);
       },
+      CommandEnvelope::DefineRuleset(define_ruleset) => {
+        let resp = self.handle_define_ruleset_command(*define_ruleset);
+        return DefineRulesetCmd::embed_response(resp);
+      },
+      CommandEnvelope::CreateWorldSubcmd(create_world_subcmd) => {
+        let envelope = self.handle_create_world_subcmd(*create_world_subcmd);
+        return ResponseEnvelope::CreateWorldSubcmd(envelope);
+      }
     };
   }
 
@@ -188,11 +202,11 @@ impl GameServerInner {
 
   fn handle_has_game_command(&mut self, _has_game_command: HasGameCmd) -> HasGameRsp {
     log::debug!("GameServerInner::handle_has_game_command");
-    match self.game {
-      Some(ref game) => {
+    match self.mode {
+      GameModeWrap::Game(ref game) => {
         HasGameRsp::GameExists(GameExistsResponse::new(game.settings().clone()))
       },
-      None => HasGameRsp::NoGameExists,
+      _ => HasGameRsp::NoGameExists,
     }
   }
 
@@ -220,13 +234,13 @@ impl GameServerInner {
     let settings = new_command.settings;
     let mut game = Game::new(settings);
     game.initialize();
-    self.game = Some(game);
+    self.mode = GameModeWrap::Game(game);
     NewGameRsp::Ok{}
   }
 
   fn handle_stop_command(&mut self, _stop_command: StopGameCmd) -> StopGameRsp {
     log::debug!("GameServerInner::handle_stop_command");
-    let mut game = match self.game.take() {
+    let mut game = match self.mode.take_game() {
       Some(game) => game,
       None => {
         log::warn!("GameServerInner::handle_stop_command: No game");
@@ -249,9 +263,9 @@ impl GameServerInner {
       return ReadMapDataRsp::Failed(FailedResponse::new_vec(validation_errors));
     }
 
-    let game = match self.game {
-      Some(ref game) => game,
-      None => {
+    let game = match self.mode {
+      GameModeWrap::Game(ref game) => game,
+      _ => {
         log::warn!(
           "GameServerInner::handle_read_elevations_command: No game"
         );
@@ -301,9 +315,9 @@ impl GameServerInner {
       return MiniElevationsRsp::Failed(FailedResponse::new_vec(validation_errors));
     }
 
-    let game = match self.game {
-      Some(ref game) => game,
-      None => {
+    let game = match self.mode {
+      GameModeWrap::Game(ref game) => game,
+      _ => {
         log::warn!("GameServerInner::handle_mini_elevations_command: No game");
         return MiniElevationsRsp::Failed(
           FailedResponse::new("No game to minify elevations from")
@@ -334,9 +348,9 @@ impl GameServerInner {
       return ReadAnimalsRsp::Failed(FailedResponse::new_vec(validation_errors));
     }
 
-    let game = match self.game {
-      Some(ref game) => game,
-      None => {
+    let game = match self.mode {
+      GameModeWrap::Game(ref game) => game,
+      _ => {
         log::warn!("GameServerInner::handle_read_animals_command: No game");
         return ReadAnimalsRsp::Failed(
           FailedResponse::new("No game to read animals from")
@@ -361,9 +375,9 @@ impl GameServerInner {
       return TakeTurnStepRsp::Failed(FailedResponse::new_vec(validation_errors));
     }
 
-    let game = match self.game {
-      Some(ref mut game) => game,
-      None => {
+    let game = match self.mode {
+      GameModeWrap::Game(ref mut game) => game,
+      _ => {
         log::warn!("GameServerInner::handle_take_turn_step_command: No game");
         return TakeTurnStepRsp::Failed(
           FailedResponse::new("No game to take turn step")
@@ -391,9 +405,9 @@ impl GameServerInner {
       return GetCellInfoRsp::Failed(FailedResponse::new_vec(validation_errors));
     }
 
-    let game = match self.game {
-      Some(ref game) => game,
-      None => {
+    let game = match self.mode {
+      GameModeWrap::Game(ref game) => game,
+      _ => {
         log::warn!("GameServerInner::handle_get_cell_info_command: No game");
         return GetCellInfoRsp::Failed(
           FailedResponse::new("No game to get cell info from")
@@ -425,9 +439,9 @@ impl GameServerInner {
       return GetAnimalDataRsp::Failed(FailedResponse::new_vec(validation_errors));
     }
 
-    let game = match self.game {
-      Some(ref game) => game,
-      None => {
+    let game = match self.mode {
+      GameModeWrap::Game(ref game) => game,
+      _ => {
         log::warn!("GameServerInner::handle_get_animal_data_command: No game");
         return GetAnimalDataRsp::Failed(
           FailedResponse::new("No game to get animal data from")
@@ -444,9 +458,9 @@ impl GameServerInner {
     _snapshot_game_cmd: SnapshotGameCmd
   ) -> SnapshotGameRsp {
     log::debug!("GameServerInner::handle_snapshot_game_command");
-    let game = match self.game {
-      Some(ref game) => game,
-      None => {
+    let game = match self.mode {
+      GameModeWrap::Game(ref game) => game,
+      _ => {
         log::warn!("GameServerInner::handle_snapshot_game_command: No game");
         return SnapshotGameRsp::Failed(FailedResponse::new("No game to snapshot"));
       }
@@ -472,7 +486,7 @@ impl GameServerInner {
     log::debug!("GameServerInner::handle_restore_game_command");
 
     // If a game already exists, do not restore.
-    if self.game.is_some() {
+    if self.mode.is_game() {
       log::warn!("GameServerInner::handle_restore_game_command: Game already exists");
       return RestoreGameRsp::Failed(
         FailedResponse::new("Cannot restore game while one is running")
@@ -493,7 +507,91 @@ impl GameServerInner {
       };
     
     let game = Game::from_persist(game_persist);
-    self.game = Some(game);
+    self.mode = GameModeWrap::Game(game);
     RestoreGameRsp::Ok
+  }
+
+  fn handle_define_ruleset_command(&mut self,
+    define_ruleset_cmd: DefineRulesetCmd,
+  ) -> DefineRulesetRsp {
+    log::debug!("GameServerInner::handle_define_ruleset_command");
+
+    // Validate command.
+    let mut validation_errors = Vec::new();
+    if !define_ruleset_cmd.validate(&mut validation_errors) {
+      log::warn!("GameServerInner::handle_define_ruleset_command: Invalid command: {:?}",
+        validation_errors
+      );
+      return DefineRulesetRsp::Failed(validation_errors);
+    }
+
+    match self.mode {
+      GameModeWrap::Game(_) => {
+        return DefineRulesetRsp::Failed(
+          vec!["A game is currently loaded".to_string()]
+        );
+      },
+      GameModeWrap::GameMode(_) => {
+        return DefineRulesetRsp::Failed(
+          vec!["A game mode is currently active.".to_string()]
+        );
+      },
+      _ => {},
+    };
+
+    let name = define_ruleset_cmd.name.clone();
+    let description = define_ruleset_cmd.description.clone();
+    let create_world_mode = GameMode::new_create_world(name, description);
+    self.mode = GameModeWrap::GameMode(create_world_mode);
+    DefineRulesetRsp::Ok
+  }
+
+  fn handle_create_world_subcmd(&mut self, subcmd: CreateWorldSubcmdEnvelope)
+    -> CreateWorldSubcmdResponse
+  {
+    log::debug!("GameServerInner::handle_create_world_subcommand");
+    match self.mode {
+      GameModeWrap::GameMode(ref mut mode) => {
+        match mode {
+          GameMode::CreateWorld(ref mut create_world_mode) => {
+            create_world_mode.handle_subcommand(subcmd)
+          },
+        }
+      },
+      _ => {
+        log::warn!("GameServerInner::handle_create_world_subcommand: No game mode");
+        CreateWorldSubcmdResponse::Failed(
+          vec!["No game mode to define world".to_string()]
+        )
+      }
+    }
+  }
+}
+
+
+// This is a temporary wrapper around `GameMode`.
+// Should be removed after the `Game` struct functionality is moved to
+// the `PlayGameMode` struct within `crate::game::mode`.
+pub(crate) enum GameModeWrap {
+  Empty,
+  Game(Game),
+  GameMode(GameMode),
+}
+impl GameModeWrap {
+  fn is_game(&self) -> bool {
+    match self {
+      GameModeWrap::Game(_) => true,
+      _ => false,
+    }
+  }
+
+  fn take_game(&mut self) -> Option<Game> {
+    match std::mem::replace(self, GameModeWrap::Empty) {
+      GameModeWrap::Game(game) => Some(game),
+      m@_ => {
+        *self = m;
+        None
+      }
+    }
   }
 }

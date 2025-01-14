@@ -121,6 +121,9 @@ async fn handle_message(server_state: &ServerState, tx: &mut SplitSink<WebSocket
         return false;
       }
     }
+  } else if message.is_ping() {
+    log::warn!("NetworkServer.handle_message: ping received.  Ignoring.");
+    return true;
   } else {
     log::warn!("NetworkServer.handle_message: non-text-message-received");
     return false;

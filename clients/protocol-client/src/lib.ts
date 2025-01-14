@@ -17,6 +17,8 @@ import { GameSnapshot } from "./types/game_snapshot";
 
 import { GameClientTransportListeners } from "./game_client";
 
+import Ruleset, * as ruleset from "./types/ruleset";
+
 export default GameClient;
 export {
   WorldDims,
@@ -33,5 +35,8 @@ export {
   TurnStepResult,
   GameSnapshot,
 
-  GameClientTransportListeners
+  GameClientTransportListeners,
+
+  Ruleset,
+  ruleset,
 };

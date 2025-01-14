@@ -1,5 +1,7 @@
+use std::iter;
 use serde;
 use crate::gpu::GpuBufferDataType;
+use super::WorldDims;
 
 /**
  * The coordinate of a single cell.
@@ -18,6 +20,13 @@ impl CellCoord {
   pub(crate) const fn new(x: u16, y: u16) -> CellCoord {
     CellCoord { col: x, row: y }
   }
+  pub(crate) const fn zero() -> CellCoord {
+    CellCoord::new(0, 0)
+  }
+
+  pub(crate) const fn add_xy(&self, x: u16, y: u16) -> CellCoord {
+    CellCoord::new(self.col + x, self.row + y)
+  }
 
   pub(crate) const fn col_u32(&self) -> u32 { self.col as u32 }
   pub(crate) const fn row_u32(&self) -> u32 { self.row as u32 }
@@ -27,6 +36,10 @@ impl CellCoord {
 
   pub(crate) const fn col_usize(&self) -> usize { self.col as usize }
   pub(crate) const fn row_usize(&self) -> usize { self.row as usize }
+
+  pub(crate) const fn extend(&self, dims: WorldDims) -> CellCoord {
+    CellCoord::new(self.col + dims.columns, self.row + dims.rows)
+  }
 
   pub(crate) const fn encode_u32(&self) -> u32 {
     (self.row_u32() << 16) | self.col_u32()

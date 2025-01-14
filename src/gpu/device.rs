@@ -59,9 +59,8 @@ impl GpuDevice {
     ).await.expect("Failed to create a GPU device");
 
     let inner = Arc::new(GpuDeviceInner { device, queue });
-    let is_dropped = Arc::new(AtomicBool::new(false));
-
     // Spawn a thread to keep polling the device.
+    let is_dropped = Arc::new(AtomicBool::new(false));
     let thread_is_dropped = is_dropped.clone();
     let thread_inner = inner.clone();
     let poll_thread = thread::spawn(move || {

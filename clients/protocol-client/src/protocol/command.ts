@@ -11,6 +11,7 @@ import { GetCellInfoCmd } from "./commands/get_cell_info_cmd";
 import { GetAnimalDataCmd } from "./commands/get_animal_data_cmd";
 import { SnapshotGameCmd } from "./commands/snapshot_game_cmd";
 import { RestoreGameCmd } from "./commands/restore_game_cmd";
+import { DefineRulesetCmd } from "./commands/define_ruleset_cmd";
 
 /**
  * Protocol commands.
@@ -29,6 +30,7 @@ export type ProtocolCommand = {
   GetAnimalData: GetAnimalDataCmd,
   SnapshotGame: SnapshotGameCmd,
   RestoreGame: RestoreGameCmd,
+  DefineRuleset: DefineRulesetCmd,
 };
 
 export type ProtocolCommandName = keyof ProtocolCommand;
