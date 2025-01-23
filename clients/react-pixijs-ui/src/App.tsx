@@ -7,27 +7,37 @@ import UnconnectedView from './views/UnconnectedView';
 import ConnectedMainView from './views/ConnectedMainView';
 import GameplayView from './views/GameplayView';
 
-import { useViewState } from './ViewState';
+import {
+  viewStateModeAtom,
+  gameServerSessionAtom,
+  gameInstanceAtom,
+} from './view_state/ViewState';
 
 import GameLoader from './game/loader';
 import GameInstance from './game/instance';
-import DefRulesGameMode from './game/mode/def_rules';
 import DefRulesView from './views/DefRulesView';
+import { useAtom, useSetAtom } from 'jotai';
 
 export default function App() {
-  const viewState = useViewState();
+  const [mode, setMode] = useAtom(viewStateModeAtom);
+  const setGameServerSession = useSetAtom(gameServerSessionAtom);
+  const setGameInstance = useSetAtom(gameInstanceAtom);
+
   const loaderRef = useRef<GameLoader>(GameLoader.getInstance());
 
   // When the user connects to a server, start the game.
   const onConnectClicked = async (server: string) => {
     const loader = loaderRef.current;
     loader.setOnDisconnect(() => {
-      viewState.serverSession = null
+      setGameServerSession(null);
+      setGameInstance(null);
+      setMode({ Unconnected: null });
     });
 
     // Establish a session with the server.
     const session = await loader.connectToServer(server);
-    viewState.serverSession = session;
+    setGameServerSession(session);
+    setMode({ Connected: { session } });
 
     // Check for existing game instance.
     const existingGame = await session.serverHasGameInstance();
@@ -35,7 +45,8 @@ export default function App() {
     if (existingGame) {
       // Join the existing game automatically.
       instance = await session.serverJoinExistingGame();
-      viewState.instance = instance;
+      setGameInstance(instance);
+      setMode({ Game: { instance } });
     }
   };
 
@@ -44,31 +55,27 @@ export default function App() {
     loader.disconnectFromServer();
   };
 
-  const session = viewState.serverSession;
-  const instance = viewState.instance;
-
-  if (session === null) {
+  if ("Unconnected" in mode) {
     return (
       <UnconnectedView
         onConnectClicked={onConnectClicked}
-        viewState={viewState}
       />
     )
   }
 
-  if (instance === null) {
+  if ("Connected" in mode) {
     return (
       <ConnectedMainView
-        session={session}
-        viewState={viewState}
+        session={mode.Connected.session}
         onDisconnectClicked={onDisconnectClicked}
       />
     )
   }
 
-  if (instance instanceof GameInstance) {
-    return <GameplayView instance={instance} viewState={viewState} />;
-  } else if (instance instanceof DefRulesGameMode) {
-    return <DefRulesView instance={instance} viewState={viewState} />;
+  if ("Game" in mode) {
+    return <GameplayView instance={mode.Game.instance} />;
+  }
+  if ("DefRules" in mode) {
+    return <DefRulesView instance={mode.DefRules.instance} />;
   }
 };

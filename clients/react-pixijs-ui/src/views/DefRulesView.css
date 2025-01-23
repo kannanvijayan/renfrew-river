@@ -1,0 +1,31 @@
+
+.ShasmEditor > div {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ShasmEditor > div :focus {
+  outline: none;
+  border: none;
+}
+
+.ShasmEditor p {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  text-align: left;
+}
+
+.ShasmEditor p :focus {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  text-align: left;
+  outline: none;
+  border: none;
+}

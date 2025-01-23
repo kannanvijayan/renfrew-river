@@ -13,14 +13,12 @@ use crate::{
     command::{ Command, CommandEnvelope },
     response::{ FailedResponse, ResponseEnvelope }
   },
-  gpu::{ ShadyRegister, ShadyProgram },
+  gpu::shady_vm::{ ShadyRegister, ShadyProgram, ShasmProgram },
 };
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct DefineRulesetCmd {
-  pub(crate) name: String,
-  pub(crate) description: String,
   pub(crate) ruleset: Ruleset,
 }
 
@@ -76,9 +74,9 @@ impl Command for DefineRulesetCmd {
 
 pub(crate) fn define_ruleset_cmd_example() -> DefineRulesetCmd {
   DefineRulesetCmd {
-    name: "RogueLove".to_string(),
-    description: "A world of love and adventure.".to_string(),
     ruleset: Ruleset {
+      name: "RogueLove".to_string(),
+      description: "A world of love and adventure.".to_string(),
       terrain_gen:  TerrainGenRules {
         perlin: TerrainGenPerlinRules {
           seed: 1,
@@ -106,12 +104,12 @@ pub(crate) fn define_ruleset_cmd_example() -> DefineRulesetCmd {
               }
             ]
           },
-          init_program: ShadyProgram::new(vec![]),
+          init_program: ShasmProgram::new("add r0, r1, r2".to_string()),
           iterations: 1,
-          pairwise_program: ShadyProgram::new(vec![]),
+          pairwise_program: ShasmProgram::new("add r0, r1, r2".to_string()),
           pairwise_output_registers: 1,
-          merge_program: ShadyProgram::new(vec![]),
-          final_program: ShadyProgram::new(vec![]),
+          merge_program: ShasmProgram::new("add r0, r1, r2".to_string()),
+          final_program: ShasmProgram::new("add r0, r1, r2".to_string()),
         },
       },
     },

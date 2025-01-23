@@ -4,20 +4,21 @@ import { Box, Button, Container, Menu, MenuItem, Typography } from '@mui/materia
 import GameServerSession from '../game/server_session';
 import GameInstance from '../game/instance';
 
-import ViewState from '../ViewState';
+import { gameInstanceAtom } from '../view_state/ViewState';
 
 import './ConnectedTopBar.css';
 import DefRulesGameMode from '../game/mode/def_rules';
+import { useAtomValue } from 'jotai';
 
 export default function ConnectedTopBar(
   props: {
     session: GameServerSession,
     onDisconnectClicked: () => void,
-    viewState: ViewState,
   }
 ) {
-  console.log("ConnectedMainScreen", props);
-  const instance = props.viewState.instance;
+  const { session, onDisconnectClicked } = props;
+
+  const instance = useAtomValue(gameInstanceAtom);
   return (
     <Box display="flex" flexDirection="row" width="100%" height="auto"
       className="ConnectedTopBar" mt={1}
@@ -25,8 +26,8 @@ export default function ConnectedTopBar(
     >
       <GameEmblem />
 
-      <ConnectionInfo serverAddr={props.session.serverAddr}
-          onDisconnectClicked={props.onDisconnectClicked} />
+      <ConnectionInfo serverAddr={session.serverAddr}
+          onDisconnectClicked={onDisconnectClicked} />
 
       {instance ? <ModeSpecificInfo instance={instance} /> : null}
     </Box>

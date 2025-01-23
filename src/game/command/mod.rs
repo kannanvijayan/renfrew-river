@@ -14,6 +14,7 @@ mod get_animal_data_cmd;
 mod snapshot_game_cmd;
 mod restore_game_cmd;
 mod define_ruleset_command;
+mod validate_shasm_cmd;
 
 mod envelope;
 
@@ -79,6 +80,11 @@ pub(crate) use self::{
   restore_game_cmd::{
     RestoreGameCmd,
     RestoreGameRsp,
+  },
+  validate_shasm_cmd::{
+    ValidateShasmCmd,
+    ValidateShasmRsp,
+    InvalidShasmResponse,
   },
   define_ruleset_command::{
     DefineRulesetCmd,

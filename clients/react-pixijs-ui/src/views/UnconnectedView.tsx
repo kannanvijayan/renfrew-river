@@ -2,14 +2,11 @@ import { Box } from '@mui/material';
 
 import ServerSelector from '../components/ServerSelector';
 import BannerLogo from '../components/BannerLogo';
-import ViewState from '../ViewState';
 
-export default function UnconnectedView(
-  props: {
-    onConnectClicked: (server: string) => void,
-    viewState: ViewState,
-  }
-) {
+export default function UnconnectedView(props: {
+  onConnectClicked: (server: string) => void,
+}) {
+  const { onConnectClicked } = props;
   return (
     <Box display="flex" flexDirection="column" position="absolute"
       width="100%" height="100%" alignItems="center"
@@ -20,7 +17,7 @@ export default function UnconnectedView(
       }}
     >
       <BannerLogo />
-      <ServerSelector onConnectClicked={props.onConnectClicked} />
+      <ServerSelector onConnectClicked={onConnectClicked} />
     </Box>
   );
 };

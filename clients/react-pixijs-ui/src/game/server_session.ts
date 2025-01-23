@@ -1,5 +1,10 @@
-import GameClient, { GameConstants, GameSettings, SettingsLimits, GameSnapshot }
-  from "renfrew-river-protocol-client"
+import GameClient, {
+  GameConstants,
+  GameSettings,
+  SettingsLimits,
+  GameSnapshot,
+  ShasmParseError,
+} from "renfrew-river-protocol-client"
 import GameInstance from "./instance";
 
 /**
@@ -9,7 +14,7 @@ export default class GameServerSession {
   public readonly serverAddr: string;
   public readonly settingsLimits: SettingsLimits;
   public readonly constants: GameConstants;
-  private readonly client_: GameClient;
+  public readonly client: GameClient;
 
   private currentGame_: GameInstance | null = null;
 
@@ -22,11 +27,17 @@ export default class GameServerSession {
     this.serverAddr = args.serverAddr;
     this.settingsLimits = args.settingsLimits;
     this.constants = args.constants;
-    this.client_ = args.client;
+    this.client = args.client;
+  }
+
+  public async validateShasmProgram(programText: string)
+    : Promise<true | ShasmParseError[]>
+  {
+    return await this.client.validateShasm(programText);
   }
 
   public async serverHasGameInstance(): Promise<GameSettings|null> {
-    const result = await this.client_.hasGame();
+    const result = await this.client.hasGame();
     return result || null;
   }
 
@@ -40,7 +51,7 @@ export default class GameServerSession {
     }
 
     const instance = await GameInstance.load({
-      client: this.client_,
+      client: this.client,
       serverSession: this,
       settings,
     });
@@ -52,9 +63,9 @@ export default class GameServerSession {
     if (this.currentGame_) {
       throw new Error("Already in a game");
     }
-    await this.client_.newGame(settings);
+    await this.client.newGame(settings);
     const instance = await GameInstance.load({
-      client: this.client_,
+      client: this.client,
       serverSession: this,
       settings,
     });
@@ -70,7 +81,7 @@ export default class GameServerSession {
       throw new Error("Already in a game");
     }
     try {
-      await this.client_.restoreGame(snapshot.data);
+      await this.client.restoreGame(snapshot.data);
     } catch (e) {
       throw new Error(`Failed to load game: ${e}`);
     }
@@ -82,7 +93,7 @@ export default class GameServerSession {
     }
 
     const instance = await GameInstance.load({
-      client: this.client_,
+      client: this.client,
       serverSession: this,
       settings,
     });

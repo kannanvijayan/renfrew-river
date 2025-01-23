@@ -4,10 +4,10 @@ use crate::gpu::GpuBufferDataType;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[derive(Serialize, Deserialize)]
 pub(crate) struct Instruction {
-  op_word: OpWord,
-  dst_word: DstWord,
-  src1_word: SrcWord,
-  src2_word: SrcWord,
+  pub(crate) op_word: OpWord,
+  pub(crate) dst_word: DstWord,
+  pub(crate) src1_word: SrcWord,
+  pub(crate) src2_word: SrcWord,
 }
 impl Instruction {
   pub(crate) fn new(
@@ -17,6 +17,15 @@ impl Instruction {
     src2_word: SrcWord
   ) -> Self {
     Self { op_word, dst_word, src1_word, src2_word }
+  }
+
+  pub(crate) fn new_default() -> Self {
+    Instruction {
+      op_word: OpWord::new_default(),
+      dst_word: DstWord::new_default(),
+      src1_word: SrcWord::new_default(),
+      src2_word: SrcWord::new_default(),
+    }
   }
 }
 impl GpuBufferDataType for Instruction {
@@ -50,6 +59,21 @@ pub(crate) struct OpWord {
   pub(crate) cflow: ControlFlow,
 }
 impl OpWord {
+  pub(crate) fn new_default() -> Self {
+    Self {
+      cond: Condition::Always,
+      set_flags: true,
+      imm_src1: false,
+      imm_src2: false,
+      shift16_src2: false,
+      ind_src1: false,
+      ind_src2: false,
+      ind_dst: false,
+      kind: OperationKind::Add,
+      cflow: ControlFlow::None,
+    }
+  }
+
   pub(crate) fn to_u32(&self) -> u32 {
     let mut bits = 0;
     bits |= (self.cond as u32) << SHADY_INS_OP_COND_OFFSET;
@@ -114,6 +138,14 @@ pub(crate) struct DstWord {
   pub(crate) bump: i8,
 }
 impl DstWord {
+  pub(crate) fn new_default() -> Self {
+    Self {
+      reg: 0,
+      negate: false,
+      bump: 0,
+    }
+  }
+
   fn to_u32(&self) -> u32 {
     let mut bits = 0;
     bits |= ((self.reg as u32) & SHADY_INS_DST_REG_MASK) << SHADY_INS_DST_REG_OFFSET;
@@ -140,6 +172,17 @@ pub(crate) enum SrcWord {
   Immediate { value: i16 },
 }
 impl SrcWord {
+  pub(crate) fn new_default() -> Self {
+    Self::Register { reg: 0, negate: false, shift: 0 }
+  }
+
+  pub(crate) fn is_register(&self) -> bool {
+    matches!(self, Self::Register { .. })
+  }
+  pub(crate) fn is_immediate(&self) -> bool {
+    matches!(self, Self::Immediate { .. })
+  }
+
   fn to_u32(&self) -> u32 {
     match self {
       Self::Register { reg, negate, shift } => {
@@ -255,6 +298,9 @@ pub(crate) const SHADY_INS_SRC_SHIFT_MAX: i8 =
 
 pub(crate) const SHADY_INS_SRC_SHIFT_MIN: i8 =
   SHADY_INS_SRC_SHIFT_MAX - (SHADY_INS_SRC_SHIFT_MASK as i8);
+
+pub(crate) const SHADY_INS_SRC_IMM_MAX: i16 = 0x7FFF;
+pub(crate) const SHADY_INS_SRC_IMM_MIN: i16 = -0x8000;
 
 pub(crate) const SHADY_INS_SRC_SHIFT_BIAS: i32 = 32;
 

@@ -11,8 +11,7 @@ mod map_buffer;
 mod seq_buffer;
 mod world;
 
-mod shady_vm;
-
+pub(crate) mod shady_vm;
 pub(crate) mod compute;
 
 pub(crate) use self::{

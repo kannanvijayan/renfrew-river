@@ -14,6 +14,7 @@ use super::command::{
   AnimalsResponse,
   TurnTakenResponse,
   GameSnapshotResponse,
+  InvalidShasmResponse,
 };
 
 #[derive(Debug, Clone)]
@@ -32,6 +33,7 @@ pub(crate) enum ResponseEnvelope {
   CellInfo(Box<CellInfo>),
   AnimalData(Box<AnimalData>),
   GameSnapshot(Box<GameSnapshotResponse>),
+  InvalidShasm(Box<InvalidShasmResponse>),
   CreateWorldSubcmd(CreateWorldSubcmdResponse),
 }
 

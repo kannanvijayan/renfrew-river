@@ -7,6 +7,7 @@
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct FormatRules {
   // The format for each word.
+  #[serde(rename = "wordFormats")]
   pub(crate) word_formats: Vec<FormatRulesWord>,
 }
 

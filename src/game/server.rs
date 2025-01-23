@@ -26,6 +26,7 @@ use crate::{
       SnapshotGameCmd, SnapshotGameRsp, GameSnapshotResponse,
       RestoreGameCmd, RestoreGameRsp,
       DefineRulesetCmd, DefineRulesetRsp,
+      ValidateShasmCmd, ValidateShasmRsp, InvalidShasmResponse,
     },
     response::{
       ResponseEnvelope,
@@ -38,6 +39,7 @@ use crate::{
     TakeTurnStepResult,
   },
   persist::GamePersist,
+  gpu::shady_vm::ShasmProgram,
 };
 use super::mode::create_world::{
   command::CreateWorldSubcmdEnvelope,
@@ -178,14 +180,18 @@ impl GameServerInner {
         let resp = self.handle_restore_game_command(*restore_game_command);
         return RestoreGameCmd::embed_response(resp);
       },
-      CommandEnvelope::DefineRuleset(define_ruleset) => {
-        let resp = self.handle_define_ruleset_command(*define_ruleset);
+      CommandEnvelope::ValidateShasm(validate_shasm_command) => {
+        let resp = self.handle_define_validate_shasm_command(*validate_shasm_command);
+        return ValidateShasmCmd::embed_response(resp);
+      },
+      CommandEnvelope::DefineRuleset(define_ruleset_command) => {
+        let resp = self.handle_define_ruleset_command(*define_ruleset_command);
         return DefineRulesetCmd::embed_response(resp);
       },
       CommandEnvelope::CreateWorldSubcmd(create_world_subcmd) => {
         let envelope = self.handle_create_world_subcmd(*create_world_subcmd);
         return ResponseEnvelope::CreateWorldSubcmd(envelope);
-      }
+      },
     };
   }
 
@@ -511,6 +517,20 @@ impl GameServerInner {
     RestoreGameRsp::Ok
   }
 
+  fn handle_define_validate_shasm_command(&mut self,
+    validate_shasm_cmd: ValidateShasmCmd,
+  ) -> ValidateShasmRsp {
+    log::debug!("GameServerInner::handle_define_validate_shasm_command");
+
+    // Validate command.
+    match ShasmProgram::validate(&validate_shasm_cmd.program_text) {
+      Ok(_) => ValidateShasmRsp::Valid,
+      Err(errs) => {
+        ValidateShasmRsp::Invalid(InvalidShasmResponse::new(errs))
+      }
+    }
+  }
+
   fn handle_define_ruleset_command(&mut self,
     define_ruleset_cmd: DefineRulesetCmd,
   ) -> DefineRulesetRsp {
@@ -539,8 +559,8 @@ impl GameServerInner {
       _ => {},
     };
 
-    let name = define_ruleset_cmd.name.clone();
-    let description = define_ruleset_cmd.description.clone();
+    let name = define_ruleset_cmd.ruleset.name.clone();
+    let description = define_ruleset_cmd.ruleset.description.clone();
     let create_world_mode = GameMode::new_create_world(name, description);
     self.mode = GameModeWrap::GameMode(create_world_mode);
     DefineRulesetRsp::Ok

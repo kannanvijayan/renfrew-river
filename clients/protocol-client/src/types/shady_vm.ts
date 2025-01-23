@@ -1,8 +1,11 @@
 
 export type ShadyRegister = number;
 
-export type ShadyProgram = {
-  bitcode: ShadyBitcodeInstruction[]
-}
+export type ShasmProgram = {
+  programText: string,
+};
 
-export type ShadyBitcodeInstruction = [number, number];
+export type ShasmParseError = {
+  lineNo: number,
+  message: string,
+};

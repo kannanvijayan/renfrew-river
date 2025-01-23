@@ -15,6 +15,13 @@ pub(crate) use self::{
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct Ruleset {
+  // The name of the ruleset.
+  pub(crate) name: String,
+
+  // The description of the ruleset.
+  pub(crate) description: String,
+
   // The terrain generator definition.
+  #[serde(rename = "terrainGen")]
   pub(crate) terrain_gen: TerrainGenRules,
 }

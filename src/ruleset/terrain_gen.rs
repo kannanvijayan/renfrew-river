@@ -1,4 +1,4 @@
-use crate::gpu::{ ShadyProgram, ShadyRegister };
+use crate::gpu::shady_vm::{ ShasmProgram, ShadyRegister };
 use super::FormatRules;
 
 #[derive(Debug, Clone)]
@@ -19,23 +19,28 @@ pub(crate) struct TerrainGenStageRules {
   pub(crate) format: FormatRules,
 
   // The program to use to initialize the pass.
-  pub(crate) init_program: ShadyProgram,
+  #[serde(rename = "initProgram")]
+  pub(crate) init_program: ShasmProgram,
 
   // Number of iterations to run pairwise/merge programs.
   pub(crate) iterations: u32,
 
   // The pairwise tile processing program.
-  pub(crate) pairwise_program: ShadyProgram,
+  #[serde(rename = "pairwiseProgram")]
+  pub(crate) pairwise_program: ShasmProgram,
   // The number of output registers from the pairwise program.
+  #[serde(rename = "pairwiseOutputRegisters")]
   pub(crate) pairwise_output_registers: u32,
 
   // The merge processing program.
-  pub(crate) merge_program: ShadyProgram,
+  #[serde(rename = "mergeProgram")]
+  pub(crate) merge_program: ShasmProgram,
 
   // The final tile processing program.
   // This should take an input in this stage's format, and emit an output in
   // next stage's format.
-  pub(crate) final_program: ShadyProgram,
+  #[serde(rename = "finalProgram")]
+  pub(crate) final_program: ShasmProgram,
 }
 
 #[derive(Debug, Clone)]

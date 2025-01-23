@@ -15,6 +15,7 @@ use crate::game::{
     SnapshotGameCmd,
     RestoreGameCmd,
     DefineRulesetCmd,
+    ValidateShasmCmd,
   },
   mode::create_world::command::CreateWorldSubcmdEnvelope,
 };
@@ -36,6 +37,7 @@ pub(crate) enum CommandEnvelope {
   GetAnimalData(Box<GetAnimalDataCmd>),
   SnapshotGame(Box<SnapshotGameCmd>),
   RestoreGame(Box<RestoreGameCmd>),
+  ValidateShasm(Box<ValidateShasmCmd>),
   DefineRuleset(Box<DefineRulesetCmd>),
   CreateWorldSubcmd(Box<CreateWorldSubcmdEnvelope>),
 }

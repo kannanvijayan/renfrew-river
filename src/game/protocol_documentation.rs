@@ -13,6 +13,7 @@ use crate::game::command::{
   GetCellInfoCmd,
   GetAnimalDataCmd,
   SnapshotGameCmd,
+  ValidateShasmCmd,
   RestoreGameCmd,
   DefineRulesetCmd,
 };
@@ -41,6 +42,7 @@ pub fn get_protocol_docs() -> Vec<ProtocolDocumentation> {
   result.push(make_example::<GetCellInfoCmd>());
   result.push(make_example::<GetAnimalDataCmd>());
   result.push(make_example::<SnapshotGameCmd>());
+  result.push(make_example::<ValidateShasmCmd>());
   result.push(make_example::<RestoreGameCmd>());
   result.push(make_example::<DefineRulesetCmd>());
   return result;

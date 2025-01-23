@@ -14,6 +14,7 @@ import { GameSettings } from "./types/game_settings";
 import { SettingsLimits } from "./types/settings_limits";
 import { TurnStepResult } from "./types/turn_step_result";
 import { GameSnapshot } from "./types/game_snapshot";
+import { ShasmParseError, ShasmProgram, ShadyRegister } from "./types/shady_vm";
 
 import { GameClientTransportListeners } from "./game_client";
 
@@ -34,6 +35,10 @@ export {
   SettingsLimits,
   TurnStepResult,
   GameSnapshot,
+
+  ShasmProgram,
+  ShasmParseError,
+  ShadyRegister,
 
   GameClientTransportListeners,
 

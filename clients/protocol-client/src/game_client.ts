@@ -18,6 +18,7 @@ import {
   ReadMapDataOutputNameMap
 } from "./protocol/commands/read_map_data_cmd";
 import Ruleset from "./types/ruleset";
+import { ShasmParseError } from "./types/shady_vm";
 
 export type GameClientTransportListeners = {
   open: () => void;
@@ -206,6 +207,19 @@ export default class GameClient {
       return;
     } else {
       throw new Error(result.Error.messages.join(", "));
+    }
+  }
+
+  public async validateShasm(programText: string):
+    Promise<true | ShasmParseError[]>
+  {
+    const result = await this.sendCommand("ValidateShasm", { programText });
+    if ("Ok" in result) {
+      return true;
+    } else if ("InvalidShasm" in result) {
+      return result.InvalidShasm.errors;
+    } else {
+      throw new Error(`ValidateShasm: ${result.Error.messages.join(",")}`);
     }
   }
 

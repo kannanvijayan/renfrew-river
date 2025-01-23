@@ -1,3 +1,8 @@
+mod collatz;
+mod shasm;
+mod trivial;
+
+
 use crate::gpu::{
   bitcode,
   GpuBufferDataType,
@@ -10,9 +15,6 @@ use crate::gpu::{
   ShadyRegisterFile,
   compute::{ shady_interpret, ShadyInterpVmInfo },
 };
-
-mod trivial;
-mod collatz;
 
 pub(crate) fn assemble_program<F>(f: F) -> ShadyProgram
   where F: FnOnce(&mut ShadyAssembler)

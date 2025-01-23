@@ -1,4 +1,5 @@
 
+mod shasm;
 mod assembler;
 mod register_file;
 mod program;
@@ -10,4 +11,11 @@ pub(crate) use self::{
   register_file::{ ShadyRegisterFile, ShadyRegister },
   assembler::ShadyAssembler,
   program::{ ShadyProgram, ShadyProgramGpuBuffer, ShadyProgramIndex },
+  shasm::{
+    shasm_instr_parser,
+    shasm_program_parser,
+    ShasmInstrParseResult,
+    ShasmParseError,
+    ShasmProgram,
+  },
 };

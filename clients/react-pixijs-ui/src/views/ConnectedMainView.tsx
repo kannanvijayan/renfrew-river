@@ -4,28 +4,31 @@ import { Box, Button, Input, Typography } from '@mui/material';
 import { GameSettings, GameSnapshot, SettingsLimits } from 'renfrew-river-protocol-client';
 
 import GameServerSession from '../game/server_session';
-import ViewState from '../ViewState';
+import { gameInstanceAtom, viewStateModeAtom } from '../view_state/ViewState';
 
 import Screen from '../components/Screen';
 import ConnectedTopBar from '../components/ConnectedTopBar';
 import MainMenuFrame, { MainMenuLabeledEntry } from '../components/MainMenuFrame';
 import DefRulesGameMode from '../game/mode/def_rules';
+import { atom, useAtom, useSetAtom } from 'jotai';
 
 type ConnectedMainScreenViewMode =
   | "menu"
   | "new_game"
   | "load_game";
 
+const viewModeAtom = atom<ConnectedMainScreenViewMode>("menu");
+
 // The main screen for the game when connected to a server.
 // Shows a centered menu of selections.
-export default function ConnectedMainView(
-  props: {
-    session: GameServerSession,
-    viewState: ViewState,
-    onDisconnectClicked: () => void,
-  }
-) {
-  const [viewMode, setViewMode] = useState<ConnectedMainScreenViewMode>("menu");
+export default function ConnectedMainView(props: {
+  session: GameServerSession,
+  onDisconnectClicked: () => void,
+}) {
+  const { session, onDisconnectClicked } = props;
+  const [viewMode, setViewMode] = useAtom(viewModeAtom);
+  const setViewStateMode = useSetAtom(viewStateModeAtom);
+  const setGameInstance = useSetAtom(gameInstanceAtom);
 
   const onNewGameClicked = () => {
     setViewMode("new_game");
@@ -36,30 +39,33 @@ export default function ConnectedMainView(
   };
 
   const onNewGameStartClicked = async (args: GameSettings) => {
-    const instance = await props.session.serverStartNewGame(args);
-    props.viewState.instance = instance;
+    const instance = await session.serverStartNewGame(args);
+    setGameInstance(instance);
+    setViewStateMode({ Game: { instance } });
   };
 
   const onLoadGameConfirm = async (contents: string) => {
     const game_snapshot: GameSnapshot = { data: contents }
-    const instance = await props.session.serverLoadGameFromSnapshot(game_snapshot);
-    props.viewState.instance = instance
+    const instance = await session.serverLoadGameFromSnapshot(game_snapshot);
+    setGameInstance(instance);
+    setViewStateMode({ Game: { instance } });
   }
 
   const onDefineRulesetClicked = () => {
-    props.viewState.instance = new DefRulesGameMode(props.session);
+    const instance = new DefRulesGameMode(session);
+    setGameInstance(instance);
+    setViewStateMode({ DefRules: { instance } });
   }
 
   return (
     <Screen>
       <ConnectedTopBar
-        session={props.session}
-        viewState={props.viewState}
-        onDisconnectClicked={props.onDisconnectClicked}
+        session={session}
+        onDisconnectClicked={onDisconnectClicked}
       />
       <ViewMode
         mode={viewMode}
-        settingsLimits={props.session.settingsLimits}
+        settingsLimits={session.settingsLimits}
         onStartGameClicked={onNewGameStartClicked}
         onNewGameClicked={onNewGameClicked}
         onLoadGameClicked={onLoadGameClicked}

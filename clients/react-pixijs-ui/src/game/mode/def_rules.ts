@@ -7,10 +7,10 @@ import GameServerSession from "../server_session";
 export default class DefRulesGameMode {
   public readonly serverSession: GameServerSession;
 
-  private partial_ruleset_: Partial<Ruleset>;
+  private ruleset: Ruleset | null;
 
   public constructor(serverSession: GameServerSession) {
     this.serverSession = serverSession;
-    this.partial_ruleset_ = {};
+    this.ruleset = null;
   }
 }
