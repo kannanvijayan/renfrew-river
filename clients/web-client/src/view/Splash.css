@@ -1,0 +1,31 @@
+.Splash {
+  margin: auto;
+  border-radius: 1rem;
+}
+
+.Splash .SplashBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.Splash .SplashTitle {
+  text-shadow: 0.2rem 0.2rem 0.3rem rgba(90, 10, 5, 1);
+  font-family: monospace;
+}
+
+.Splash .SplashSubtitle {
+  margin: 1rem;
+  margin-bottom: 3rem;
+  text-shadow: 0.05rem 0.05rem 0.1rem rgba(90, 10, 5, 1);
+  font-family: monospace;
+}
+
+.Splash .SplashServerInput {
+  margin-top: 4rem;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  font-family: monospace;
+}

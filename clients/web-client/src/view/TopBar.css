@@ -1,0 +1,48 @@
+
+.TopBar {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  margin: 0;
+  left: 0;
+  top: 0;
+  right: 0;
+}
+
+.TopBarPanel {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 1rem;
+  height: 10rem;
+  box-shadow: 0.2rem 0.2rem 0.2rem rgba(90, 10, 5, 1);
+}
+
+.TopBar .TopBarPanel .Logo {
+  margin: 1rem;
+  text-align: center;
+  text-shadow: 0.05rem 0.05rem 0.1rem rgba(90, 10, 5, 1);
+}
+
+.TopBar .TopBarPanel .ConnectionStatus {
+  margin: 1rem;
+  text-align: center;
+  font-size: 2rem;
+}
+
+.TopBar .TopBarPanel .ConnectionStatus {
+  margin: 1rem;
+  text-align: center;
+}
+
+.TopBar .TopBarPanel .ConnectionStatus .ConnectedLabel {
+  font-size: 2rem;
+  font-weight: bolder;
+  color: rgba(40, 100, 5, 1);
+}
+
+.TopBar .TopBarPanel .ConnectionStatus .ConnectedUrl {
+  font-size: 1.3rem;
+  font-family: monospace;
+}
