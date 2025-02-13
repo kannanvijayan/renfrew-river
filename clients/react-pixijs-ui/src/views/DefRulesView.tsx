@@ -101,12 +101,12 @@ function DefRulesFrame(props: {
         }
         {
           viewModeAllows("generation_params", viewMode)
-            ? <DefRulesGenerationParams />
+            ? <DefRulesGenerationParamsColumn />
             : null
         }
         {
           viewModeAllows("format", viewMode)
-            ? <DefRulesGenerationFormat />
+            ? <DefRulesGenerationFormatColumn />
             : null
         }
         {
@@ -133,6 +133,52 @@ function DefRulesFrame(props: {
   );
 }
 
+function DefRulesColumnHeader(props: { title: string }) {
+  return (
+    <Container className="DefRulesColumnHeader">
+      <Typography variant="h4" className="DefRulesColumnTitle">
+        {props.title}
+      </Typography>
+    </Container>
+  );
+}
+
+function DefRulesLabeledInput(props: {
+  name: string,
+  placeholder: string,
+  value: string,
+  onChange: (value: string) => void,
+}) {
+  return (
+    <Box className="DefRulesLabeledInput">
+      <Typography variant="body1" className="DefRulesLabeledInputName">
+        {props.name}
+      </Typography>
+      <Input type="text" placeholder={props.placeholder}
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+      />
+    </Box>
+  );
+}
+
+function DefRulesDrillEntry(props: {
+  text: string,
+  onClick: () => void,
+  first?: boolean,
+}) {
+  const first = props.first ?? false;
+  return (
+    <Box className="DefRulesDrillEntry" mt={first ? 4 : undefined}>
+      <Button className="DefRulesDrillEntryButton" variant="text"
+        color="primary" size="large" fullWidth onClick={props.onClick}>
+        {props.text}
+      </Button>
+    </Box>
+  );
+}
+
+
 // The main screen for the game when connected to a server.
 // Shows a centered menu of selections.
 function DefRulesMainColumn() {
@@ -143,59 +189,29 @@ function DefRulesMainColumn() {
   const errors = useAtomValue(defRulesErrorsAtom);
 
   return (
-    <Box display="flex" flexDirection="column" width="20em"
-      m={0} ml={1} py={1} boxShadow={5}
-      sx={{ backgroundColor: 'secondary.dark' }} >
-        <Container sx={{ width: "100%", height: "auto" }}>
-          <Typography variant="h4" margin="auto" border={1} p={1} color="primary.light"
-            boxShadow={5} 
-            fontWeight={600}>
-            Ruleset
-          </Typography>
-        </Container>
-        <Box display="flex" flexDirection="row" width="auto" height="auto" mt={1}>
-          <Typography variant="body1" margin={2} padding={0} color="primary.light"
-            fontWeight={600}>
-            Name
-          </Typography>
-          <Input type="text" placeholder="Ruleset name"
-            value={rulesetName}
-            onChange={(e) => setRulesetName(e.target.value)}
-          />
-        </Box>
-        <Box display="flex" flexDirection="row" width="auto" height="auto" mt={1}>
-          <Typography variant="body1" margin={2} padding={0} color="primary.light"
-            fontWeight={600}>
-            Descr
-          </Typography>
-          <Input type="text" placeholder="Description"
-            value={rulesetDescription}
-            onChange={(e) => setRulesetDescription(e.target.value)}
-          />
-        </Box>
-        <Box display="flex" flexDirection="row" width="100%" height="auto" m="auto" mt={4}
-             borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            sx={{ fontWeight: 600 }}
-            onClick={() => setViewMode("terrain_gen")}>
-            Terrain Generation
-          </Button>
-        </Box>
-        {
-          (errors.length > 0) ? (
-            <Box display="flex" flexDirection="column" width="100%" height="auto" m="auto" mt={4}
-                borderTop={1} borderColor={"error.dark"}>
-            {
-              errors.map((error, i) => (
-                <Typography variant="body1" margin={2} padding={0} color="error.dark"
-                  fontWeight={600} key={i} fontSize={20}>
-                  {error}
-                </Typography>
-              ))
-            }
-            </Box>
-          ) : null
-        }
+    <Box className="DefRulesColumn">
+      <DefRulesColumnHeader title="Ruleset" />
+      <DefRulesLabeledInput name="Name" placeholder="Ruleset name"
+        value={rulesetName} onChange={setRulesetName} />
+      <DefRulesLabeledInput name="Descr" placeholder="Description"
+        value={rulesetDescription} onChange={setRulesetDescription} />
+      <DefRulesDrillEntry text="Terrain Generation" first={true}
+        onClick={() => setViewMode("terrain_gen")} />
+      {
+        (errors.length > 0) ? (
+          <Box display="flex" flexDirection="column" width="100%" height="auto" m="auto" mt={4}
+              borderTop={1} borderColor={"error.dark"}>
+          {
+            errors.map((error, i) => (
+              <Typography variant="body1" margin={2} padding={0} color="error.dark"
+                fontWeight={600} key={i} fontSize={20}>
+                {error}
+              </Typography>
+            ))
+          }
+          </Box>
+        ) : null
+      }
     </Box>
   );
 }
@@ -204,32 +220,12 @@ function DefRulesTerrainGenColumn() {
   const setViewMode = useSetAtom(defRulesViewModeAtom);
 
   return (
-    <Box display="flex" flexDirection="column" width="20em"
-      m={0} ml={1} py={1} boxShadow={5}
-      sx={{ backgroundColor: 'secondary.dark' }} >
-        <Container sx={{ width: "100%", height: "auto" }}>
-          <Typography variant="h4" margin="auto" border={1} p={1} color="primary.light"
-            boxShadow={5} 
-            fontWeight={600}>
-            Terrain Gen
-          </Typography>
-        </Container>
-        <Box display="flex" flexDirection="row" width="100%" height="auto" mt={4}
-             borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            sx={{ fontWeight: 600 }}
-            onClick={() => setViewMode("perlin_params")}>
-            Perlin Params
-          </Button>
-        </Box>
-        <Box display="flex" flexDirection="row" width="100%" height="auto"
-             borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            sx={{ fontWeight: 600 }}
-            onClick={() => setViewMode("generation_params")}>
-            Generation Params
-          </Button>
-        </Box>
+    <Box className="DefRulesColumn">
+      <DefRulesColumnHeader title="Terrain Gen" />
+      <DefRulesDrillEntry text="Perlin Params" first={true}
+        onClick={() => setViewMode("perlin_params")} />
+      <DefRulesDrillEntry text="Generation Params"
+        onClick={() => setViewMode("generation_params")} />
     </Box>
   );
 }
@@ -242,154 +238,69 @@ function DefRulesPerlinParamsColumn() {
   const [register, setRegister] = useAtom(perlinRules.register);
 
   return (
-    <Box display="flex" flexDirection="column" width="20em"
-      m={0} ml={1} py={1} boxShadow={5}
-      sx={{ backgroundColor: 'secondary.dark' }} >
-        <Container sx={{ width: "100%", height: "auto" }}>
-          <Typography variant="h4" margin="auto" border={1} p={1} color="primary.light"
-            boxShadow={5} 
-            fontWeight={600}>
-            Perlin Params
-          </Typography>
-        </Container>
-        <Box display="flex" justifyContent="flex-end" flexDirection="row" width="auto" height="auto" mt={1}>
-          <Typography variant="body1" margin={2} padding={0} color="primary.light"
-            fontWeight={600}>
-            Seed
-          </Typography>
-          <Input type="text" placeholder="###" sx={{ width: "10em", mr: 5 }}
-            value={seed}
-            onChange={(e) => setSeed(e.target.value)} />
-        </Box>
-        <Box display="flex" justifyContent="flex-end" flexDirection="row" width="auto" height="auto" mt={1}>
-          <Typography variant="body1" margin={2} padding={0} color="primary.light"
-            fontWeight={600}>
-            Octaves
-          </Typography>
-          <Input type="text" placeholder="###" sx={{ width: "10em", mr: 5 }}
-            value={octaves}
-            onChange={(e) => {
-              const ival = parseInt(e.target.value);
-              if (Number.isInteger(ival)) {
-                setOctaves(ival);
-              }
-            }} />
-        </Box>
-        <Box display="flex" justifyContent="flex-end" flexDirection="row" width="auto" height="auto" mt={1}>
-          <Typography variant="body1" margin={2} padding={0} color="primary.light"
-            fontWeight={600}>
-            Frequency
-          </Typography>
-          <Input type="text" placeholder="###" sx={{ width: "10em", mr: 5 }}
-            value={frequency}
-            onChange={(e) => setFrequency(parseInt(e.target.value))} />
-        </Box>
-        <Box display="flex" justifyContent="flex-end" flexDirection="row" width="auto" height="auto" mt={1}>
-          <Typography variant="body1" margin={2} padding={0} color="primary.light"
-            fontWeight={600}>
-            Amplitude
-          </Typography>
-          <Input type="text" placeholder="###" sx={{ width: "10em", mr: 5 }}
-            value={amplitude}
-            onChange={(e) => setAmplitude(parseInt(e.target.value))} />
-        </Box>
-        <Box display="flex" justifyContent="flex-end" flexDirection="row" width="auto" height="auto" mt={1}>
-          <Typography variant="body1" margin={2} padding={0} color="primary.light"
-            fontWeight={600}>
-            Register
-          </Typography>
-          <Input type="text" placeholder="0 to 255" sx={{ width: "10em", mr: 5 }}
-            value={register}
-            onChange={(e) => setRegister(parseInt(e.target.value))} />
-        </Box>
+    <Box className="DefRulesColumn">
+      <DefRulesColumnHeader title="Perlin Params" />
+      <DefRulesLabeledInput name="Seed" placeholder="###"
+        value={seed} onChange={setSeed} />
+      <DefRulesLabeledInput name="Octaves" placeholder="###"
+        value={octaves} onChange={setOctaves} />
+      <DefRulesLabeledInput name="Frequency" placeholder="###"
+        value={frequency} onChange={setFrequency} />
+      <DefRulesLabeledInput name="Amplitude" placeholder="###"
+        value={amplitude} onChange={setAmplitude} />
+      <DefRulesLabeledInput name="Register" placeholder="0 to 255"
+        value={register} onChange={setRegister} />
     </Box>
   );
 }
 
-function DefRulesGenerationParams() {
+function DefRulesGenerationParamsColumn() {
   const setViewMode = useSetAtom(defRulesViewModeAtom);
   return (
-    <Box display="flex" flexDirection="column" width="30em"
-      m={0} ml={1} py={1} boxShadow={5}
-      sx={{ backgroundColor: 'secondary.dark' }} >
-        <Container sx={{ width: "100%", height: "auto" }}>
-          <Typography variant="h4" margin="auto" border={1} p={1} color="primary.light"
-            boxShadow={5}
-            fontWeight={600}>
-            Generation Params
-          </Typography>
-        </Container>
-        <Box display="flex" flexDirection="row" width="100%" height="auto" mt={4}
-             borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            onClick={() => setViewMode("format")}
-            sx={{ fontWeight: 600 }} >
-            Format
-          </Button>
-        </Box>
-        <Box display="flex" flexDirection="row" width="100%" height="auto"
-             borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            onClick={() => setViewMode("init_program")}
-            sx={{ fontWeight: 600 }} >
-            Init Program
-          </Button>
-        </Box>
-        <Box display="flex" flexDirection="row" width="100%" height="auto"
-             borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            onClick={() => setViewMode("pairwise_program")}
-            sx={{ fontWeight: 600 }} >
-            Pairwise Program
-          </Button>
-        </Box>
-        <Box display="flex" flexDirection="row" width="100%" height="auto"
-             borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            onClick={() => setViewMode("merge_program")}
-            sx={{ fontWeight: 600 }} >
-            Merge Program
-          </Button>
-        </Box>
-        <Box display="flex" flexDirection="row" width="100%" height="auto"
-             borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            onClick={() => setViewMode("final_program")}
-            sx={{ fontWeight: 600 }} >
-            Final Program
-          </Button>
-        </Box>
+    <Box className="DefRulesColumn">
+      <DefRulesColumnHeader title="Generation Params" />
+        <DefRulesDrillEntry text="Format" first={true}
+          onClick={() => setViewMode("format")} />
+        <DefRulesDrillEntry text="Init Program"
+          onClick={() => setViewMode("init_program")} />
+        <DefRulesDrillEntry text="Pairwise Program"
+          onClick={() => setViewMode("pairwise_program")} />
+        <DefRulesDrillEntry text="Merge Program"
+          onClick={() => setViewMode("merge_program")} />
+        <DefRulesDrillEntry text="Final Program"
+          onClick={() => setViewMode("final_program")} />
     </Box>
   );
 }
+
+function DefRulesColumnButton(props: {
+  text: string,
+  onClick: () => void,
+}) {
+  return (
+    <Button variant="text" size="large" fullWidth
+      className="DefRulesColumnButton"
+      onClick={props.onClick}>
+      {props.text}
+    </Button>
+  );
+}
+
 
 const addFormatModelOpenAtom = atom(false);
 
-function DefRulesGenerationFormat() {
+function DefRulesGenerationFormatColumn() {
   const [stageFormatRules, setStageFormatRules] = useAtom(stageFormatRulesAtom);
   const setAddFormatModalOpen = useSetAtom(addFormatModelOpenAtom);
   return (
-    <Box display="flex" flexDirection="column" width="30em"
-      m={0} ml={1} py={1} boxShadow={5}
-      sx={{ backgroundColor: 'secondary.dark' }} >
-        <Container sx={{ width: "100%", height: "auto" }}>
-          <Typography variant="h4" margin="auto" border={1} color="primary.light"
-            fontWeight={600}>
-            Format
-          </Typography>
-        </Container>
+    <Box className="DefRulesColumn" width="30em">
+      <DefRulesColumnHeader title="Format" />
         <Box display="flex" flexDirection="row" width="100%" height="auto" mt={4}
              borderTop={1} borderColor={"primary.main"}>
-          <Button variant="text" color="primary" size="large" fullWidth
-            onClick={() => setAddFormatModalOpen(true)}
-            sx={{ fontWeight: 600 }} >
-            Add Component
-          </Button>
-          <Button variant="text" color="primary" size="large" fullWidth
-            onClick={() => setStageFormatRules({ wordFormats: [] })}
-            sx={{ fontWeight: 600 }} >
-            Clear Components
-          </Button>
+          <DefRulesColumnButton text="Add Component"
+            onClick={() => setAddFormatModalOpen(true)} />
+          <DefRulesColumnButton text="Clear Components"
+            onClick={() => setStageFormatRules({ wordFormats: [] })} />
           <DefRulesGenerationAddFormatComponentModal />
         </Box>
         <Box display="flex" flexDirection="column" width="auto" height="100%" mt={4}
@@ -516,16 +427,8 @@ function DefRulesGenerationProgramColumn(
   };
 
   return (
-    <Box display="flex" flexDirection="column" width="30em"
-      m={0} ml={1} py={1} boxShadow={5}
-      sx={{ backgroundColor: 'secondary.dark' }} >
-        <Container sx={{ width: "100%", height: "auto" }}>
-          <Typography variant="h4" margin="auto" border={1} p={1} color="primary.light"
-            boxShadow={5}
-            fontWeight={600}>
-            {props.title}
-          </Typography>
-        </Container>
+    <Box className="DefRulesColumn" width="30em">
+      <DefRulesColumnHeader title={props.title} />
         <Box position="relative" display="flex" flexDirection="row" width="auto" height="100%" mt={4}
              m={2} border={1} borderRadius={5} borderColor={"primary.main"} >
           <Box className="ShasmLineAnnot"

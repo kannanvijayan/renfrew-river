@@ -29,3 +29,69 @@
   outline: none;
   border: none;
 }
+
+.DefRulesColumn {
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  margin: 0;
+  margin-left: 1em;
+  padding: 1em;
+  box-shadow: 5px 5px 5px #666;
+  background-color: var(--mui-palette-secondary-dark);
+}
+
+.DefRulesColumn .DefRulesColumnHeader {
+  width: 100%;
+  height: auto;
+}
+
+.DefRulesColumn .DefRulesColumnHeader .DefRulesColumnTitle {
+  margin: auto;
+  border: 1px solid;
+  padding: 0.5em;
+  color: var(--mui-palette-primary-light);
+  box-shadow: 5px 5px 5px #666;
+  font-weight: 600;
+}
+
+.DefRulesLabeledInput {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  width: auto;
+  height: auto;
+  margin-top: 1em;
+}
+
+.DefRulesLabeledInput .DefRulesLabeledInputName {
+  margin: 1em;
+  padding: 0;
+  color: var(--mui-palette-primary-light);
+  font-weight: 600;
+}
+
+.DefRulesColumnButton {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: auto;
+  margin-top: 0.3em;
+  border-top: 1px solid;
+  border-color: var(--mui-palette-primary-main);
+}
+
+.DefRulesDrillEntry {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: auto;
+  margin-top: 0.3em;
+  border-top: 1px solid;
+  border-color: var(--mui-palette-primary-main);
+}
+
+.DefRulesDrillEntry .DefRulesDrillEntryButton {
+  color: var(--mui-palette-primary-main);
+  font-weight: 600;
+}
