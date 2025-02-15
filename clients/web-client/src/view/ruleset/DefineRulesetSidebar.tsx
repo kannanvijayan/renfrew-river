@@ -1,11 +1,9 @@
 import { Box, styled, Typography } from "@mui/material";
-import ConnectedViewState from "../../state/view/connected_view";
-import { useRootDispatch } from "../../store/hooks";
-import RootState from "../../state/root";
-import ViewState from "../../state/view";
+import { useAppDispatch } from "../../store/hooks";
+import DefRulesViewState from "../../state/view/def_rules";
 
 export default function DefineRulesetSidebar(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
 }) {
   const { viewState } = props;
   return (
@@ -19,30 +17,24 @@ export default function DefineRulesetSidebar(props: {
 }
 
 function DefineRulesetSidebarWorldGen(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
 }) {
   const { viewState } = props;
 
-  const dispatch = useRootDispatch();
+  const dispatchDefRules = useAppDispatch.view.connected.defRules();
   const onClickPerlinRules = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.setDefRulesSelection("terrain_gen/perlin_rules")
-      )
-    ));
+    dispatchDefRules(
+      DefRulesViewState.action.setCategory("terrain_gen/perlin_rules")
+    );
   }
   const onClickGeneratorProgram = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.setDefRulesSelection(
-          "terrain_gen/generator_program"
-        )
-      )
-    ));
+    dispatchDefRules(
+      DefRulesViewState.action.setCategory("terrain_gen/generator_program")
+    );
   }
 
   return (
-    <DefineRulesetSidebarCategory viewState={viewState}
+    <DefineRulesetSidebarCategory 
         categoryName="Terrain Generation">
       <DefineRulesetSidebarEntry viewState={viewState}
           entryName="Perlin Rules" entryId="terrain_gen/perlin_rules"
@@ -55,7 +47,6 @@ function DefineRulesetSidebarWorldGen(props: {
 }
 
 function DefineRulesetSidebarCategory(props: {
-  viewState: ConnectedViewState,
   categoryName: string,
   children?: React.ReactNode,
 }) {
@@ -102,13 +93,13 @@ const DefineRulesetSidebarEntrySelectedTypography =
   });
 
 function DefineRulesetSidebarEntry(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
   entryId: string,
   entryName: string,
   onClick: () => void,
 }) {
   const { viewState, entryId, entryName, onClick } = props;
-  const selected = viewState.defRulesSelection === entryId;
+  const selected = viewState.category === entryId;
   const TypographyComponent =
     selected
       ? DefineRulesetSidebarEntrySelectedTypography

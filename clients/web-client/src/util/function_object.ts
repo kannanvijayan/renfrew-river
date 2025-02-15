@@ -3,9 +3,7 @@ export type FunctionObject<
   A extends Array<unknown>,
   R,
   O extends { [key: string]: unknown },
-> =
-  & { (...args: A): R }
-  & { [K in keyof O]: (...args: A) => R };
+> = { (...args: A): R } & O;
 
 export function functionObject<
   A extends Array<unknown>,

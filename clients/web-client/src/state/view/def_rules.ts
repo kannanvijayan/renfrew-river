@@ -1,86 +1,149 @@
+import { Reducer } from "@reduxjs/toolkit";
+import {
+  DefRulesEntryCategory,
+  DefRulesEntrySelection,
+} from "./def_rules/ruleset";
+import PerlinFieldsViewState, { PerlinFieldsAction } from "./def_rules/perlin_fields";
+import GeneratorProgramViewState, { GeneratorProgramAction } from "./def_rules/generator_program";
 
-export type DefRulesEntryCategory =
-  | "terrain_gen/perlin_rules"
-  | "terrain_gen/generator_program";
+type DefRulesDispatchTargets =
+  | "perlin_fields"
+  | "generator_program";
 
-export type DefRulesEntrySelection =
-  | DefRulesPerlinField
-  | DefRulesGeneratorProgramSection;
+type DefRulesAction =
+  | SetDefRulesCategoryAction
+  | SetDefRulesEntrySelectionAction
+  | PerlinFieldsDispatchAction
+  | GeneratorProgramDispatchAction;
 
-export const DefRulesEntrySelection = {
-  mapToId(entry: DefRulesEntrySelection): string {
-    if (entry.startsWith("terrain_gen/perlin_rules")) {
-      return DefRulesPerlinField.mapToId(
-        entry as DefRulesPerlinField
-      );
-    } else if (entry.startsWith("terrain_gen/generator_program")) {
-      return DefRulesGeneratorProgramSection.mapToId(
-        entry as DefRulesGeneratorProgramSection
-      );
-    } else {
-      throw new Error(`Invalid DefRulesEntrySelection: ${entry}`);
+type DefRulesViewState = {
+  category: DefRulesEntryCategory | null,
+  entrySelection: DefRulesEntrySelection | null,
+  perlinFields: PerlinFieldsViewState,
+  generatorProgram: GeneratorProgramViewState,
+};
+
+const DefRulesViewState = {
+  initialState: {
+    category: null,
+    entrySelection: null,
+    perlinFields: PerlinFieldsViewState.initialState,
+    generatorProgram: GeneratorProgramViewState.initialState,
+  } as DefRulesViewState,
+
+  action: {
+    setCategory(category: DefRulesEntryCategory | null)
+      : SetDefRulesCategoryAction
+    {
+      return { type: "set_category" as const, category };
+    },
+    setEntrySelection(entrySelection: DefRulesEntrySelection | null)
+      : SetDefRulesEntrySelectionAction
+    {
+      return { type: "set_entry_selection" as const, entrySelection };
+    },
+    perlinFields(action: PerlinFieldsAction): PerlinFieldsDispatchAction {
+      return {
+        type: "dispatch" as const,
+        target: "perlin_fields",
+        action,
+      };
+    },
+    generatorProgram(action: GeneratorProgramAction)
+      : GeneratorProgramDispatchAction
+    {
+      return {
+        type: "dispatch" as const,
+        target: "generator_program",
+        action,
+      };
     }
+  },
+
+  reducers: {
+    set_category(state: DefRulesViewState, action: SetDefRulesCategoryAction)
+      : DefRulesViewState
+    {
+      return { ...state, category: action.category };
+    },
+    set_entry_selection(
+      state: DefRulesViewState,
+      action: SetDefRulesEntrySelectionAction
+    ): DefRulesViewState {
+      return { ...state, entrySelection: action.entrySelection }
+    },
+    perlin_fields(
+      state: DefRulesViewState,
+      action: PerlinFieldsDispatchAction,
+    ): DefRulesViewState {
+      return {
+        ...state,
+        perlinFields: PerlinFieldsViewState.reducer(
+          state.perlinFields, action.action
+        ),
+      };
+    },
+    generator_program(
+      state: DefRulesViewState,
+      action: GeneratorProgramDispatchAction,
+    ): DefRulesViewState {
+      return {
+        ...state,
+        generatorProgram: GeneratorProgramViewState.reducer(
+          state.generatorProgram, action.action
+        ),
+      };
+    },
+  },
+
+  reducer(state: DefRulesViewState, action: DefRulesAction): DefRulesViewState {
+    if (action.type === "dispatch") {
+      const target = action.target;
+      const reducer = DefRulesViewState.reducers[target];
+      return (reducer as Reducer<DefRulesViewState>)(
+        state,
+        action as PerlinFieldsDispatchAction
+      );
+    }
+    const fn = DefRulesViewState.reducers[action.type];
+    if (!fn) {
+      console.warn("DefRulesViewState.reducer: Unknown action", action);
+      return state;
+    }
+    return (fn as Reducer<DefRulesViewState>)(state, action);
   }
+};
+
+type SetDefRulesCategoryAction = {
+  type: "set_category",
+  category: DefRulesEntryCategory | null,
+};
+
+type SetDefRulesEntrySelectionAction = {
+  type: "set_entry_selection",
+  entrySelection: DefRulesEntrySelection | null,
+};
+
+type TargetedDefRulesAction<T extends DefRulesDispatchTargets> = {
+  type: "dispatch",
+  target: T,
+  action: ({
+    "perlin_fields": PerlinFieldsAction,
+    "generator_program": GeneratorProgramAction,
+  })[T],
 }
 
-export type DefRulesPerlinField =
-  | "terrain_gen/perlin_rules/seed"
-  | "terrain_gen/perlin_rules/octaves"
-  | "terrain_gen/perlin_rules/frequency"
-  | "terrain_gen/perlin_rules/amplitude"
-  | "terrain_gen/perlin_rules/outreg";
+type PerlinFieldsDispatchAction =
+  TargetedDefRulesAction<"perlin_fields">;
 
-export const DefRulesPerlinField = {
-  elementId: {
-    seed: "DefineRulesetPerlinSeed",
-    octaves: "DefineRulesetPerlinOctaves",
-    frequency: "DefineRulesetPerlinFrequency",
-    amplitude: "DefineRulesetPerlinAmplitude",
-    outreg: "DefineRulesetPerlinOutReg",
-  } as Record<string, string>,
+type GeneratorProgramDispatchAction =
+  TargetedDefRulesAction<"generator_program">;
 
-  SEED: "terrain_gen/perlin_rules/seed" as const,
-  OCTAVES: "terrain_gen/perlin_rules/octaves" as const,
-  FREQUENCY: "terrain_gen/perlin_rules/frequency" as const,
-  AMPLITUDE: "terrain_gen/perlin_rules/amplitude" as const,
-  OUTREG: "terrain_gen/perlin_rules/outreg" as const,
-
-  mapToId(entry: DefRulesPerlinField): string {
-    const piece = entry.split("/").pop()!;
-    return DefRulesPerlinField.elementId[piece];
-  }
-} as const;
-
-export type DefRulesGeneratorProgramSection =
-  | "terrain_gen/generator_program/format"
-  | "terrain_gen/generator_program/init_program"
-  | "terrain_gen/generator_program/iterations"
-  | "terrain_gen/generator_program/pairwise_program"
-  | "terrain_gen/generator_program/pairwise_outregs"
-  | "terrain_gen/generator_program/merge_program"
-  | "terrain_gen/generator_program/final_program";
-
-export const DefRulesGeneratorProgramSection = {
-  elementId: {
-    format: "DefineRulesetGeneratorProgramFormat",
-    init_program: "DefineRulesetGeneratorProgramInitProgram",
-    iterations: "DefineRulesetGeneratorProgramIterations",
-    pairwise_program: "DefineRulesetGeneratorProgramPairwiseProgram",
-    pairwise_outregs: "DefineRulesetGeneratorProgramPairwiseOutRegs",
-    merge_program: "DefineRulesetGeneratorProgramMergeProgram",
-    final_program: "DefineRulesetGeneratorProgramFinalProgram",
-  } as Record<string, string>,
-
-  FORMAT: "terrain_gen/generator_program/format" as const,
-  INIT_PROGRAM: "terrain_gen/generator_program/init_program" as const,
-  ITERATIONS: "terrain_gen/generator_program/iterations" as const,
-  PAIRWISE_PROGRAM: "terrain_gen/generator_program/pairwise_program" as const,
-  PAIRWISE_OUTREGS: "terrain_gen/generator_program/pairwise_outregs" as const,
-  MERGE_PROGRAM: "terrain_gen/generator_program/merge_program" as const,
-  FINAL_PROGRAM: "terrain_gen/generator_program/final_program" as const,
-
-  mapToId(section: DefRulesGeneratorProgramSection): string {
-    const piece = section.split("/").pop()!;
-    return DefRulesGeneratorProgramSection.elementId[piece];
-  }
-} as const;
+export default DefRulesViewState;
+export type {
+  DefRulesAction,
+  SetDefRulesCategoryAction,
+  SetDefRulesEntrySelectionAction,
+  PerlinFieldsDispatchAction,
+  GeneratorProgramDispatchAction,
+};

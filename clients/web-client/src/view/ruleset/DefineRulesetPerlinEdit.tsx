@@ -1,14 +1,12 @@
 import { Box, Input, Typography } from "@mui/material";
-import ConnectedViewState from "../../state/view/connected_view";
 import DefineRulesetEditorBox from "./DefineRulesetEditorBox";
-import { useRootDispatch } from "../../store/hooks";
-import RootState from "../../state/root";
-import ViewState from "../../state/view";
-import { DefRulesPerlinField } from "../../state/view/def_rules";
-import PerlinFieldsViewState from "../../state/view/perlin_fields";
+import { useAppDispatch } from "../../store/hooks";
+import { DefRulesPerlinField } from "../../state/view/def_rules/ruleset";
+import PerlinFieldsViewState from "../../state/view/def_rules/perlin_fields";
+import DefRulesViewState from "../../state/view/def_rules";
 
 export default function DefineRulesetPerlinEdit(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
 }) {
   const { viewState } = props;
   return (
@@ -23,28 +21,21 @@ export default function DefineRulesetPerlinEdit(props: {
 }
 
 function DefineRulsetPerlinSeedField(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
 }) {
-  const dispatch = useRootDispatch();
+  const { viewState } = props;
+  const dispatchPerlinFields =
+    useAppDispatch.view.connected.defRules.perlinFields();
+  const dispatchDefRules = useAppDispatch.view.connected.defRules();
   const SEED = DefRulesPerlinField.SEED;
   const onChange = (value: string) => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.perlinFields(
-          PerlinFieldsViewState.action.setSeedInput(value)
-        )
-      )
-    ));
+    dispatchPerlinFields(PerlinFieldsViewState.action.setSeedInput(value));
   };
   const onClick = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.setDefRulesEntrySelection(SEED)
-      )
-    ));
+    dispatchDefRules(DefRulesViewState.action.setEntrySelection(SEED));
   };
-  const selected = props.viewState.defRulesEntrySelection === SEED;
-  const value = props.viewState.perlinFields.seedInput;
+  const selected = viewState.entrySelection === SEED;
+  const value = viewState.perlinFields.seedInput;
   return (
     <DefineRulesetInputField label="Seed"
         onChange={onChange} onClick={onClick}
@@ -53,28 +44,21 @@ function DefineRulsetPerlinSeedField(props: {
 }
 
 function DefineRulesetPerlinOctavesField(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
 }) {
-  const dispatch = useRootDispatch();
+  const { viewState } = props;
+  const dispatchPerlinFields =
+    useAppDispatch.view.connected.defRules.perlinFields();
+  const dispatchDefRules = useAppDispatch.view.connected.defRules();
   const OCTAVES = DefRulesPerlinField.OCTAVES;
   const onChange = (value: string) => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.perlinFields(
-          PerlinFieldsViewState.action.setOctavesInput(value)
-        )
-      )
-    ));
+    dispatchPerlinFields(PerlinFieldsViewState.action.setOctavesInput(value));
   };
   const onClick = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.setDefRulesEntrySelection(OCTAVES)
-      )
-    ));
+    dispatchDefRules(DefRulesViewState.action.setEntrySelection(OCTAVES));
   };
-  const selected = props.viewState.defRulesEntrySelection === OCTAVES;
-  const value = props.viewState.perlinFields.octavesInput;
+  const selected = viewState.entrySelection === OCTAVES;
+  const value = viewState.perlinFields.octavesInput;
   return (
     <DefineRulesetInputField label="Octaves"
         onChange={onChange} onClick={onClick}
@@ -83,28 +67,20 @@ function DefineRulesetPerlinOctavesField(props: {
 }
 
 function DefineRulesetPerlinFrequencyField(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
 }) {
   const { viewState } = props;
-  const dispatch = useRootDispatch();
+  const dispatchPerlinFields =
+    useAppDispatch.view.connected.defRules.perlinFields();
+  const dispatchDefRules = useAppDispatch.view.connected.defRules();
   const FREQUENCY = DefRulesPerlinField.FREQUENCY;
   const onChange = (value: string) => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.perlinFields(
-          PerlinFieldsViewState.action.setFrequencyInput(value)
-        )
-      )
-    ));
+    dispatchPerlinFields(PerlinFieldsViewState.action.setFrequencyInput(value));
   };
   const onClick = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.setDefRulesEntrySelection(FREQUENCY)
-      )
-    ));
+    dispatchDefRules(DefRulesViewState.action.setEntrySelection(FREQUENCY));
   };
-  const selected = viewState.defRulesEntrySelection === FREQUENCY;
+  const selected = viewState.entrySelection === FREQUENCY;
   const value = viewState.perlinFields.frequencyInput
   return (
     <DefineRulesetInputField label="Frequency"
@@ -114,28 +90,21 @@ function DefineRulesetPerlinFrequencyField(props: {
 }
 
 function DefineRulesetPerlinAmplitudeField(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
 }) {
-  const dispatch = useRootDispatch();
+  const { viewState } = props;
+  const dispatchPerlinFields =
+    useAppDispatch.view.connected.defRules.perlinFields();
+  const dispatchDefRules = useAppDispatch.view.connected.defRules();
   const AMPLITUDE = DefRulesPerlinField.AMPLITUDE;
   const onChange = (value: string) => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.perlinFields(
-          PerlinFieldsViewState.action.setAmplitudeInput(value)
-        )
-      )
-    ));
+    dispatchPerlinFields(PerlinFieldsViewState.action.setAmplitudeInput(value));
   };
   const onClick = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.setDefRulesEntrySelection(AMPLITUDE)
-      )
-    ));
+    dispatchDefRules(DefRulesViewState.action.setEntrySelection(AMPLITUDE));
   };
-  const selected = props.viewState.defRulesEntrySelection === AMPLITUDE;
-  const value = props.viewState.perlinFields.amplitudeInput;
+  const selected = viewState.entrySelection === AMPLITUDE;
+  const value = viewState.perlinFields.amplitudeInput;
   return (
     <DefineRulesetInputField label="Amplitude"
         onChange={onChange} onClick={onClick}
@@ -144,28 +113,21 @@ function DefineRulesetPerlinAmplitudeField(props: {
 }
 
 function DefineRulesetPerlinOutregField(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
 }) {
-  const dispatch = useRootDispatch();
+  const { viewState } = props;
+  const dispatchPerlinFields =
+    useAppDispatch.view.connected.defRules.perlinFields();
+  const dispatchDefRules = useAppDispatch.view.connected.defRules();
   const OUTREG = DefRulesPerlinField.OUTREG;
   const onChange = (value: string) => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.perlinFields(
-          PerlinFieldsViewState.action.setOutregInput(value)
-        )
-      )
-    ));
+    dispatchPerlinFields(PerlinFieldsViewState.action.setOutregInput(value));
   };
   const onClick = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.setDefRulesEntrySelection(OUTREG)
-      )
-    ));
+    dispatchDefRules(DefRulesViewState.action.setEntrySelection(OUTREG));
   };
-  const selected = props.viewState.defRulesEntrySelection === OUTREG;
-  const value = props.viewState.perlinFields.outregInput;
+  const selected = viewState.entrySelection === OUTREG;
+  const value = viewState.perlinFields.outregInput;
   return (
     <DefineRulesetInputField label="Outreg"
         onChange={onChange} onClick={onClick}

@@ -1,8 +1,8 @@
 import { Box, Divider, styled, Typography } from "@mui/material";
-import ConnectedViewState from "../../state/view/connected_view";
 import DefineRulesetSidebar from "./DefineRulesetSidebar";
 import DefineRulesetPerlinEdit from "./DefineRulesetPerlinEdit";
 import DefineRulesetGeneratorProgramEdit from "./DefineRulesetGeneratorProgramEdit";
+import DefRulesViewState from "../../state/view/def_rules";
 
 const DefineRulesetBox = styled(Box)({
   display: "flex",
@@ -17,9 +17,12 @@ const DefineRulesetBox = styled(Box)({
 });
 
 export default function DefineRulesetMain(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState | null,
 }) {
   const { viewState } = props;
+  if (!viewState) {
+    return;
+  }
   return (
     <DefineRulesetBox sx={{
       backgroundColor: "primary.dark",
@@ -46,9 +49,7 @@ function Title() {
   )
 }
 
-function DefineRulesetContents(props: {
-  viewState: ConnectedViewState,
-}) {
+function DefineRulesetContents(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
   return (
     <Box className="DefineRulesetContents" display="flex" flexDirection="row"
@@ -71,14 +72,12 @@ function DefineRulesetContents(props: {
   )
 }
 
-function DefineRulesetEditor(props: {
-  viewState: ConnectedViewState,
-}) {
+function DefineRulesetEditor(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
-  if (viewState.defRulesSelection === "terrain_gen/perlin_rules") {
+  if (viewState.category === "terrain_gen/perlin_rules") {
     return <DefineRulesetPerlinEdit viewState={viewState} />
   }
-  if (viewState.defRulesSelection === "terrain_gen/generator_program") {
+  if (viewState.category === "terrain_gen/generator_program") {
     return <DefineRulesetGeneratorProgramEdit viewState={viewState} />
   }
   return <Box width="100%" height="100%" />

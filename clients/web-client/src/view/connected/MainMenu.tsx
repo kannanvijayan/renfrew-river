@@ -1,10 +1,9 @@
 import { Button, Container, Divider, styled, Typography } from "@mui/material";
 
 import "./MainMenu.css";
-import { useRootDispatch } from "../../store/hooks";
-import RootState from "../../state/root";
-import ViewState from "../../state/view";
+import { useAppDispatch } from "../../store/hooks";
 import ConnectedViewState from "../../state/view/connected_view";
+import DefRulesViewState from "../../state/view/def_rules";
 
 export default function MainMenu() {
   return (
@@ -50,12 +49,11 @@ function MainMenuTitle() {
 }
 
 function DefineRulesetButton() {
-  const dispatch = useRootDispatch();
+  const dispatchConnected = useAppDispatch.view.connected();
   const onClick = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.setViewMode("define_ruleset")
-      )
+    dispatchConnected(ConnectedViewState.action.setViewMode("define_ruleset"));
+    dispatchConnected(ConnectedViewState.action.setDefRules(
+      DefRulesViewState.initialState
     ));
   };
 
@@ -102,7 +100,6 @@ const StyledButton = styled(Button)({
   boxShadow: "0.4rem 0.4rem 1rem #200808",
   margin: "1rem 8rem 1rem 8rem",
   width: "100%",
-  fontSize: "1rem",
   "&:hover": {
     boxShadow: "0.5rem 0.5rem 1rem #d66",
   },

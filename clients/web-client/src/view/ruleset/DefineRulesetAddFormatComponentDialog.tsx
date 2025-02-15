@@ -1,10 +1,8 @@
 import { Box, Button, Dialog, Input, styled, Typography }
   from "@mui/material";
-import ConnectedViewState from "../../state/view/connected_view";
-import { useRootDispatch } from "../../store/hooks";
-import RootState from "../../state/root";
-import ViewState from "../../state/view";
-import GeneratorProgramViewState, { FormatInput } from "../../state/view/generator_program";
+import { useAppDispatch } from "../../store/hooks";
+import GeneratorProgramViewState, { FormatInput } from "../../state/view/def_rules/generator_program";
+import DefRulesViewState from "../../state/view/def_rules";
 
 const StyledDialog = styled(Dialog)({
   margin: 0,
@@ -26,25 +24,20 @@ const AddComponentDialogBox = styled(Box)({
 });
 
 export default function DefineRulesetAddFormatComponentDialog(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
   wordIndex: number,
   visible: boolean,
 }) {
   const { viewState, wordIndex, visible } = props;
-  const dispatch = useRootDispatch();
   const formatInputState = viewState.generatorProgram.formatInput;
+  const dispatchGeneratorProgram =
+    useAppDispatch.view.connected.defRules.generatorProgram();
   const dispatchFormatInputUpdate =
     (formatInputUpdate: Partial<FormatInput>) => {
-      dispatch(RootState.action.view(
-        ViewState.action.connected(
-          ConnectedViewState.action.generatorProgram(
-            GeneratorProgramViewState.action.setFormatInput({
-              ...formatInputState,
-              ...formatInputUpdate,
-            })
-          )
-        )
-      ));
+      dispatchGeneratorProgram(GeneratorProgramViewState.action.setFormatInput({
+        ...formatInputState,
+        ...formatInputUpdate,
+      }));
     };
   const onNameChange = (value: string) => {
     console.log("onNameChange", value);
@@ -172,28 +165,25 @@ const WordNumLabel = styled(Typography)({
 });
 
 function AddComponentDialogTitle(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
   wordIndex: number,
 }) {
   const { viewState, wordIndex } = props;
-  const dispatch = useRootDispatch();
+  const dispatchGeneratorProgram =
+    useAppDispatch.view.connected.defRules.generatorProgram();
   const formatInput = viewState.generatorProgram.formatInput;
   const wordInfo = formatInput.wordFormats[wordIndex];
 
   const onCloseClick = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.generatorProgram(
-          GeneratorProgramViewState.action.setFormatInput({
-            ...formatInput,
-            addComponentDialog: {
-              ...formatInput.addComponentDialog,
-              visible: false,
-            },
-          })
-        )
-      )
-    ));
+    dispatchGeneratorProgram(
+      GeneratorProgramViewState.action.setFormatInput({
+        ...formatInput,
+        addComponentDialog: {
+          ...formatInput.addComponentDialog,
+          visible: false,
+        },
+      })
+    );
   };
   return (
     <Box display="flex" flexDirection="row" margin="0" padding="0"

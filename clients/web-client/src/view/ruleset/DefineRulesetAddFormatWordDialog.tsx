@@ -1,10 +1,8 @@
 import { Box, Button, Dialog, Input, styled, Typography }
   from "@mui/material";
-import ConnectedViewState from "../../state/view/connected_view";
-import { useRootDispatch } from "../../store/hooks";
-import RootState from "../../state/root";
-import ViewState from "../../state/view";
-import GeneratorProgramViewState from "../../state/view/generator_program";
+import { useAppDispatch } from "../../store/hooks";
+import GeneratorProgramViewState from "../../state/view/def_rules/generator_program";
+import DefRulesViewState from "../../state/view/def_rules";
 
 const StyledDialog = styled(Dialog)({
   margin: 0,
@@ -26,50 +24,43 @@ const AddWordDialogBox = styled(Box)({
 });
 
 export default function DefineRulesetAddFormatWordDialog(props: {
-  viewState: ConnectedViewState,
+  viewState: DefRulesViewState,
   visible: boolean,
 }) {
   const { viewState, visible } = props;
-  const dispatch = useRootDispatch();
+  const dispatchGeneratorProgram =
+    useAppDispatch.view.connected.defRules.generatorProgram();
   const formatInputState = viewState.generatorProgram.formatInput;
   const onNameChange = (value: string) => {
     console.log("onNameChange", value);
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.generatorProgram(
-          GeneratorProgramViewState.action.setFormatInput({
-            ...formatInputState,
-            addWordDialog: {
-              ...formatInputState.addWordDialog,
-              name: value,
-            },
-          })
-        )
-      )
-    ));
+    dispatchGeneratorProgram(
+      GeneratorProgramViewState.action.setFormatInput({
+        ...formatInputState,
+        addWordDialog: {
+          ...formatInputState.addWordDialog,
+          name: value,
+        },
+      })
+    );
   };
   const onAddClicked = () => {
     console.log("onAddClicked");
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.generatorProgram(
-          GeneratorProgramViewState.action.setFormatInput({
-            ...formatInputState,
-            wordFormats: [
-              ...formatInputState.wordFormats,
-              {
-                name: formatInputState.addWordDialog.name,
-                components: [],
-              }
-            ],
-            addWordDialog: {
-              name: "",
-              visible: false,
-            },
-          })
-        )
-      )
-    ));
+    dispatchGeneratorProgram(
+      GeneratorProgramViewState.action.setFormatInput({
+        ...formatInputState,
+        wordFormats: [
+          ...formatInputState.wordFormats,
+          {
+            name: formatInputState.addWordDialog.name,
+            components: [],
+          }
+        ],
+        addWordDialog: {
+          name: "",
+          visible: false,
+        },
+      })
+    );
   };
   const nameInput = formatInputState.addWordDialog.name;
   return (
@@ -122,26 +113,21 @@ const CloseButton = styled(Button)({
   },
 });
 
-function AddWordDialogTitle(props: {
-  viewState: ConnectedViewState,
-}) {
+function AddWordDialogTitle(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
-  const dispatch = useRootDispatch();
+  const dispatchGeneratorProgram =
+    useAppDispatch.view.connected.defRules.generatorProgram();
   const formatInput = viewState.generatorProgram.formatInput;
   const onCloseClick = () => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.generatorProgram(
-          GeneratorProgramViewState.action.setFormatInput({
-            ...formatInput,
-            addWordDialog: {
-              ...formatInput.addWordDialog,
-              visible: false,
-            },
-          })
-        )
-      )
-    ));
+    dispatchGeneratorProgram(
+      GeneratorProgramViewState.action.setFormatInput({
+        ...formatInput,
+        addWordDialog: {
+          ...formatInput.addWordDialog,
+          visible: false,
+        },
+      })
+    );
   };
   return (
     <Box display="flex" flexDirection="row" margin="0" padding="0"
