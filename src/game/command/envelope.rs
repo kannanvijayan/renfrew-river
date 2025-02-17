@@ -18,6 +18,7 @@ use crate::game::{
     ValidateShasmCmd,
   },
   mode::create_world::command::CreateWorldSubcmdEnvelope,
+  mode::define_rules::command::DefineRulesSubcmdEnvelope,
 };
 
 /** Tagged union type for commands sent over transport channels. */
@@ -40,4 +41,5 @@ pub(crate) enum CommandEnvelope {
   ValidateShasm(Box<ValidateShasmCmd>),
   DefineRuleset(Box<DefineRulesetCmd>),
   CreateWorldSubcmd(Box<CreateWorldSubcmdEnvelope>),
+  DefineRulesSubcmd(Box<DefineRulesSubcmdEnvelope>),
 }

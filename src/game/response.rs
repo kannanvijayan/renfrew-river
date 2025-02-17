@@ -1,7 +1,10 @@
 use serde;
 
 use crate::{
-  game::mode::create_world::response::CreateWorldSubcmdResponse,
+  game::mode::{
+    create_world::response::CreateWorldSubcmdResponse,
+    define_rules::response::DefineRulesSubcmdResponse,
+  },
   world::{CellInfo, AnimalData},
 };
 
@@ -35,6 +38,7 @@ pub(crate) enum ResponseEnvelope {
   GameSnapshot(Box<GameSnapshotResponse>),
   InvalidShasm(Box<InvalidShasmResponse>),
   CreateWorldSubcmd(CreateWorldSubcmdResponse),
+  DefineRulesSubcmd(DefineRulesSubcmdResponse),
 }
 
 #[derive(Debug, Clone)]

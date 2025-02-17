@@ -1,4 +1,4 @@
-import GameClient from "./game_client";
+import GameClient, { GameClientDefineRules} from "./game_client";
 import {
   AnimalId,
   AnimalData,
@@ -40,6 +40,7 @@ export {
   ShasmParseError,
   ShadyRegister,
 
+  GameClientDefineRules,
   GameClientTransportListeners,
 
   Ruleset,

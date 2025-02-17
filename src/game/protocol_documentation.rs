@@ -18,7 +18,9 @@ use crate::game::command::{
   DefineRulesetCmd,
 };
 
-pub struct ProtocolDocumentation {
+use super::mode::define_rules;
+
+pub struct ProtocolCommandDocumentation {
   pub name: String,
   pub description: String,
   pub notes: Vec<String>,
@@ -26,10 +28,23 @@ pub struct ProtocolDocumentation {
   pub response_examples: Vec<String>,
 }
 
+pub struct ProtocolCategoryDocumentation {
+  pub name: String,
+  pub description: String,
+  pub commands: Vec<ProtocolCommandDocumentation>,
+}
+
 /**
  * Get a list of examples of commands and responses, as json values.
  */
-pub fn get_protocol_docs() -> Vec<ProtocolDocumentation> {
+pub fn get_protocol_docs() -> Vec<ProtocolCategoryDocumentation> {
+  let mut result = Vec::new();
+  result.push(define_rules::protocol_documentation::get_category_docs());
+  result.push(get_old_category());
+  return result;
+}
+
+pub fn get_old_category() -> ProtocolCategoryDocumentation {
   let mut result = Vec::new();
   result.push(make_example::<HasGameCmd>());
   result.push(make_example::<DefaultSettingsCmd>());
@@ -45,10 +60,15 @@ pub fn get_protocol_docs() -> Vec<ProtocolDocumentation> {
   result.push(make_example::<ValidateShasmCmd>());
   result.push(make_example::<RestoreGameCmd>());
   result.push(make_example::<DefineRulesetCmd>());
-  return result;
+
+  ProtocolCategoryDocumentation {
+    name: "Old".to_string(),
+    description: "Old commands".to_string(),
+    commands: result,
+  }
 }
 
-fn make_example<C: Command>() -> ProtocolDocumentation {
+fn make_example<C: Command>() -> ProtocolCommandDocumentation {
   let (commands, responses) = C::protocol_examples();
   let notes = C::protocol_notes();
   let command_examples: Vec<String> = commands.into_iter().map(|command| {
@@ -57,7 +77,7 @@ fn make_example<C: Command>() -> ProtocolDocumentation {
   let response_examples: Vec<String> = responses.into_iter().map(|response| {
     serde_json::to_string_pretty(&C::embed_response(response)).unwrap()
   }).collect();
-  return ProtocolDocumentation {
+  return ProtocolCommandDocumentation {
     name: C::name().to_string(),
     description: C::description().to_string(),
     notes,

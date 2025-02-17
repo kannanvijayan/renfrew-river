@@ -1,7 +1,7 @@
 import { Box, Button, Dialog, Input, styled, Typography }
   from "@mui/material";
 import { useAppDispatch } from "../../store/hooks";
-import GeneratorProgramViewState, { FormatInput } from "../../state/view/def_rules/generator_program";
+import GeneratorProgramViewState, { AddFormatWordComponentDialogState } from "../../state/view/def_rules/generator_program";
 import DefRulesViewState from "../../state/view/def_rules";
 
 const StyledDialog = styled(Dialog)({
@@ -29,74 +29,65 @@ export default function DefineRulesetAddFormatComponentDialog(props: {
   visible: boolean,
 }) {
   const { viewState, wordIndex, visible } = props;
-  const formatInputState = viewState.generatorProgram.formatInput;
+  const formatState = viewState.generatorProgram.format;
+  const dialogState = viewState.generatorProgram.addFormatComponentDialog;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
-  const dispatchFormatInputUpdate =
-    (formatInputUpdate: Partial<FormatInput>) => {
-      dispatchGeneratorProgram(GeneratorProgramViewState.action.setFormatInput({
-        ...formatInputState,
-        ...formatInputUpdate,
+  const dispatchDialogUpdate =
+    (dialogUpdate: Partial<AddFormatWordComponentDialogState>) => {
+      dispatchGeneratorProgram(
+        GeneratorProgramViewState.action.setAddFormatComponentDialog({
+          ...dialogState,
+          ...dialogUpdate,
       }));
     };
   const onNameChange = (value: string) => {
     console.log("onNameChange", value);
-    dispatchFormatInputUpdate({
-      addComponentDialog: {
-        ...formatInputState.addComponentDialog,
-        name: value,
-      },
-    });
+    dispatchDialogUpdate({ name: value });
   };
   const onStartBitChange = (value: string) => {
     console.log("onStartBitChange", value);
-    dispatchFormatInputUpdate({
-      addComponentDialog: {
-        ...formatInputState.addComponentDialog,
-        startBit: value,
-      },
-    });
+    dispatchDialogUpdate({ startBit: value });
   };
   const onNumBitsChange = (value: string) => {
     console.log("onNumBitsChange", value);
-    dispatchFormatInputUpdate({
-      addComponentDialog: {
-        ...formatInputState.addComponentDialog,
-        numBits: value,
-      },
-    });
+    dispatchDialogUpdate({ numBits: value });
   };
   const onAddClicked = () => {
     console.log("onAddClicked");
-    dispatchFormatInputUpdate({
-      wordFormats:
-        formatInputState.wordFormats.map((wordFormat, index) => {
-          if (index !== wordIndex) {
-            return wordFormat;
-          }
-          return {
-            ...wordFormat,
-            components: [
-              ...wordFormat.components,
-              {
-                name: formatInputState.addComponentDialog.name,
-                startBit: formatInputState.addComponentDialog.startBit,
-                numBits: formatInputState.addComponentDialog.numBits,
-              }
-            ],
-          };
-        }),
-      addComponentDialog: {
+    dispatchGeneratorProgram(
+      GeneratorProgramViewState.action.setFormat({
+        wordFormats:
+          formatState.wordFormats.map((wordFormat, index) => {
+            if (index !== wordIndex) {
+              return wordFormat;
+            }
+            return {
+              ...wordFormat,
+              components: [
+                ...wordFormat.components,
+                {
+                  name: dialogState.name,
+                  offset: dialogState.startBit,
+                  bits: dialogState.numBits,
+                }
+              ],
+            };
+          }),
+      })
+    );
+    dispatchGeneratorProgram(
+      GeneratorProgramViewState.action.setAddFormatComponentDialog({
         visible: false,
         name: "",
         startBit: "",
         numBits: "",
-      },
-    });
+      })
+    );
   };
-  const nameInput = formatInputState.addComponentDialog.name;
-  const startBitInput = formatInputState.addComponentDialog.startBit;
-  const numBitsInput = formatInputState.addComponentDialog.numBits;
+  const nameInput = dialogState.name;
+  const startBitInput = dialogState.startBit;
+  const numBitsInput = dialogState.numBits;
   return (
     <StyledDialog open={visible}
         slotProps={{
@@ -171,17 +162,15 @@ function AddComponentDialogTitle(props: {
   const { viewState, wordIndex } = props;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
-  const formatInput = viewState.generatorProgram.formatInput;
-  const wordInfo = formatInput.wordFormats[wordIndex];
+  const formatState = viewState.generatorProgram.format;
+  const dialogState = viewState.generatorProgram.addFormatComponentDialog;
+  const wordInfo = formatState.wordFormats[wordIndex];
 
   const onCloseClick = () => {
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setFormatInput({
-        ...formatInput,
-        addComponentDialog: {
-          ...formatInput.addComponentDialog,
-          visible: false,
-        },
+      GeneratorProgramViewState.action.setAddFormatComponentDialog({
+        ...dialogState,
+        visible: false,
       })
     );
   };

@@ -1,9 +1,18 @@
-import { ShadyRegister, ShasmProgram } from "../shady_vm";
-import { FormatRules } from "./format_rules";
+import { ShadyRegister, ShasmProgram, ShasmProgramValidation } from "../shady_vm";
+import { FormatRules, FormatInput, FormatValidation } from "./format_rules";
 
 export type TerrainGenRules = {
   perlin: TerrainGenPerlinRules,
   stage: TerrainGenStageRules,
+};
+export type TerrainGenInput = {
+  perlin: TerrainGenPerlinInput,
+  stage: TerrainGenStageInput,
+};
+export type TerrainGenValidation = {
+  errors: string[],
+  perlin: TerrainGenPerlinValidation,
+  stage: TerrainGenStageValidation,
 };
 export function defaultTerrainGenRules(): TerrainGenRules {
   return {
@@ -57,6 +66,26 @@ export type TerrainGenStageRules = {
   mergeProgram: ShasmProgram,
   finalProgram: ShasmProgram,
 };
+export type TerrainGenStageInput = {
+  format: FormatInput,
+  initProgram: string,
+  iterations: string,
+  pairwiseProgram: string,
+  pairwiseOutputRegisters: string,
+  mergeProgram: string,
+  finalProgram: string,
+};
+export type TerrainGenStageValidation = {
+  errors: string[],
+
+  format: FormatValidation,
+  initProgram: ShasmProgramValidation,
+  iterations: string[],
+  pairwiseProgram: ShasmProgramValidation,
+  pairwiseOutputRegisters: string[],
+  mergeProgram: ShasmProgramValidation,
+  finalProgram: ShasmProgramValidation,
+};
 function defaultTerrainGenStageRules(): TerrainGenStageRules {
   return {
     format: { wordFormats: [] },
@@ -76,6 +105,24 @@ export type TerrainGenPerlinRules = {
   amplitude: number,
 
   register: ShadyRegister,
+};
+export type TerrainGenPerlinInput = {
+  seed: string,
+  octaves: string,
+  frequency: string,
+  amplitude: string,
+
+  register: string,
+};
+export type TerrainGenPerlinValidation = {
+  errors: string[],
+
+  seed: string[],
+  octaves: string[],
+  frequency: string[],
+  amplitude: string[],
+
+  register: string[],
 };
 function defaultTerrainGenPerlinRules(): TerrainGenPerlinRules {
   return {

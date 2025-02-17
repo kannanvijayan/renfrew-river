@@ -17,8 +17,15 @@ import {
   ReadMapDataKindsToOutput,
   ReadMapDataOutputNameMap
 } from "./protocol/commands/read_map_data_cmd";
-import Ruleset from "./types/ruleset";
+import Ruleset, { RulesetInput, RulesetValidation } from "./types/ruleset";
 import { ShasmParseError } from "./types/shady_vm";
+import {
+  ProtocolSubcmdParams,
+  ProtocolSubcmdName,
+  ProtocolSubcmdResponse,
+  ProtocolSubcmdSpec,
+} from "./protocol/subcommand";
+import DefineRulesSubcmd from "./protocol/commands/define_rules_subcmd";
 
 export type GameClientTransportListeners = {
   open: () => void;
@@ -71,6 +78,9 @@ export default class GameClient {
   // Current command response awaiter.
   private responseAwaiters_: ResponseAwaiter[];
 
+  // The define-rules subcommand sender.
+  public readonly defineRules: GameClientDefineRules;
+
   public constructor(args: GameClientArgs) {
     const { transport, callbacks } = args;
     this.callbacks_ = callbacks;
@@ -80,6 +90,10 @@ export default class GameClient {
     this.transport_.addEventListener("close", this.handleClose.bind(this));
     this.transport_.addEventListener("error", this.handleError.bind(this));
     this.transport_.addEventListener("message", this.handleMessage.bind(this));
+
+    this.defineRules = new GameClientDefineRules({
+      send: this.sendSubcmd.bind(this),
+    });
   }
 
   public disconnect(): void {
@@ -272,6 +286,41 @@ export default class GameClient {
     return promise;
   }
 
+  private async sendSubcmd<
+    S extends ProtocolSubcmdSpec,
+    T extends ProtocolSubcmdName<S>
+  >(
+    category: string,
+    subcmd: T,
+    params: ProtocolSubcmdParams<S, T>,
+  ): Promise<ProtocolSubcmdResponse<S, T>> {
+    // Compose the command to send.
+    const msgObj = { [category]: { [subcmd]: params } };
+    const msg = JSON.stringify(msgObj);
+
+    // Send the command, but only after the response from the
+    // current last command has been received.
+    if (this.responseAwaiters_.length > 0) {
+      this.responseAwaiters_[this.responseAwaiters_.length - 1].promise.then(
+        () => this.transport_.send(msg)
+      );
+    } else {
+      this.transport_.send(msg);
+    }
+
+    // Create and push an awaiter for the response.
+    let resolve: unknown;
+    let reject: unknown;
+    const promise = new Promise<ProtocolSubcmdResponse<S, T>>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    const awaiter = { command: subcmd, resolve, reject, promise } as ResponseAwaiter;
+    this.responseAwaiters_.push(awaiter);
+
+    return promise
+  }
+
   private handleOpen(): void {
     this.callbacks_.onConnect();
   }
@@ -304,5 +353,61 @@ export default class GameClient {
       throw new Error("GameClient.onMessage: no awaiter");
     }
     awaiter.resolve(data);
+  }
+}
+
+interface SubcmdSender {
+  send<
+    S extends ProtocolSubcmdSpec,
+    T extends ProtocolSubcmdName<S>
+  >(
+    category: string,
+    subcmd: T,
+    params: ProtocolSubcmdParams<S, T>,
+  ): Promise<ProtocolSubcmdResponse<S, T>>;
+}
+
+class GameClientSendSubcommand<S extends ProtocolSubcmdSpec> {
+  private readonly sender_: SubcmdSender;
+  private readonly category_: string;
+
+  public constructor(sender: SubcmdSender, category: string) {
+    this.sender_ = sender;
+    this.category_ = category;
+  }
+
+  protected async sendSubcmd<T extends ProtocolSubcmdName<S>>(
+    subcmd: T,
+    params: ProtocolSubcmdParams<S, T>,
+  ): Promise<ProtocolSubcmdResponse<S, T>> {
+    return this.sender_.send(this.category_, subcmd, params);
+  }
+}
+
+export class GameClientDefineRules
+  extends GameClientSendSubcommand<DefineRulesSubcmd>
+{
+  public constructor(sender: SubcmdSender) {
+    super(sender, "DefineRuleset");
+  }
+
+  public async validateRules(rulesetInput: RulesetInput)
+    : Promise<true|RulesetValidation>
+  {
+    const result = await this.sendSubcmd("ValidateRules", { rulesetInput });
+    if ("Validation" in result) {
+      if (result.Validation.isValid) {
+        return true;
+      } else {
+        if (!result.Validation.validation) {
+          throw new Error("Validation failed but no validation object");
+        }
+        return result.Validation.validation;
+      }
+    } else {
+      throw new Error(
+        "ValidateRules: unexpected response: " + result.Error.messages.join(", ")
+      );
+    }
   }
 }

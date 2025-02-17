@@ -9,7 +9,8 @@ mod ruleset;
 
 pub use self::{
   game::{
-    ProtocolDocumentation,
+    ProtocolCommandDocumentation,
+    ProtocolCategoryDocumentation,
     get_protocol_docs,
   },
   network::{

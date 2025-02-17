@@ -1,163 +1,164 @@
 import { Reducer } from "@reduxjs/toolkit";
+import { ruleset } from "renfrew-river-protocol-client";
 
-type GeneratorProgramViewState = {
-  formatInput: FormatInput,
-  initProgramInput: string,
-  iterationsInput: string,
-  pairwiseProgramInput: string,
-  pairwiseOutputRegistersInput: string,
-  mergeProgramInput: string,
-  finalProgramInput: string,
-}
-
-type FormatInput = {
-  wordFormats: WordFormatInput[],
-  addWordDialog: { visible: boolean, name: string },
-  addComponentDialog: {
-    visible: boolean,
-    name: string,
-    startBit: string,
-    numBits: string,
-  },
-};
-
-type WordFormatInput = {
+type AddFormatWordDialogState = {
+  visible: boolean,
   name: string,
-  components: WordComponentFormatInput[],
 };
 
-type WordComponentFormatInput = {
+type AddFormatWordComponentDialogState = {
+  visible: boolean,
   name: string,
   startBit: string,
   numBits: string,
 };
 
+type GeneratorProgramViewState = {
+  format: ruleset.FormatInput,
+  addFormatWordDialog: AddFormatWordDialogState,
+  addFormatComponentDialog: AddFormatWordComponentDialogState,
+  initProgram: string,
+  iterations: string,
+  pairwiseProgram: string,
+  pairwiseOutputRegisters: string,
+  mergeProgram: string,
+  finalProgram: string,
+}
+
 const GeneratorProgramViewState = {
   initialState: {
-    formatInput: {
-      wordFormats: [],
-      addWordDialog: {
-        name: "",
-        visible: false,
-      },
-      addComponentDialog: {
-        name: "",
-        visible: false,
-        startBit: "",
-        numBits: "",
-      },
+    format: { wordFormats: [], addWordDialog: false, addComponentDialog: false },
+    addFormatWordDialog: {
+      visible: false,
+      name: "",
     },
-    initProgramInput: "",
-    iterationsInput: "",
-    pairwiseProgramInput: "",
-    pairwiseOutputRegistersInput: "",
-    mergeProgramInput: "",
-    finalProgramInput: "",
+    addFormatComponentDialog: {
+      visible: false,
+      name: "",
+      startBit: "",
+      numBits: "",
+    },
+    initProgram: "",
+    iterations: "",
+    pairwiseProgram: "",
+    pairwiseOutputRegisters: "",
+    mergeProgram: "",
+    finalProgram: "",
   } as GeneratorProgramViewState,
 
   action: {
-    setFormatInput(formatInput: FormatInput): SetFormatInputAction {
+    setFormat(formatInput: ruleset.FormatInput): SetFormatAction {
       return {
-        type: "set_format_input" as const,
+        type: "set_format" as const,
         formatInput,
       };
     },
-    setInitProgramInput(initProgramInput: string): SetInitProgramInputAction {
-      return {
-        type: "set_init_program_input" as const,
-        initProgramInput,
-      };
-    },
-    setIterationsInput(iterationsInput: string): SetIterationsInputAction {
-      return {
-        type: "set_iterations_input" as const,
-        iterationsInput,
-      };
-    },
-    setPairwiseProgramInput(pairwiseProgramInput: string): SetPairwiseProgramInputAction {
-      return {
-        type: "set_pairwise_program_input" as const,
-        pairwiseProgramInput,
-      };
-    },
-    setPairwiseOutputRegistersInput(pairwiseOutputRegistersInput: string)
-      : SetPairwiseOutputRegistersInputAction
+    setAddFormatWordDialog(dialog: AddFormatWordDialogState)
+      : SetAddFormatWordDialogAction
     {
       return {
-        type: "set_pairwise_output_registers_input" as const,
-        pairwiseOutputRegistersInput,
+        type: "set_add_format_word_dialog" as const,
+        dialog,
       };
     },
-    setMergeProgramInput(mergeProgramInput: string): SetMergeProgramInputAction {
+    setAddFormatComponentDialog(dialog: AddFormatWordComponentDialogState)
+      : SetAddFormatWordComponentDialogAction
+    {
       return {
-        type: "set_merge_program_input" as const,
-        mergeProgramInput,
+        type: "set_add_format_word_component_dialog" as const,
+        dialog,
       };
     },
-    setFinalProgramInput(finalProgramInput: string): SetFinalProgramInputAction {
+    setInitProgram(initProgram: string): SetInitProgramAction {
       return {
-        type: "set_final_program_input" as const,
-        finalProgramInput,
+        type: "set_init_program" as const,
+        initProgramInput: initProgram,
+      };
+    },
+    setIterations(iterations: string): SetIterationsAction {
+      return {
+        type: "set_iterations" as const,
+        iterationsInput: iterations,
+      };
+    },
+    setPairwiseProgram(pairwiseProgram: string): SetPairwiseProgramAction {
+      return {
+        type: "set_pairwise_program" as const,
+        pairwiseProgramInput: pairwiseProgram,
+      };
+    },
+    setPairwiseOutputRegisters(pairwiseOutputRegisters: string)
+      : SetPairwiseOutputRegistersAction
+    {
+      return {
+        type: "set_pairwise_output_registers" as const,
+        pairwiseOutputRegistersInput: pairwiseOutputRegisters,
+      };
+    },
+    setMergeProgram(mergeProgram: string): SetMergeProgramAction {
+      return {
+        type: "set_merge_program" as const,
+        mergeProgramInput: mergeProgram,
+      };
+    },
+    setFinalProgram(finalProgram: string): SetFinalProgramAction {
+      return {
+        type: "set_final_program" as const,
+        finalProgramInput: finalProgram,
       };
     },
   },
 
   reducers: {
-    set_format_input(state: GeneratorProgramViewState, action: SetFormatInputAction)
+    set_format(state: GeneratorProgramViewState, action: SetFormatAction)
+      : GeneratorProgramViewState
+    {
+      return { ...state, format: action.formatInput };
+    },
+    set_add_format_word_dialog(
+      state: GeneratorProgramViewState,
+      action: SetAddFormatWordDialogAction
+    ): GeneratorProgramViewState {
+      return { ...state, addFormatWordDialog: action.dialog };
+    },
+    set_add_format_word_component_dialog(
+      state: GeneratorProgramViewState,
+      action: SetAddFormatWordComponentDialogAction
+    ): GeneratorProgramViewState {
+      return { ...state, addFormatComponentDialog: action.dialog };
+    },
+    set_init_program(state: GeneratorProgramViewState, action: SetInitProgramAction)
+      : GeneratorProgramViewState
+    {
+      return { ...state, initProgram: action.initProgramInput };
+    },
+    set_iterations(state: GeneratorProgramViewState, action: SetIterationsAction)
+      : GeneratorProgramViewState
+    {
+      return { ...state, iterations: action.iterationsInput };
+    },
+    set_pairwise_program(state: GeneratorProgramViewState, action: SetPairwiseProgramAction)
+      : GeneratorProgramViewState
+    {
+      return { ...state, pairwiseProgram: action.pairwiseProgramInput };
+    },
+    set_pairwise_output_registers(state: GeneratorProgramViewState, action: SetPairwiseOutputRegistersAction)
       : GeneratorProgramViewState
     {
       return {
         ...state,
-        formatInput: action.formatInput,
+        pairwiseOutputRegisters: action.pairwiseOutputRegistersInput,
       };
     },
-    set_init_program_input(state: GeneratorProgramViewState, action: SetInitProgramInputAction)
+    set_merge_program(state: GeneratorProgramViewState, action: SetMergeProgramAction)
       : GeneratorProgramViewState
     {
-      return {
-        ...state,
-        initProgramInput: action.initProgramInput,
-      };
+      return { ...state, mergeProgram: action.mergeProgramInput };
     },
-    set_iterations_input(state: GeneratorProgramViewState, action: SetIterationsInputAction)
+    set_final_program(state: GeneratorProgramViewState, action: SetFinalProgramAction)
       : GeneratorProgramViewState
     {
-      return {
-        ...state,
-        iterationsInput: action.iterationsInput,
-      };
-    },
-    set_pairwise_program_input(state: GeneratorProgramViewState, action: SetPairwiseProgramInputAction)
-      : GeneratorProgramViewState
-    {
-      return {
-        ...state,
-        pairwiseProgramInput: action.pairwiseProgramInput,
-      };
-    },
-    set_pairwise_output_registers_input(state: GeneratorProgramViewState, action: SetPairwiseOutputRegistersInputAction)
-      : GeneratorProgramViewState
-    {
-      return {
-        ...state,
-        pairwiseOutputRegistersInput: action.pairwiseOutputRegistersInput,
-      };
-    },
-    set_merge_program_input(state: GeneratorProgramViewState, action: SetMergeProgramInputAction)
-      : GeneratorProgramViewState
-    {
-      return {
-        ...state,
-        mergeProgramInput: action.mergeProgramInput,
-      };
-    },
-    set_final_program_input(state: GeneratorProgramViewState, action: SetFinalProgramInputAction)
-      : GeneratorProgramViewState
-    {
-      return {
-        ...state,
-        finalProgramInput: action.finalProgramInput,
-      };
+      return { ...state, finalProgram: action.finalProgramInput };
     },
   },
 
@@ -174,61 +175,76 @@ const GeneratorProgramViewState = {
   },
 };
 
-type SetFormatInputAction = {
-  type: "set_format_input",
-  formatInput: FormatInput,
+type SetFormatAction = {
+  type: "set_format",
+  formatInput: ruleset.FormatInput,
 };
 
-type SetInitProgramInputAction = {
-  type: "set_init_program_input",
+type SetAddFormatWordDialogAction = {
+  type: "set_add_format_word_dialog",
+  dialog: AddFormatWordDialogState,
+};
+
+type SetAddFormatWordComponentDialogAction = {
+  type: "set_add_format_word_component_dialog",
+  dialog: AddFormatWordComponentDialogState,
+};
+
+type SetInitProgramAction = {
+  type: "set_init_program",
   initProgramInput: string,
 };
 
-type SetIterationsInputAction = {
-  type: "set_iterations_input",
+type SetIterationsAction = {
+  type: "set_iterations",
   iterationsInput: string,
 };
 
-type SetPairwiseProgramInputAction = {
-  type: "set_pairwise_program_input",
+type SetPairwiseProgramAction = {
+  type: "set_pairwise_program",
   pairwiseProgramInput: string,
 };
 
-type SetPairwiseOutputRegistersInputAction = {
-  type: "set_pairwise_output_registers_input",
+type SetPairwiseOutputRegistersAction = {
+  type: "set_pairwise_output_registers",
   pairwiseOutputRegistersInput: string,
 };
 
-type SetMergeProgramInputAction = {
-  type: "set_merge_program_input",
+type SetMergeProgramAction = {
+  type: "set_merge_program",
   mergeProgramInput: string,
 };
 
-type SetFinalProgramInputAction = {
-  type: "set_final_program_input",
+type SetFinalProgramAction = {
+  type: "set_final_program",
   finalProgramInput: string,
 };
 
 
 type GeneratorProgramAction =
-  | SetFormatInputAction
-  | SetInitProgramInputAction
-  | SetIterationsInputAction
-  | SetPairwiseProgramInputAction
-  | SetPairwiseOutputRegistersInputAction
-  | SetMergeProgramInputAction
-  | SetFinalProgramInputAction;
+  | SetFormatAction
+  | SetAddFormatWordDialogAction
+  | SetAddFormatWordComponentDialogAction
+  | SetInitProgramAction
+  | SetIterationsAction
+  | SetPairwiseProgramAction
+  | SetPairwiseOutputRegistersAction
+  | SetMergeProgramAction
+  | SetFinalProgramAction;
 
 export default GeneratorProgramViewState;
 export type {
-  FormatInput,
-  WordFormatInput,
-  SetFormatInputAction,
-  SetInitProgramInputAction,
-  SetIterationsInputAction,
-  SetPairwiseProgramInputAction,
-  SetPairwiseOutputRegistersInputAction,
-  SetMergeProgramInputAction,
-  SetFinalProgramInputAction,
+  AddFormatWordDialogState,
+  AddFormatWordComponentDialogState,
+
+  SetFormatAction,
+  SetAddFormatWordDialogAction,
+  SetAddFormatWordComponentDialogAction,
+  SetInitProgramAction,
+  SetIterationsAction,
+  SetPairwiseProgramAction,
+  SetPairwiseOutputRegistersAction,
+  SetMergeProgramAction,
+  SetFinalProgramAction,
   GeneratorProgramAction,
 };

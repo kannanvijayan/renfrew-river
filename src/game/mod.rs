@@ -18,6 +18,7 @@ pub(crate) use self::{
   extra_flags::ExtraFlags,
 };
 pub use self::protocol_documentation::{
-  ProtocolDocumentation,
+  ProtocolCommandDocumentation,
+  ProtocolCategoryDocumentation,
   get_protocol_docs,
 };

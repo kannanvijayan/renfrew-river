@@ -22,7 +22,10 @@ export default function Splash(props: {
   const connect = async () => {
     const wsUrl = viewState.wsUrlInput;
     try {
+      // Connect to session.
       await Session.connectToServer(wsUrl);
+
+      // Update view.
       dispatch(RootState.action.view(
         ViewState.action.setMode(ViewMode.CONNECTED)
       ));

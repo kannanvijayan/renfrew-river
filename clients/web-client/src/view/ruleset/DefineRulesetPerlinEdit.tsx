@@ -35,7 +35,7 @@ function DefineRulsetPerlinSeedField(props: {
     dispatchDefRules(DefRulesViewState.action.setEntrySelection(SEED));
   };
   const selected = viewState.entrySelection === SEED;
-  const value = viewState.perlinFields.seedInput;
+  const value = viewState.perlinFields.seed;
   return (
     <DefineRulesetInputField label="Seed"
         onChange={onChange} onClick={onClick}
@@ -58,7 +58,7 @@ function DefineRulesetPerlinOctavesField(props: {
     dispatchDefRules(DefRulesViewState.action.setEntrySelection(OCTAVES));
   };
   const selected = viewState.entrySelection === OCTAVES;
-  const value = viewState.perlinFields.octavesInput;
+  const value = viewState.perlinFields.octaves;
   return (
     <DefineRulesetInputField label="Octaves"
         onChange={onChange} onClick={onClick}
@@ -81,7 +81,7 @@ function DefineRulesetPerlinFrequencyField(props: {
     dispatchDefRules(DefRulesViewState.action.setEntrySelection(FREQUENCY));
   };
   const selected = viewState.entrySelection === FREQUENCY;
-  const value = viewState.perlinFields.frequencyInput
+  const value = viewState.perlinFields.frequency
   return (
     <DefineRulesetInputField label="Frequency"
         onChange={onChange} onClick={onClick}
@@ -104,7 +104,7 @@ function DefineRulesetPerlinAmplitudeField(props: {
     dispatchDefRules(DefRulesViewState.action.setEntrySelection(AMPLITUDE));
   };
   const selected = viewState.entrySelection === AMPLITUDE;
-  const value = viewState.perlinFields.amplitudeInput;
+  const value = viewState.perlinFields.amplitude;
   return (
     <DefineRulesetInputField label="Amplitude"
         onChange={onChange} onClick={onClick}
@@ -127,7 +127,7 @@ function DefineRulesetPerlinOutregField(props: {
     dispatchDefRules(DefRulesViewState.action.setEntrySelection(OUTREG));
   };
   const selected = viewState.entrySelection === OUTREG;
-  const value = viewState.perlinFields.outregInput;
+  const value = viewState.perlinFields.register;
   return (
     <DefineRulesetInputField label="Outreg"
         onChange={onChange} onClick={onClick}

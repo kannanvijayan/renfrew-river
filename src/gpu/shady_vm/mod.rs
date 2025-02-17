@@ -17,5 +17,6 @@ pub(crate) use self::{
     ShasmInstrParseResult,
     ShasmParseError,
     ShasmProgram,
+    ShasmProgramValidation,
   },
 };

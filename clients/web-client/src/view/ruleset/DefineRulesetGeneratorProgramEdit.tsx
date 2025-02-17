@@ -302,15 +302,12 @@ function FormatEntry(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
-  const formatInputState = viewState.generatorProgram.formatInput;
+  const dialogState = viewState.generatorProgram.addFormatWordDialog;
   const onAddWordClick = () => {
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setFormatInput({
-        ...formatInputState,
-        addWordDialog: {
-          ...formatInputState.addWordDialog,
-          visible: true,
-        },
+      GeneratorProgramViewState.action.setAddFormatWordDialog({
+        ...dialogState,
+        visible: true,
       })
     );
   };
@@ -327,14 +324,14 @@ function FormatEntry(props: { viewState: DefRulesViewState }) {
       </Button>
       <FormatWordList viewState={viewState} />
       <DefineRulesetAddFormatWordDialog
-          visible={formatInputState.addWordDialog.visible} viewState={viewState} />
+          visible={dialogState.visible} viewState={viewState} />
     </>
   );
 }
 
 function FormatWordList(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
-  const formatInputState = viewState.generatorProgram.formatInput;
+  const formatInputState = viewState.generatorProgram.format;
   return (
     <Box display="flex" flexDirection="column"
       margin="0 auto 0 0" padding="2rem"
@@ -356,18 +353,15 @@ function FormatWordListEntry(props: {
   name: string,
 }) {
   const { viewState, index, name } = props;
-  const formatInput = viewState.generatorProgram.formatInput;
-  const dialogVisible = formatInput.addComponentDialog.visible;
+  const formatInput = viewState.generatorProgram.format;
+  const dialogState = viewState.generatorProgram.addFormatComponentDialog;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
   const onAddComponentClick = () => {
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setFormatInput({
-        ...formatInput,
-        addComponentDialog: {
-          ...formatInput.addComponentDialog,
-          visible: true,
-        },
+      GeneratorProgramViewState.action.setAddFormatComponentDialog({
+        ...dialogState, 
+        visible: true,
       })
     );
   };
@@ -403,12 +397,12 @@ function FormatWordListEntry(props: {
         {
           components.map((component, index) => {
             let startBit: number | undefined = undefined;
-            if (/^\d+$/.test(component.startBit)) {
-              startBit = parseInt(component.startBit);
+            if (/^\d+$/.test(component.offset)) {
+              startBit = parseInt(component.offset);
             }
             let endBit: number | undefined = undefined;
-            if (/^\d+$/.test(component.numBits)) {
-              const numBits = parseInt(component.numBits);
+            if (/^\d+$/.test(component.bits)) {
+              const numBits = parseInt(component.bits);
               endBit = startBit !== undefined ? (startBit + numBits - 1) : undefined;
             }
 
@@ -425,7 +419,7 @@ function FormatWordListEntry(props: {
                   margin="0 0 0 0.5rem" padding="0"
                   fontSize="1.1rem"
                   width="5rem" textAlign={"left"}>
-                  ({component.numBits} bits)
+                  ({component.bits} bits)
                 </Typography>
                 <Typography variant="h5" color={"primary.dark"}
                   margin="0 0.5rem 0 0" padding="0"
@@ -445,20 +439,20 @@ function FormatWordListEntry(props: {
         margin: "1rem 0 0.5rem 0",
       }}/>
       <DefineRulesetAddFormatComponentDialog viewState={viewState}
-          wordIndex={index} visible={dialogVisible} />
+          wordIndex={index} visible={dialogState.visible} />
     </Box>
   );
 }
 
 function InitProgramEntry(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
-  const programText = viewState.generatorProgram.initProgramInput;
+  const programText = viewState.generatorProgram.initProgram;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
   const onChange = (programText: string) => {
     console.log("InitProgramEntry.onChange", programText);
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setInitProgramInput(programText)
+      GeneratorProgramViewState.action.setInitProgram(programText)
     );
   };
   return (
@@ -471,13 +465,13 @@ function InitProgramEntry(props: { viewState: DefRulesViewState }) {
 
 function IterationsEntry(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
-  const iterations = viewState.generatorProgram.iterationsInput;
+  const iterations = viewState.generatorProgram.iterations;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
   const onChange = (iterations: string) => {
     console.log("IterationsEntry.onChange", iterations);
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setIterationsInput(iterations)
+      GeneratorProgramViewState.action.setIterations(iterations)
     );
   };
   return (
@@ -510,13 +504,13 @@ function IterationsEntry(props: { viewState: DefRulesViewState }) {
 
 function PairwiseProgramEntry(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
-  const programText = viewState.generatorProgram.pairwiseProgramInput;
+  const programText = viewState.generatorProgram.pairwiseProgram;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
   const onChange = (programText: string) => {
     console.log("PairwiseProgramEntry.onChange", programText);
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setPairwiseProgramInput(programText)
+      GeneratorProgramViewState.action.setPairwiseProgram(programText)
     );
   };
   return (
@@ -529,13 +523,13 @@ function PairwiseProgramEntry(props: { viewState: DefRulesViewState }) {
 
 function MergeProgramEntry(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
-  const programText = viewState.generatorProgram.mergeProgramInput;
+  const programText = viewState.generatorProgram.mergeProgram;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
   const onChange = (programText: string) => {
     console.log("MergeProgramEntry.onChange", programText);
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setMergeProgramInput(programText)
+      GeneratorProgramViewState.action.setMergeProgram(programText)
     );
   };
   return (
@@ -548,13 +542,13 @@ function MergeProgramEntry(props: { viewState: DefRulesViewState }) {
 
 function FinalProgramEntry(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
-  const programText = viewState.generatorProgram.finalProgramInput;
+  const programText = viewState.generatorProgram.finalProgram;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
   const onChange = (programText: string) => {
     console.log("FinalProgramEntry.onChange", programText);
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setFinalProgramInput(programText)
+      GeneratorProgramViewState.action.setFinalProgram(programText)
     );
   };
   return (

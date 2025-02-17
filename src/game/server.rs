@@ -41,9 +41,15 @@ use crate::{
   persist::GamePersist,
   gpu::shady_vm::ShasmProgram,
 };
-use super::mode::create_world::{
-  command::CreateWorldSubcmdEnvelope,
-  response::CreateWorldSubcmdResponse,
+use super::mode::{
+  create_world::{
+    command::CreateWorldSubcmdEnvelope,
+    response::CreateWorldSubcmdResponse,
+  },
+  define_rules::{
+    command::DefineRulesSubcmdEnvelope,
+    response::DefineRulesSubcmdResponse,
+  },
 };
 
 /**
@@ -192,6 +198,10 @@ impl GameServerInner {
         let envelope = self.handle_create_world_subcmd(*create_world_subcmd);
         return ResponseEnvelope::CreateWorldSubcmd(envelope);
       },
+      CommandEnvelope::DefineRulesSubcmd(define_rules_subcmd) => {
+        let envelope = self.handle_define_rules_subcmd(*define_rules_subcmd);
+        return ResponseEnvelope::DefineRulesSubcmd(envelope);
+      }
     };
   }
 
@@ -523,11 +533,11 @@ impl GameServerInner {
     log::debug!("GameServerInner::handle_define_validate_shasm_command");
 
     // Validate command.
-    match ShasmProgram::validate(&validate_shasm_cmd.program_text) {
-      Ok(_) => ValidateShasmRsp::Valid,
-      Err(errs) => {
-        ValidateShasmRsp::Invalid(InvalidShasmResponse::new(errs))
-      }
+    let validation = ShasmProgram::validate(&validate_shasm_cmd.program_text);
+    if validation.is_valid() {
+      ValidateShasmRsp::Valid
+    } else {
+      ValidateShasmRsp::Invalid(InvalidShasmResponse::new(validation.errors))
     }
   }
 
@@ -570,20 +580,31 @@ impl GameServerInner {
     -> CreateWorldSubcmdResponse
   {
     log::debug!("GameServerInner::handle_create_world_subcommand");
-    match self.mode {
-      GameModeWrap::GameMode(ref mut mode) => {
-        match mode {
-          GameMode::CreateWorld(ref mut create_world_mode) => {
-            create_world_mode.handle_subcommand(subcmd)
-          },
-        }
-      },
-      _ => {
-        log::warn!("GameServerInner::handle_create_world_subcommand: No game mode");
-        CreateWorldSubcmdResponse::Failed(
-          vec!["No game mode to define world".to_string()]
-        )
-      }
+    if let GameModeWrap::GameMode(
+      GameMode::CreateWorld(ref mut create_world_mode)
+    ) = self.mode {
+      create_world_mode.handle_subcommand(subcmd)
+    } else {
+      log::warn!("GameServerInner::handle_create_world_subcommand: Bad game mode");
+      CreateWorldSubcmdResponse::Failed(
+        vec!["No game mode to define world".to_string()]
+      )
+    }
+  } 
+
+  fn handle_define_rules_subcmd(&mut self, subcmd: DefineRulesSubcmdEnvelope)
+    -> DefineRulesSubcmdResponse
+  {
+    log::debug!("GameServerInner::handle_define_rules_subcommand");
+    if let GameModeWrap::GameMode(
+      GameMode::DefineRules(ref mut define_rules_mode)
+    ) = self.mode {
+      define_rules_mode.handle_subcommand(subcmd)
+    } else {
+      log::warn!("GameServerInner::handle_define_rules_subcommand: Bad game mode");
+      DefineRulesSubcmdResponse::Failed(
+        vec!["No game mode to define rules".to_string()]
+      )
     }
   }
 }

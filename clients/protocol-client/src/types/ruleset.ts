@@ -2,8 +2,14 @@
 import GameClient from "../game_client";
 import {
   FormatRules,
-  FormatRulesWord,
-  FormatRulesComponent,
+  FormatInput,
+  FormatValidation,
+  FormatWordRules,
+  FormatWordInput,
+  FormatWordValidation,
+  FormatComponentRules,
+  FormatComponentInput,
+  FormatComponentValidation,
   addFormatRuleComponent,
 } from "./ruleset/format_rules";
 
@@ -13,14 +19,27 @@ import {
   TerrainGenPerlinRules,
   TerrainGenStageRules,
   TerrainGenRules,
+  TerrainGenInput,
+  TerrainGenValidation,
 } from "./ruleset/terrain_gen";
 
-type Ruleset = {
+export type Ruleset = {
   name: string,
   description: string,
   terrainGen: TerrainGenRules,
 };
-function defaultRuleset(): Ruleset {
+export type RulesetInput = {
+  name: string,
+  description: string,
+  terrainGen: TerrainGenInput,
+};
+export type RulesetValidation = {
+  errors: string[],
+  name: string[],
+  description: string[],
+  terrainGen: TerrainGenValidation,
+}
+export function defaultRuleset(): Ruleset {
   return {
     name: "",
     description: "",
@@ -28,7 +47,10 @@ function defaultRuleset(): Ruleset {
   };
 }
 
-async function validateRuleset(ruleset: Ruleset, client: GameClient): Promise<true | string[]> {
+export async function validateRuleset(
+  ruleset: Ruleset,
+  client: GameClient
+): Promise<true | string[]> {
   const errors: string[] = [];
 
   // Ensure nonempty name and description
@@ -68,14 +90,18 @@ async function validateRuleset(ruleset: Ruleset, client: GameClient): Promise<tr
 export default Ruleset;
 export {
   FormatRules,
-  FormatRulesWord,
-  FormatRulesComponent,
+  FormatInput,
+  FormatValidation,
+  FormatWordRules,
+  FormatWordInput,
+  FormatWordValidation,
+  FormatComponentRules,
+  FormatComponentInput,
+  FormatComponentValidation,
 
   TerrainGenRules,
   TerrainGenStageRules,
   TerrainGenPerlinRules,
 
   addFormatRuleComponent,
-  defaultRuleset,
-  validateRuleset,
 };

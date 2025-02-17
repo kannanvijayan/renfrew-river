@@ -1,18 +1,27 @@
 import { Reducer } from "@reduxjs/toolkit";
+import { ruleset } from "renfrew-river-protocol-client";
+
 import {
   DefRulesEntryCategory,
   DefRulesEntrySelection,
 } from "./def_rules/ruleset";
-import PerlinFieldsViewState, { PerlinFieldsAction } from "./def_rules/perlin_fields";
-import GeneratorProgramViewState, { GeneratorProgramAction } from "./def_rules/generator_program";
+
+import PerlinFieldsViewState, {
+  PerlinFieldsAction,
+} from "./def_rules/perlin_fields";
+
+import GeneratorProgramViewState, {
+  GeneratorProgramAction,
+} from "./def_rules/generator_program";
 
 type DefRulesDispatchTargets =
   | "perlin_fields"
   | "generator_program";
 
 type DefRulesAction =
-  | SetDefRulesCategoryAction
-  | SetDefRulesEntrySelectionAction
+  | SetCategoryAction
+  | SetEntrySelectionAction
+  | SetValidationAction
   | PerlinFieldsDispatchAction
   | GeneratorProgramDispatchAction;
 
@@ -21,26 +30,44 @@ type DefRulesViewState = {
   entrySelection: DefRulesEntrySelection | null,
   perlinFields: PerlinFieldsViewState,
   generatorProgram: GeneratorProgramViewState,
+  validation: ruleset.RulesetValidation | null,
 };
 
 const DefRulesViewState = {
+  createRulesetInput(state: DefRulesViewState): ruleset.RulesetInput {
+    return {
+      name: "",
+      description: "",
+      terrainGen: {
+        perlin: state.perlinFields,
+        stage: state.generatorProgram,
+      },
+    };
+  },
+
   initialState: {
     category: null,
     entrySelection: null,
     perlinFields: PerlinFieldsViewState.initialState,
     generatorProgram: GeneratorProgramViewState.initialState,
+    validation: null,
   } as DefRulesViewState,
 
   action: {
     setCategory(category: DefRulesEntryCategory | null)
-      : SetDefRulesCategoryAction
+      : SetCategoryAction
     {
       return { type: "set_category" as const, category };
     },
     setEntrySelection(entrySelection: DefRulesEntrySelection | null)
-      : SetDefRulesEntrySelectionAction
+      : SetEntrySelectionAction
     {
       return { type: "set_entry_selection" as const, entrySelection };
+    },
+    setValidation(validation: ruleset.RulesetValidation | null)
+      : SetValidationAction
+    {
+      return { type: "set_validation" as const, validation };
     },
     perlinFields(action: PerlinFieldsAction): PerlinFieldsDispatchAction {
       return {
@@ -61,16 +88,21 @@ const DefRulesViewState = {
   },
 
   reducers: {
-    set_category(state: DefRulesViewState, action: SetDefRulesCategoryAction)
+    set_category(state: DefRulesViewState, action: SetCategoryAction)
       : DefRulesViewState
     {
       return { ...state, category: action.category };
     },
     set_entry_selection(
       state: DefRulesViewState,
-      action: SetDefRulesEntrySelectionAction
+      action: SetEntrySelectionAction
     ): DefRulesViewState {
       return { ...state, entrySelection: action.entrySelection }
+    },
+    set_validation(state: DefRulesViewState, action: SetValidationAction)
+      : DefRulesViewState
+    {
+      return { ...state, validation: action.validation };
     },
     perlin_fields(
       state: DefRulesViewState,
@@ -114,14 +146,19 @@ const DefRulesViewState = {
   }
 };
 
-type SetDefRulesCategoryAction = {
+type SetCategoryAction = {
   type: "set_category",
   category: DefRulesEntryCategory | null,
 };
 
-type SetDefRulesEntrySelectionAction = {
+type SetEntrySelectionAction = {
   type: "set_entry_selection",
   entrySelection: DefRulesEntrySelection | null,
+};
+
+type SetValidationAction = {
+  type: "set_validation",
+  validation: ruleset.RulesetValidation | null,
 };
 
 type TargetedDefRulesAction<T extends DefRulesDispatchTargets> = {
@@ -142,8 +179,9 @@ type GeneratorProgramDispatchAction =
 export default DefRulesViewState;
 export type {
   DefRulesAction,
-  SetDefRulesCategoryAction,
-  SetDefRulesEntrySelectionAction,
+  SetCategoryAction,
+  SetEntrySelectionAction,
+  SetValidationAction,
   PerlinFieldsDispatchAction,
   GeneratorProgramDispatchAction,
 };

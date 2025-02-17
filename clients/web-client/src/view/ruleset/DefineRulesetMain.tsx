@@ -3,6 +3,7 @@ import DefineRulesetSidebar from "./DefineRulesetSidebar";
 import DefineRulesetPerlinEdit from "./DefineRulesetPerlinEdit";
 import DefineRulesetGeneratorProgramEdit from "./DefineRulesetGeneratorProgramEdit";
 import DefRulesViewState from "../../state/view/def_rules";
+import { useAppListener } from "../../store/hooks";
 
 const DefineRulesetBox = styled(Box)({
   display: "flex",
@@ -20,9 +21,22 @@ export default function DefineRulesetMain(props: {
   viewState: DefRulesViewState | null,
 }) {
   const { viewState } = props;
+
+  useAppListener.view.connected.defRules((newDefRules, oldDefRules) => {
+    if (
+      (newDefRules?.generatorProgram !== oldDefRules?.generatorProgram) ||
+      (newDefRules?.perlinFields !== oldDefRules?.perlinFields)
+    ) {
+      console.log("DefineRulesetMain: new rules");
+      // setViewState(newViewState);
+    }
+  });
+
   if (!viewState) {
+    console.warn("DefineRulesetMain: viewState is null");
     return;
   }
+
   return (
     <DefineRulesetBox sx={{
       backgroundColor: "primary.dark",

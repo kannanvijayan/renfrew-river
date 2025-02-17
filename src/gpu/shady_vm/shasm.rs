@@ -29,14 +29,23 @@ impl ShasmProgram {
     ShasmProgram { program_text }
   }
    
-   pub(crate) fn validate(text: &str)
-    -> Result<(), Vec<ShasmParseError>>
-   {
+   pub(crate) fn validate(text: &str) -> ShasmProgramValidation {
       match shasm_program_parser(text) {
-        Ok(_) => Ok(()),
-        Err(errors) => Err(errors),
+        Ok(_) => ShasmProgramValidation { errors: Vec::new() },
+        Err(errors) => ShasmProgramValidation { errors },
       }
    }
+}
+
+#[derive(Debug, Clone)]
+#[derive(serde::Deserialize, serde::Serialize)]
+pub(crate) struct ShasmProgramValidation {
+  pub(crate) errors: Vec<ShasmParseError>,
+}
+impl ShasmProgramValidation {
+  pub(crate) fn is_valid(&self) -> bool {
+    self.errors.is_empty()
+  }
 }
 
 #[derive(Debug, Clone)]
@@ -44,6 +53,7 @@ impl ShasmProgram {
 pub(crate) struct ShasmParseError {
   #[serde(rename = "lineNo")]
   pub(crate) line_no: usize,
+
   pub(crate) message: String,
 }
 impl ShasmParseError {

@@ -1,20 +1,20 @@
 import { Reducer } from "@reduxjs/toolkit";
 
 type PerlinFieldsViewState = {
-  seedInput: string,
-  octavesInput: string,
-  frequencyInput: string,
-  amplitudeInput: string,
-  outregInput: string,
+  seed: string,
+  octaves: string,
+  frequency: string,
+  amplitude: string,
+  register: string,
 }
 
 const PerlinFieldsViewState = {
   initialState: {
-    seedInput: "",
-    octavesInput: "",
-    frequencyInput: "",
-    amplitudeInput: "",
-    outregInput: "",
+    seed: "",
+    octaves: "",
+    frequency: "",
+    amplitude: "",
+    register: "",
   } as PerlinFieldsViewState,
 
   action: {
@@ -56,7 +56,7 @@ const PerlinFieldsViewState = {
     {
       return {
         ...state,
-        seedInput: action.seedInput,
+        seed: action.seedInput,
       };
     },
     set_octaves_input(state: PerlinFieldsViewState, action: SetOctavesInputAction)
@@ -64,7 +64,7 @@ const PerlinFieldsViewState = {
     {
       return {
         ...state,
-        octavesInput: action.octavesInput,
+        octaves: action.octavesInput,
       };
     },
     set_frequency_input(state: PerlinFieldsViewState, action: SetFrequencyInputAction)
@@ -72,7 +72,7 @@ const PerlinFieldsViewState = {
     {
       return {
         ...state,
-        frequencyInput: action.frequencyInput,
+        frequency: action.frequencyInput,
       };
     },
     set_amplitude_input(state: PerlinFieldsViewState, action: SetAmplitudeInputAction)
@@ -80,7 +80,7 @@ const PerlinFieldsViewState = {
     {
       return {
         ...state,
-        amplitudeInput: action.amplitudeInput,
+        amplitude: action.amplitudeInput,
       };
     },
     set_outreg_input(state: PerlinFieldsViewState, action: SetOutregInputAction)
@@ -88,7 +88,7 @@ const PerlinFieldsViewState = {
     {
       return {
         ...state,
-        outregInput: action.outregInput,
+        register: action.outregInput,
       };
     },
   },

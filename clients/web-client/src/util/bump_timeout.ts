@@ -24,6 +24,10 @@ export class BumpTimeout {
     this.timeout = this.createTimeout();
   }
 
+  public cancel() {
+    this.cancelTimeout();
+  }
+
   private cancelTimeout(): boolean {
     if (this.timeout === undefined) {
       return false;

@@ -93,6 +93,8 @@ pub(crate) use self::{
   envelope::CommandEnvelope,
 };
 
+use super::ProtocolCommandDocumentation;
+
 /** Base trait implemented by all commands. */
 pub(crate) trait Command:
   Sized +
@@ -114,5 +116,25 @@ pub(crate) trait Command:
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>);
   fn protocol_notes() -> Vec<String> {
     Vec::new()
+  }
+}
+
+pub(crate) fn make_command_example<C: Command>()
+  -> ProtocolCommandDocumentation
+{
+  let (commands, responses) = C::protocol_examples();
+  let notes = C::protocol_notes();
+  let command_examples: Vec<String> = commands.into_iter().map(|command| {
+    serde_json::to_string_pretty(&command.to_queue_command()).unwrap()
+  }).collect();
+  let response_examples: Vec<String> = responses.into_iter().map(|response| {
+    serde_json::to_string_pretty(&C::embed_response(response)).unwrap()
+  }).collect();
+  return ProtocolCommandDocumentation {
+    name: C::name().to_string(),
+    description: C::description().to_string(),
+    notes,
+    command_examples,
+    response_examples,
   }
 }

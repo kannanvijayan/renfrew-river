@@ -1,16 +1,42 @@
 
-export type FormatRulesComponent = {
+export type FormatComponentRules = {
   name: string,
   offset: number,
   bits: number,
 };
+export type FormatComponentInput = {
+  name: string,
+  offset: string,
+  bits: string,
+};
+export type FormatComponentValidation = {
+  errors: string[],
+  name: string[],
+  offset: string[],
+  bits: string[],
+};
 
-export type FormatRulesWord = {
-  components: FormatRulesComponent[],
+export type FormatWordRules = {
+  components: FormatComponentRules[],
+};
+export type FormatWordInput = {
+  name: string,
+  components: FormatComponentInput[],
+};
+export type FormatWordValidation = {
+  errors: string[],
+  components: FormatComponentValidation[],
 };
 
 export type FormatRules = {
-  wordFormats: FormatRulesWord[],
+  wordFormats: FormatWordRules[],
+};
+export type FormatInput = {
+  wordFormats: FormatWordInput[],
+};
+export type FormatValidation = {
+  errors: string[],
+  wordFormats: FormatWordValidation[],
 };
 
 export function addFormatRuleComponent(format: FormatRules, name: string, bits: number): FormatRules {
@@ -45,7 +71,7 @@ export function addFormatRuleComponent(format: FormatRules, name: string, bits: 
   };
 }
 
-function wordFormatUsedBits(wordFormat: FormatRulesWord): number {
+function wordFormatUsedBits(wordFormat: FormatWordRules): number {
   let usedBits = 0;
   for (const component of wordFormat.components) {
     usedBits += component.bits;

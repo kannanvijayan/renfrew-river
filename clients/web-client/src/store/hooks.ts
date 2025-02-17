@@ -2,14 +2,15 @@ import { useDispatch, useSelector, useStore } from "react-redux";
 
 import RootState from "../state/root";
 import ViewState, { ViewAction } from "../state/view";
-import { UnconnectedViewAction } from "../state/view/unconnected_view";
+import UnconnectedViewState, { UnconnectedViewAction } from "../state/view/unconnected_view";
 import ConnectedViewState, { ConnectedViewAction } from "../state/view/connected_view";
 import { PerlinFieldsAction } from "../state/view/def_rules/perlin_fields";
 import { GeneratorProgramAction } from "../state/view/def_rules/generator_program";
 
-import type { RootDispatch, RootStore } from "./root";
+import { RootDispatch, RootStore, StateChangeListener, subscribeToChange } from "./root";
 import { functionObject } from "../util/function_object";
 import DefRulesViewState, { DefRulesAction } from "../state/view/def_rules";
+import { useEffect } from "react";
 
 export const useRootDispatch = useDispatch.withTypes<RootDispatch>();
 export const useRootSelector = useSelector.withTypes<RootState>();
@@ -76,5 +77,73 @@ export const useAppDispatch = functionObject(useRootDispatch, {
         generatorProgram: useDefRulesGeneratorProgramDispatch,
       }),
     }),
+  }),
+});
+
+
+function useRootListener(onRootStateChange: StateChangeListener<RootState>) {
+  useEffect(() => {
+    return subscribeToChange({
+      selector: (state) => state,
+      equals: (a, b) => a === b,
+      onChange: onRootStateChange,
+    });
+  });
+}
+
+function useViewListener(onViewStateChange: StateChangeListener<ViewState>) {
+  useRootListener((newValue, oldValue) => {
+    if (newValue.view !== oldValue.view) {
+      return onViewStateChange(newValue.view, oldValue.view);
+    }
+    return () => {};
+  });
+}
+
+function useConnectedViewListener(
+  onConnectedViewStateChange: (
+    newValue: ConnectedViewState,
+    oldValue: ConnectedViewState
+  ) => void
+) {
+  useViewListener((newValue, oldValue) => {
+    if (newValue.connected !== oldValue.connected) {
+      onConnectedViewStateChange(newValue.connected, oldValue.connected);
+    }
+  });
+}
+
+function useUnconnectedViewListener(
+  onUnconnectedViewStateChange: (
+    newValue: UnconnectedViewState,
+    oldValue: UnconnectedViewState
+  ) => void
+) {
+  useViewListener((newValue, oldValue) => {
+    if (newValue.unconnected !== oldValue.unconnected) {
+      onUnconnectedViewStateChange(newValue.unconnected, oldValue.unconnected);
+    }
+  });
+}
+
+function useDefRulesViewListener(
+  onDefRulesViewStateChange: (
+    newValue: DefRulesViewState | null,
+    oldValue: DefRulesViewState | null,
+  ) => void
+) {
+  useConnectedViewListener((newValue, oldValue) => {
+    if (newValue.defRules !== oldValue.defRules) {
+      onDefRulesViewStateChange(newValue.defRules, oldValue.defRules);
+    }
+  });
+}
+
+export const useAppListener = functionObject(useRootListener, {
+  view: functionObject(useViewListener, {
+    connected: functionObject(useConnectedViewListener, {
+      defRules: useDefRulesViewListener,
+    }),
+    unconnected: useUnconnectedViewListener,
   }),
 });

@@ -6,14 +6,14 @@ use crate::{
     TerrainGenStageRules,
     Ruleset,
     FormatRules,
-    FormatRulesWord,
-    FormatRulesComponent,
+    FormatWordRules,
+    FormatComponentRules,
   },
   game::{
     command::{ Command, CommandEnvelope },
     response::{ FailedResponse, ResponseEnvelope }
   },
-  gpu::shady_vm::{ ShadyRegister, ShadyProgram, ShasmProgram },
+  gpu::shady_vm::{ ShadyRegister, ShasmProgram },
 };
 
 #[derive(Debug, Clone)]
@@ -88,14 +88,15 @@ pub(crate) fn define_ruleset_cmd_example() -> DefineRulesetCmd {
         stage: TerrainGenStageRules {
           format: FormatRules  {
             word_formats: vec![
-              FormatRulesWord {
+              FormatWordRules {
+                name: "word0".to_string(),
                 components: vec![
-                  FormatRulesComponent {
+                  FormatComponentRules {
                     name: "word0_field_0".to_string(),
                     offset: 0,
                     bits: 9,
                   },
-                  FormatRulesComponent {
+                  FormatComponentRules {
                     name: "word0_field_1".to_string(),
                     offset: 9,
                     bits: 3,

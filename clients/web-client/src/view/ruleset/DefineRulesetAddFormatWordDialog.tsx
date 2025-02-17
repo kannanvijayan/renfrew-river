@@ -30,39 +30,34 @@ export default function DefineRulesetAddFormatWordDialog(props: {
   const { viewState, visible } = props;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
-  const formatInputState = viewState.generatorProgram.formatInput;
+  const formatState = viewState.generatorProgram.format;
+  const dialogState = viewState.generatorProgram.addFormatWordDialog;
   const onNameChange = (value: string) => {
     console.log("onNameChange", value);
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setFormatInput({
-        ...formatInputState,
-        addWordDialog: {
-          ...formatInputState.addWordDialog,
-          name: value,
-        },
+      GeneratorProgramViewState.action.setAddFormatWordDialog({
+        ...dialogState,
+        name: value,
       })
     );
   };
   const onAddClicked = () => {
     console.log("onAddClicked");
+    dispatchGeneratorProgram(GeneratorProgramViewState.action.setFormat({
+      ...formatState,
+      wordFormats: [
+        ...formatState.wordFormats,
+        { name: dialogState.name, components: [] }
+      ],
+    }));
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setFormatInput({
-        ...formatInputState,
-        wordFormats: [
-          ...formatInputState.wordFormats,
-          {
-            name: formatInputState.addWordDialog.name,
-            components: [],
-          }
-        ],
-        addWordDialog: {
-          name: "",
-          visible: false,
-        },
+      GeneratorProgramViewState.action.setAddFormatWordDialog({
+        visible: false,
+        name: "",
       })
     );
   };
-  const nameInput = formatInputState.addWordDialog.name;
+  const nameInput = dialogState.name;
   return (
     <StyledDialog open={visible}
         slotProps={{
@@ -117,15 +112,12 @@ function AddWordDialogTitle(props: { viewState: DefRulesViewState }) {
   const { viewState } = props;
   const dispatchGeneratorProgram =
     useAppDispatch.view.connected.defRules.generatorProgram();
-  const formatInput = viewState.generatorProgram.formatInput;
+  const dialogState = viewState.generatorProgram.addFormatWordDialog;
   const onCloseClick = () => {
     dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setFormatInput({
-        ...formatInput,
-        addWordDialog: {
-          ...formatInput.addWordDialog,
-          visible: false,
-        },
+      GeneratorProgramViewState.action.setAddFormatWordDialog({
+        ...dialogState,
+        visible: false,
       })
     );
   };
