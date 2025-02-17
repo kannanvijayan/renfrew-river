@@ -1,6 +1,12 @@
 import GameClient from "renfrew-river-protocol-client";
 import WsTransport from "./ws_transport";
 import DefineRulesSender from "./define_rules_sender";
+import { BumpTimeout } from "../util/bump_timeout";
+import DefRulesViewState from "../state/view/def_rules";
+import { store } from "../store/root";
+import RootState from "../state/root";
+import ViewState from "../state/view";
+import ConnectedViewState from "../state/view/connected_view";
 
 /**
  * The behavioural logic for maintaining a client connection (session)
@@ -12,7 +18,9 @@ export default class Session {
 
   public readonly serverAddr: string;
   public readonly client: GameClient;
+
   public readonly send: SessionSender;
+  public readonly defRules: DefRulesModule;
 
   public static async connectToServer(serverAddr: string): Promise<Session> {
     const currentSession = Session.maybeGetInstance();
@@ -74,6 +82,7 @@ export default class Session {
     this.serverAddr = args.serverAddr;
     this.client = args.client;
     this.send = new SessionSender(args.client);
+    this.defRules = new DefRulesModule(this);
   }
 
   private static createInstance(args: {
@@ -98,5 +107,60 @@ export class SessionSender {
 
   constructor(gameClient: GameClient) {
     this.defineRules = new DefineRulesSender(gameClient);
+  }
+}
+
+export class DefRulesModule {
+  public readonly session: Session;
+  public readonly view: DefRulesViewController;
+
+  constructor(session: Session) {
+    this.session = session;
+    this.view = new DefRulesViewController(this);
+  }
+}
+
+export class DefRulesViewController {
+  private readonly module_: DefRulesModule;
+  private validationBumpTimout_: BumpTimeout | null;
+
+  constructor(module: DefRulesModule) {
+    this.module_ = module;
+    this.validationBumpTimout_ = null;
+  }
+
+  public bumpValidationTimeout() {
+    let timeout = this.validationBumpTimout_;
+    if (timeout) {
+      timeout.bump();
+    } else {
+      timeout = new BumpTimeout(500, () => this.validateInput());
+      this.validationBumpTimout_ = timeout;
+    }
+  }
+
+  private get gameClient() {
+    return this.module_.session.client;
+  }
+
+  private async validateInput() {
+    console.log("DefRulesViewController.validateInput");
+    const state = store.getState();
+    const defRulesViewState = state.view.connected.defRules;
+    if (!defRulesViewState) {
+      return;
+    }
+    const input = DefRulesViewState.createRulesetInput(defRulesViewState);
+    const result = await this.gameClient.defineRules.validateRules(input);
+    const validation = result === true ? null : result;
+    console.log("DefRulesViewController.validateInput", validation);
+    store.dispatch(RootState.action.view(
+      ViewState.action.connected(
+        ConnectedViewState.action.defRules(
+          DefRulesViewState.action.setValidation(validation)
+        )
+      )
+    ));
+    this.validationBumpTimout_ = null;
   }
 }

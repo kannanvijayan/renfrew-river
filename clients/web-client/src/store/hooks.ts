@@ -96,45 +96,38 @@ function useViewListener(onViewStateChange: StateChangeListener<ViewState>) {
     if (newValue.view !== oldValue.view) {
       return onViewStateChange(newValue.view, oldValue.view);
     }
-    return () => {};
   });
 }
 
 function useConnectedViewListener(
-  onConnectedViewStateChange: (
-    newValue: ConnectedViewState,
-    oldValue: ConnectedViewState
-  ) => void
+  onConnectedViewStateChange: StateChangeListener<ConnectedViewState>,
 ) {
   useViewListener((newValue, oldValue) => {
     if (newValue.connected !== oldValue.connected) {
-      onConnectedViewStateChange(newValue.connected, oldValue.connected);
+      return onConnectedViewStateChange(newValue.connected, oldValue.connected);
     }
   });
 }
 
 function useUnconnectedViewListener(
-  onUnconnectedViewStateChange: (
-    newValue: UnconnectedViewState,
-    oldValue: UnconnectedViewState
-  ) => void
+  onUnconnectedViewStateChange: StateChangeListener<UnconnectedViewState>,
 ) {
   useViewListener((newValue, oldValue) => {
     if (newValue.unconnected !== oldValue.unconnected) {
-      onUnconnectedViewStateChange(newValue.unconnected, oldValue.unconnected);
+      return onUnconnectedViewStateChange(
+        newValue.unconnected,
+        oldValue.unconnected
+      );
     }
   });
 }
 
 function useDefRulesViewListener(
-  onDefRulesViewStateChange: (
-    newValue: DefRulesViewState | null,
-    oldValue: DefRulesViewState | null,
-  ) => void
+  onDefRulesViewStateChange: StateChangeListener<DefRulesViewState|null>,
 ) {
   useConnectedViewListener((newValue, oldValue) => {
     if (newValue.defRules !== oldValue.defRules) {
-      onDefRulesViewStateChange(newValue.defRules, oldValue.defRules);
+      return onDefRulesViewStateChange(newValue.defRules, oldValue.defRules);
     }
   });
 }

@@ -388,7 +388,7 @@ export class GameClientDefineRules
   extends GameClientSendSubcommand<DefineRulesSubcmd>
 {
   public constructor(sender: SubcmdSender) {
-    super(sender, "DefineRuleset");
+    super(sender, "DefineRulesSubcmd");
   }
 
   public async validateRules(rulesetInput: RulesetInput)

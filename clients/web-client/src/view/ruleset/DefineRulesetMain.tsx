@@ -4,6 +4,7 @@ import DefineRulesetPerlinEdit from "./DefineRulesetPerlinEdit";
 import DefineRulesetGeneratorProgramEdit from "./DefineRulesetGeneratorProgramEdit";
 import DefRulesViewState from "../../state/view/def_rules";
 import { useAppListener } from "../../store/hooks";
+import Session from "../../session/session";
 
 const DefineRulesetBox = styled(Box)({
   display: "flex",
@@ -28,7 +29,8 @@ export default function DefineRulesetMain(props: {
       (newDefRules?.perlinFields !== oldDefRules?.perlinFields)
     ) {
       console.log("DefineRulesetMain: new rules");
-      // setViewState(newViewState);
+      const session = Session.getInstance();
+      session.defRules.view.bumpValidationTimeout();
     }
   });
 

@@ -75,5 +75,8 @@ class ChangeSubscriber<T> implements GenericChangeSubscriber {
 
   public destroy() {
     CHANGE_SUBSCRIBERS.delete(this);
+    if (this.cancelOnChange) {
+      this.cancelOnChange();
+    }
   }
 }
