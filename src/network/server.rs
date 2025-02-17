@@ -12,7 +12,7 @@ use warp::{
 };
 use crate::{
   network::{NetworkServerConfig, ServerState},
-  game::CommandEnvelope,
+  protocol::CommandEnvelope,
 };
 
 /**

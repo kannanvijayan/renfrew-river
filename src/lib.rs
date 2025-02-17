@@ -6,9 +6,10 @@ mod gpu;
 mod cog;
 mod persist;
 mod ruleset;
+mod protocol;
 
 pub use self::{
-  game::{
+  protocol::{
     ProtocolCommandDocumentation,
     ProtocolCategoryDocumentation,
     get_protocol_docs,

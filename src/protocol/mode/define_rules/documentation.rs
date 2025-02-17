@@ -1,8 +1,8 @@
 use crate::{
-  game::command::make_command_example,
+  protocol::command::make_command_example,
   ProtocolCategoryDocumentation,
 };
-use super::command::ValidateRulesCmd;
+use super::validate_rules_cmd::ValidateRulesCmd;
 
 pub fn get_category_docs() -> ProtocolCategoryDocumentation {
   let mut commands = Vec::new();

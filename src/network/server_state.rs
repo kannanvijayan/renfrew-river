@@ -3,10 +3,9 @@ use std::sync::{
   Mutex,
   atomic::{ AtomicBool, Ordering },
 };
-use crate::game::{
-  GameServer,
-  CommandEnvelope,
-  ResponseEnvelope,
+use crate::{
+  game::GameServer,
+  protocol::{ CommandEnvelope, ResponseEnvelope },
 };
 
 struct ServerStateInner {

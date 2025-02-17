@@ -1,4 +1,4 @@
-use super::command::ValidateRulesRsp;
+use super::validate_rules_cmd::ValidateRulesRsp;
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]

@@ -1,6 +1,6 @@
 use serde;
 use crate::{
-  game::{
+  protocol::{
     command::{ Command, CommandEnvelope },
     mode::define_rules::response::DefineRulesSubcmdResponse,
     response::ResponseEnvelope,
@@ -32,7 +32,7 @@ impl Command for ValidateRulesCmd {
     "ValidateRules"
   }
   fn description() -> &'static str {
-    "Start a new game with the given game settings."
+    "Validate the given ruleset."
   }
   fn to_queue_command(&self) -> CommandEnvelope {
     CommandEnvelope::DefineRulesSubcmd(

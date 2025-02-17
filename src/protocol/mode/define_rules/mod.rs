@@ -1,7 +1,7 @@
 pub(crate) mod command;
 pub(crate) mod response;
-pub(crate) mod protocol_documentation;
-
+pub(crate) mod documentation;
+pub(crate) mod validate_rules_cmd;
 
 use self::{
   command::DefineRulesSubcmdEnvelope,
