@@ -9,8 +9,9 @@ import { GeneratorProgramAction } from "../state/view/def_rules/generator_progra
 
 import { RootDispatch, RootStore, StateChangeListener, subscribeToChange } from "./root";
 import { functionObject } from "../util/function_object";
-import DefRulesViewState, { DefRulesAction } from "../state/view/def_rules";
+import DefineRulesViewState, { DefineRulesAction } from "../state/view/def_rules";
 import { useEffect } from "react";
+import TerrainGenerationViewState, { TerrainGenerationAction } from "../state/view/def_rules/terrain_generation";
 
 export const useRootDispatch = useDispatch.withTypes<RootDispatch>();
 export const useRootSelector = useSelector.withTypes<RootState>();
@@ -41,29 +42,38 @@ function useConnectedViewDispatch() {
   }
 }
 
-function useDefRulesViewDispatch() {
+function useDefineRulesViewDispatch() {
   const connectedViewDispatch = useConnectedViewDispatch();
-  return (defRulesAction: DefRulesAction) => {
+  return (defRulesAction: DefineRulesAction) => {
     connectedViewDispatch(
-      ConnectedViewState.action.defRules(defRulesAction)
+      ConnectedViewState.action.defineRules(defRulesAction)
     );
   }
 }
 
-function useDefRulesPerlinFieldsDispatch() {
-  const defRulesViewDispatch = useDefRulesViewDispatch();
+function useDefineRulesTerrainGenerationDispatch() {
+  const defRulesViewDispatch = useDefineRulesViewDispatch();
+  return (terrainGenerationAction: TerrainGenerationAction) => {
+    defRulesViewDispatch(
+      DefineRulesViewState.action.terrainGeneration(terrainGenerationAction)
+    );
+  }
+}
+
+function useDefineRulesPerlinFieldsDispatch() {
+  const defRulesTerrainGenerationDispatch = useDefineRulesTerrainGenerationDispatch();
   return (perlinFieldsAction: PerlinFieldsAction) => {
-    defRulesViewDispatch(
-      DefRulesViewState.action.perlinFields(perlinFieldsAction)
+    defRulesTerrainGenerationDispatch(
+      TerrainGenerationViewState.action.perlinFields(perlinFieldsAction)
     );
   }
 }
 
-function useDefRulesGeneratorProgramDispatch() {
-  const defRulesViewDispatch = useDefRulesViewDispatch();
+function useDefineRulesGeneratorProgramDispatch() {
+  const defRulesTerrainGenerationDispatch = useDefineRulesTerrainGenerationDispatch();
   return (generatorProgramAction: GeneratorProgramAction) => {
-    defRulesViewDispatch(
-      DefRulesViewState.action.generatorProgram(generatorProgramAction)
+    defRulesTerrainGenerationDispatch(
+      TerrainGenerationViewState.action.generatorProgram(generatorProgramAction)
     );
   }
 }
@@ -72,9 +82,11 @@ export const useAppDispatch = functionObject(useRootDispatch, {
   view: functionObject(useViewDispatch, {
     unconnected: useUnconnectedViewDispatch,
     connected: functionObject(useConnectedViewDispatch, {
-      defRules: functionObject(useDefRulesViewDispatch, {
-        perlinFields: useDefRulesPerlinFieldsDispatch,
-        generatorProgram: useDefRulesGeneratorProgramDispatch,
+      defRules: functionObject(useDefineRulesViewDispatch, {
+        terrainGeneration: functionObject(useDefineRulesTerrainGenerationDispatch, {
+          perlinFields: useDefineRulesPerlinFieldsDispatch,
+          generatorProgram: useDefineRulesGeneratorProgramDispatch,
+        }),
       }),
     }),
   }),
@@ -122,12 +134,12 @@ function useUnconnectedViewListener(
   });
 }
 
-function useDefRulesViewListener(
-  onDefRulesViewStateChange: StateChangeListener<DefRulesViewState|null>,
+function useDefineRulesViewListener(
+  onDefineRulesViewStateChange: StateChangeListener<DefineRulesViewState|null>,
 ) {
   useConnectedViewListener((newValue, oldValue) => {
-    if (newValue.defRules !== oldValue.defRules) {
-      return onDefRulesViewStateChange(newValue.defRules, oldValue.defRules);
+    if (newValue.defineRules !== oldValue.defineRules) {
+      return onDefineRulesViewStateChange(newValue.defineRules, oldValue.defineRules);
     }
   });
 }
@@ -135,7 +147,7 @@ function useDefRulesViewListener(
 export const useAppListener = functionObject(useRootListener, {
   view: functionObject(useViewListener, {
     connected: functionObject(useConnectedViewListener, {
-      defRules: useDefRulesViewListener,
+      defineRules: useDefineRulesViewListener,
     }),
     unconnected: useUnconnectedViewListener,
   }),

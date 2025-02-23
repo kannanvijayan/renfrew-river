@@ -23,7 +23,7 @@ pub struct ProtocolCategoryDocumentation {
  */
 pub fn get_protocol_docs() -> Vec<ProtocolCategoryDocumentation> {
   let mut result = Vec::new();
-  result.push(define_rules::documentation::get_category_docs());
+  result.push(define_rules::get_category_docs());
   return result;
 }
 

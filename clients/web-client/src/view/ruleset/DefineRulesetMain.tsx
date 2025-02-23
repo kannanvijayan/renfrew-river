@@ -2,7 +2,7 @@ import { Box, Divider, styled, Typography } from "@mui/material";
 import DefineRulesetSidebar from "./DefineRulesetSidebar";
 import DefineRulesetPerlinEdit from "./DefineRulesetPerlinEdit";
 import DefineRulesetGeneratorProgramEdit from "./DefineRulesetGeneratorProgramEdit";
-import DefRulesViewState from "../../state/view/def_rules";
+import DefineRulesViewState from "../../state/view/def_rules";
 import { useAppListener } from "../../store/hooks";
 import Session from "../../session/session";
 
@@ -19,15 +19,12 @@ const DefineRulesetBox = styled(Box)({
 });
 
 export default function DefineRulesetMain(props: {
-  viewState: DefRulesViewState | null,
+  viewState: DefineRulesViewState | null,
 }) {
   const { viewState } = props;
 
-  useAppListener.view.connected.defRules((newDefRules, oldDefRules) => {
-    if (
-      (newDefRules?.generatorProgram !== oldDefRules?.generatorProgram) ||
-      (newDefRules?.perlinFields !== oldDefRules?.perlinFields)
-    ) {
+  useAppListener.view.connected.defineRules((newDefRules, oldDefRules) => {
+    if (newDefRules?.terrainGeneration !== oldDefRules?.terrainGeneration) {
       console.log("DefineRulesetMain: new rules");
       const session = Session.getInstance();
       session.defRules.view.bumpValidationTimeout();
@@ -50,7 +47,7 @@ export default function DefineRulesetMain(props: {
         width: "100%",
         margin: 0,
       }}/>
-      <DefineRulesetContents viewState={viewState} />
+      <Contents viewState={viewState} />
     </DefineRulesetBox>
   )
 }
@@ -65,7 +62,7 @@ function Title() {
   )
 }
 
-function DefineRulesetContents(props: { viewState: DefRulesViewState }) {
+function Contents(props: { viewState: DefineRulesViewState }) {
   const { viewState } = props;
   return (
     <Box className="DefineRulesetContents" display="flex" flexDirection="row"
@@ -83,12 +80,12 @@ function DefineRulesetContents(props: { viewState: DefRulesViewState }) {
         height: "100%",
         margin: 0,
       }}/>
-      <DefineRulesetEditor viewState={viewState} />
+      <Editor viewState={viewState} />
     </Box>
   )
 }
 
-function DefineRulesetEditor(props: { viewState: DefRulesViewState }) {
+function Editor(props: { viewState: DefineRulesViewState }) {
   const { viewState } = props;
   if (viewState.category === "terrain_gen/perlin_rules") {
     return <DefineRulesetPerlinEdit viewState={viewState} />

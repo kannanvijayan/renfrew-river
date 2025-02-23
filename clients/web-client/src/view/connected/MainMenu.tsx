@@ -3,7 +3,8 @@ import { Button, Container, Divider, styled, Typography } from "@mui/material";
 import "./MainMenu.css";
 import { useAppDispatch } from "../../store/hooks";
 import ConnectedViewState from "../../state/view/connected_view";
-import DefRulesViewState from "../../state/view/def_rules";
+import DefineRulesViewState from "../../state/view/def_rules";
+import Session from "../../session/session";
 
 export default function MainMenu() {
   return (
@@ -50,10 +51,12 @@ function MainMenuTitle() {
 
 function DefineRulesetButton() {
   const dispatchConnected = useAppDispatch.view.connected();
-  const onClick = () => {
-    dispatchConnected(ConnectedViewState.action.setViewMode("define_ruleset"));
-    dispatchConnected(ConnectedViewState.action.setDefRules(
-      DefRulesViewState.initialState
+  const onClick = async () => {
+    const session = Session.getInstance();
+    await session.defRules.enter();
+    dispatchConnected(ConnectedViewState.action.setViewMode("define_rules"));
+    dispatchConnected(ConnectedViewState.action.setDefineRules(
+      DefineRulesViewState.initialState
     ));
   };
 

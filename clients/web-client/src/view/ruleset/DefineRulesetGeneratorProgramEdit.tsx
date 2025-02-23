@@ -1,56 +1,71 @@
 import { Box, Button, Divider, Input, styled, Typography } from "@mui/material";
 import DefineRulesetEditorBox from "./DefineRulesetEditorBox";
 import { useAppDispatch } from "../../store/hooks";
-import DefRulesViewState from "../../state/view/def_rules";
-import { DefRulesEntrySelection, DefRulesGeneratorProgramSection } from "../../state/view/def_rules/ruleset";
+import DefineRulesViewState from "../../state/view/def_rules";
+import { DefineRulesEntrySelection, DefineRulesGeneratorProgramSection } from "../../state/view/def_rules/ruleset";
 import GeneratorProgramViewState from "../../state/view/def_rules/generator_program";
 import DefineRulesetAddFormatWordDialog from "./DefineRulesetAddFormatWordDialog";
 import ShasmProgramInput from "../common/ShasmProgramInput";
 import ShasmProgramErrors from "../common/ShasmProgramErrors";
 import DefineRulesetAddFormatComponentDialog from "./DefineRulesetAddFormatComponentDialog";
+import ValidationErrors from "./ValidationErrors";
+import { ShasmParseError } from "renfrew-river-protocol-client";
+
+const useGeneratorProgramDispatch =
+  useAppDispatch.view.connected.defRules.terrainGeneration.generatorProgram;
 
 export default function DefineRulesetGeneratorProgramEdit(props: {
-  viewState: DefRulesViewState,
+  viewState: DefineRulesViewState,
 }) {
   const { viewState } = props;
+  const terrainGenerationViewState = viewState.terrainGeneration;
+  const generatorProgramViewState = terrainGenerationViewState.generatorProgram;
+  const generatorProgramValidation = viewState.validation?.terrainGen?.stage;
   return (
     <DefineRulesetEditorBox title="Generator Program">
       <Box display="flex" flexDirection="row" margin="1rem 0 0 0" padding="0"
         width="100%">
-        <DefineRulesetGeneratorProgramItemList viewState={viewState}>
-          <FormatItem viewState={viewState} />
-          <InitProgramItem viewState={viewState} />
-          <IterationsItem viewState={viewState} />
-          <PairwiseProgramItem viewState={viewState} />
-          <PairwiseOutRegsItem viewState={viewState} />
-          <MergeProgramItem viewState={viewState} />
-          <FinalProgramItem viewState={viewState} />
-        </DefineRulesetGeneratorProgramItemList>
-        <DefineRulesetGeneratorProgramFieldList
+        <ItemList>
+          <FormatItem viewState={viewState}
+              errors={generatorProgramValidation?.format?.errors} />
+          <InitProgramItem viewState={viewState}
+              errors={generatorProgramValidation?.initProgram?.errors} />
+          <IterationsItem viewState={viewState}
+              errors={generatorProgramValidation?.iterations} />
+          <PairwiseProgramItem viewState={viewState}
+              errors={generatorProgramValidation?.pairwiseProgram?.errors} />
+          <PairwiseOutRegsItem viewState={viewState}
+              errors={generatorProgramValidation?.pairwiseOutputRegisters} />
+          <MergeProgramItem viewState={viewState}
+              errors={generatorProgramValidation?.mergeProgram?.errors} />
+          <FinalProgramItem viewState={viewState}
+              errors={generatorProgramValidation?.finalProgram?.errors} />
+        </ItemList>
+        <FieldList
           viewState={viewState}
           fields={{
             DefineRulesetGeneratorProgramFormat: {
-              selection: DefRulesGeneratorProgramSection.FORMAT,
+              selection: DefineRulesGeneratorProgramSection.FORMAT,
               label: "Format",
-              node: <FormatEntry viewState={viewState} />,
+              node: <FormatEntry viewState={generatorProgramViewState} />,
             },
             DefineRulesetGeneratorProgramInitProgram: {
-              selection: DefRulesGeneratorProgramSection.INIT_PROGRAM,
+              selection: DefineRulesGeneratorProgramSection.INIT_PROGRAM,
               label: "Init Program",
-              node: <InitProgramEntry viewState={viewState} />,
+              node: <InitProgramEntry viewState={generatorProgramViewState} />,
             },
             DefineRulesetGeneratorProgramIterations: {
-              selection: DefRulesGeneratorProgramSection.ITERATIONS,
+              selection: DefineRulesGeneratorProgramSection.ITERATIONS,
               label: "Iterations",
-              node: <IterationsEntry viewState={viewState} />,
+              node: <IterationsEntry viewState={generatorProgramViewState} />,
             },
             DefineRulesetGeneratorProgramPairwiseProgram: {
-              selection: DefRulesGeneratorProgramSection.PAIRWISE_PROGRAM,
+              selection: DefineRulesGeneratorProgramSection.PAIRWISE_PROGRAM,
               label: "Pairwise Program",
-              node: <PairwiseProgramEntry viewState={viewState} />,
+              node: <PairwiseProgramEntry viewState={generatorProgramViewState} />,
             },
             DefineRulesetGeneratorProgramPairwiseOutRegs: {
-              selection: DefRulesGeneratorProgramSection.PAIRWISE_OUTREGS,
+              selection: DefineRulesGeneratorProgramSection.PAIRWISE_OUTREGS,
               label: "Pairwise OutRegs",
               node: (
                 <Typography variant="h5" color={"primary.dark"}
@@ -61,14 +76,14 @@ export default function DefineRulesetGeneratorProgramEdit(props: {
               ),
             },
             DefineRulesetGeneratorProgramMergeProgram: {
-              selection: DefRulesGeneratorProgramSection.MERGE_PROGRAM,
+              selection: DefineRulesGeneratorProgramSection.MERGE_PROGRAM,
               label: "Merge Program",
-              node: <MergeProgramEntry viewState={viewState} />,
+              node: <MergeProgramEntry viewState={generatorProgramViewState} />,
             },
             DefineRulesetGeneratorProgramFinalProgram: {
-              selection: DefRulesGeneratorProgramSection.FINAL_PROGRAM,
+              selection: DefineRulesGeneratorProgramSection.FINAL_PROGRAM,
               label: "Final Program",
-              node: <FinalProgramEntry viewState={viewState} />,
+              node: <FinalProgramEntry viewState={generatorProgramViewState} />,
             },
           }}
         />
@@ -77,136 +92,183 @@ export default function DefineRulesetGeneratorProgramEdit(props: {
   );
 }
 
-function FormatItem(props: { viewState: DefRulesViewState }) {
-  const { viewState } = props;
+function FormatItem(props: {
+  viewState: DefineRulesViewState,
+  errors: string[] | undefined,
+}) {
+  const { viewState, errors } = props;
   const defRulesDispatch = useAppDispatch.view.connected.defRules();
-  const FORMAT = DefRulesGeneratorProgramSection.FORMAT;
+  const FORMAT = DefineRulesGeneratorProgramSection.FORMAT;
   const onClick = () => {
-    defRulesDispatch(DefRulesViewState.action.setEntrySelection(FORMAT));
+    defRulesDispatch(DefineRulesViewState.action.setEntrySelection(FORMAT));
     location.hash = "#DefineRulesetGeneratorProgramFormat";
   };
   const isSelected = viewState.entrySelection === FORMAT;
   return (
-    <DefineRulesetGeneratorProgramItem name="Format" onClick={onClick}
-        isSelected={isSelected}/>
+    <Item name="Format" onClick={onClick}
+        isSelected={isSelected} errors={errors} />
   );
 }
 
-function InitProgramItem(props: { viewState: DefRulesViewState }) {
-  const { viewState } = props;
+function InitProgramItem(props: {
+  viewState: DefineRulesViewState,
+  errors: ShasmParseError[] | undefined,
+}) {
+  const { viewState, errors } = props;
   return (
     <ProgramItem viewState={viewState}
         name="Init Program"
-        entrySelection={DefRulesGeneratorProgramSection.INIT_PROGRAM}
-        elementId={"DefineRulesetGeneratorProgramInitProgram"} />
+        entrySelection={DefineRulesGeneratorProgramSection.INIT_PROGRAM}
+        elementId={"DefineRulesetGeneratorProgramInitProgram"}
+        errors={errors} />
   );
 }
 
-function IterationsItem(props: { viewState: DefRulesViewState }) {
-  const { viewState } = props;
+function IterationsItem(props: {
+  viewState: DefineRulesViewState,
+  errors: string[] | undefined,
+}) {
+  const { viewState, errors } = props;
   const defRulesDispatch = useAppDispatch.view.connected.defRules();
-  const ITERATIONS = DefRulesGeneratorProgramSection.ITERATIONS;
+  const ITERATIONS = DefineRulesGeneratorProgramSection.ITERATIONS;
   const onClick = () => {
-    defRulesDispatch(DefRulesViewState.action.setEntrySelection(ITERATIONS));
+    defRulesDispatch(DefineRulesViewState.action.setEntrySelection(ITERATIONS));
     location.hash = "#DefineRulesetGeneratorProgramIterations";
   };
   const isSelected = viewState.entrySelection === ITERATIONS;
   return (
-    <DefineRulesetGeneratorProgramItem name="Iterations" onClick={onClick}
-        isSelected={isSelected} />
+    <Item name="Iterations" onClick={onClick}
+        isSelected={isSelected} errors={errors} />
   );
 }
 
-function PairwiseProgramItem(props: { viewState: DefRulesViewState }) {
-  const { viewState } = props;
+function PairwiseProgramItem(props: {
+  viewState: DefineRulesViewState,
+  errors: ShasmParseError[] | undefined,
+}) {
+  const { viewState, errors } = props;
   return (
     <ProgramItem viewState={viewState}
         name="Pairwise Program"
-        entrySelection={DefRulesGeneratorProgramSection.PAIRWISE_PROGRAM}
-        elementId={"DefineRulesetGeneratorProgramPairwiseProgram"} />
+        entrySelection={DefineRulesGeneratorProgramSection.PAIRWISE_PROGRAM}
+        elementId={"DefineRulesetGeneratorProgramPairwiseProgram"}
+        errors={errors} />
   );
 }
 
-function PairwiseOutRegsItem(props: { viewState: DefRulesViewState }) {
-  const { viewState } = props;
+function PairwiseOutRegsItem(props: {
+  viewState: DefineRulesViewState,
+  errors: string[] | undefined,
+}) {
+  const { viewState, errors } = props;
   const defRulesDispatch = useAppDispatch.view.connected.defRules();
-  const PAIRWISE_OUTREGS = DefRulesGeneratorProgramSection.PAIRWISE_OUTREGS;
+  const PAIRWISE_OUTREGS = DefineRulesGeneratorProgramSection.PAIRWISE_OUTREGS;
   const onClick = () => {
     defRulesDispatch(
-      DefRulesViewState.action.setEntrySelection(PAIRWISE_OUTREGS)
+      DefineRulesViewState.action.setEntrySelection(PAIRWISE_OUTREGS)
     );
     location.hash = "#DefineRulesetGeneratorProgramPairwiseOutRegs";
   };
   const isSelected = viewState.entrySelection === PAIRWISE_OUTREGS;
   return (
-    <DefineRulesetGeneratorProgramItem name="Pairwise OutRegs" onClick={onClick}
-        isSelected={isSelected} />
+    <Item name="Pairwise OutRegs" onClick={onClick}
+        isSelected={isSelected} errors={errors} />
   );
 }
 
-function MergeProgramItem(props: { viewState: DefRulesViewState }) {
+function MergeProgramItem(props: {
+  viewState: DefineRulesViewState,
+  errors: ShasmParseError[] | undefined,
+}) {
   const { viewState } = props;
   return (
     <ProgramItem viewState={viewState}
         name="Merge Program"
-        entrySelection={DefRulesGeneratorProgramSection.MERGE_PROGRAM}
-        elementId={"DefineRulesetGeneratorProgramMergeProgram"} />
+        entrySelection={DefineRulesGeneratorProgramSection.MERGE_PROGRAM}
+        elementId={"DefineRulesetGeneratorProgramMergeProgram"}
+        errors={props.errors} />
   );
 }
 
-function FinalProgramItem(props: { viewState: DefRulesViewState }) {
-  const { viewState } = props;
+function FinalProgramItem(props: {
+  viewState: DefineRulesViewState,
+  errors: ShasmParseError[] | undefined,
+}) {
+  const { viewState, errors } = props;
   return (
     <ProgramItem viewState={viewState}
         name="Final Program"
-        entrySelection={DefRulesGeneratorProgramSection.FINAL_PROGRAM}
-        elementId={"DefineRulesetGeneratorProgramFinalProgram"} />
+        entrySelection={DefineRulesGeneratorProgramSection.FINAL_PROGRAM}
+        elementId={"DefineRulesetGeneratorProgramFinalProgram"}
+        errors={errors} />
   );
 }
 
 function ProgramItem(props: {
-  viewState: DefRulesViewState,
+  viewState: DefineRulesViewState,
   name: string,
-  entrySelection: DefRulesEntrySelection,
+  entrySelection: DefineRulesEntrySelection,
   elementId: string,
+  errors?: ShasmParseError[] | undefined,
 }) {
   const { viewState, name, entrySelection, elementId } = props;
+  const errors = (props.errors || []).map(e => `line ${e.lineNo + 1}: ${e.message}`);
   const defRulesDispatch = useAppDispatch.view.connected.defRules();
   const onClick = () => {
     defRulesDispatch(
-      DefRulesViewState.action.setEntrySelection(entrySelection)
+      DefineRulesViewState.action.setEntrySelection(entrySelection)
     );
     location.hash = `#${elementId}`;
   };
   const isSelected = viewState.entrySelection === entrySelection;
   return (
-    <DefineRulesetGeneratorProgramItem name={name} onClick={onClick}
-        isSelected={isSelected} />
+    <Item name={name} onClick={onClick} isSelected={isSelected} errors={errors} />
   );
 }
 
 
-function DefineRulesetGeneratorProgramItem(props: {
+function Item(props: {
   name: string,
   onClick: () => void,
   isSelected: boolean,
+  errors?: string[] | undefined,
 }) {
   const { name, onClick } = props;
+  const errors = props.errors || [];
   const UseTypography =
     props.isSelected
       ? SelectedItemTypography
       : ItemTypography;
   return (
-    <UseTypography variant="h5" color={"primary.dark"} onClick={onClick}>
+    <UseTypography variant="h5" color={"primary.dark"} onClick={onClick}
+      position={"relative"}>
       {name}
+      {
+        errors.length > 0 ?
+          (
+            <span
+                style={{
+                    float: "right",
+                    position: "absolute",
+                    right: "0",
+                    top: "-0.5rem"
+                }}
+            >
+              <ValidationErrors errors={errors}
+                  exclaimSx={{
+                    fontSize: "1.1rem",
+                    fontWeight: 700,
+                    filter: "brightness(1.5)",
+                  }}/>
+            </span>
+          )
+          : null
+      }
     </UseTypography>
   );
 }
 
-function DefineRulesetGeneratorProgramItemList(props: {
-  viewState: DefRulesViewState,
-  children: React.ReactNode,
-}) {
+function ItemList(props: { children: React.ReactNode }) {
   const { children } = props;
   return (
     <Box className="DefineRulesetGeneratorProgramItemList"
@@ -242,10 +304,10 @@ const SelectedItemTypography = styled(ItemTypography)({
   borderRadius: "1rem",
 });
 
-function DefineRulesetGeneratorProgramFieldList(props: {
-  viewState: DefRulesViewState,
+function FieldList(props: {
+  viewState: DefineRulesViewState,
   fields: Record<string, {
-    selection: DefRulesEntrySelection,
+    selection: DefineRulesEntrySelection,
     label: string,
     node: React.ReactNode,
   }>,
@@ -262,47 +324,48 @@ function DefineRulesetGeneratorProgramFieldList(props: {
         const curSelection = viewState.entrySelection;
         const selected =
           curSelection
-            ?  DefRulesEntrySelection.mapToId(curSelection) === id
+            ?  DefineRulesEntrySelection.mapToId(curSelection) === id
             : false;
         const headerTextColor = selected ? "#622" : "#caa";
         const headerTextBg = selected ? "#caa" : "#622";
         const border = selected ? "2px solid #caa" : "2px solid #622";
         const onClick = () => {
-          dispatch(DefRulesViewState.action.setEntrySelection(selection));
+          dispatch(DefineRulesViewState.action.setEntrySelection(selection));
         };
         return (
-          <>
-          <Typography variant="h5" color="#622"
-            margin="4rem auto 0 4rem" padding="0.5rem 2rem"
-            borderRadius={"1rem 1rem 0 0"} id={id}
-            onClick={onClick}
-            fontWeight={700} width="auto" sx={{
-              backgroundColor: headerTextBg,
-              color: headerTextColor,
-            }}>
-            {label}
-          </Typography>
-          <Box key={index}
-            display={"flex"} flexDirection={"column"}
-            margin="0 1rem" padding="1rem" width="auto" height="auto"
-            border={border} borderRadius="2rem"
-            fontSize="1.5rem" color="#622"
-            sx={{ textAlign: "left" }}
-            onClick={onClick}>
-            {node}
+          <Box margin="4rem 0 0 0" padding="0" key={index}
+            display="flex" flexDirection="column">
+            <Typography variant="h5" color="#622"
+              margin="0 auto 0 4rem" padding="0.5rem 2rem"
+              borderRadius={"1rem 1rem 0 0"} id={id}
+              onClick={onClick}
+              fontWeight={700}
+              sx={{
+                backgroundColor: headerTextBg,
+                color: headerTextColor,
+              }}>
+              {label}
+            </Typography>
+            <Box key={index}
+              display={"flex"} flexDirection={"column"}
+              margin="0 1rem" padding="1rem" width="auto" height="auto"
+              border={border} borderRadius="2rem"
+              fontSize="1.5rem" color="#622"
+              sx={{ textAlign: "left" }}
+              onClick={onClick}>
+              {node}
+            </Box>
           </Box>
-          </>
         );
       })}
     </Box>
   );
 }
 
-function FormatEntry(props: { viewState: DefRulesViewState }) {
+function FormatEntry(props: { viewState: GeneratorProgramViewState }) {
   const { viewState } = props;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
-  const dialogState = viewState.generatorProgram.addFormatWordDialog;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
+  const dialogState = viewState.addFormatWordDialog;
   const onAddWordClick = () => {
     dispatchGeneratorProgram(
       GeneratorProgramViewState.action.setAddFormatWordDialog({
@@ -329,12 +392,12 @@ function FormatEntry(props: { viewState: DefRulesViewState }) {
   );
 }
 
-function FormatWordList(props: { viewState: DefRulesViewState }) {
+function FormatWordList(props: { viewState: GeneratorProgramViewState }) {
   const { viewState } = props;
-  const formatInputState = viewState.generatorProgram.format;
+  const formatInputState = viewState.format;
   return (
     <Box display="flex" flexDirection="column"
-      margin="0 auto 0 0" padding="2rem"
+      margin="0 auto 0 1rem" padding="2rem"
       borderColor={"#622"} border="1px solid"
       width="auto" borderRadius="1rem">
       {
@@ -348,15 +411,14 @@ function FormatWordList(props: { viewState: DefRulesViewState }) {
 }
 
 function FormatWordListEntry(props: {
-  viewState: DefRulesViewState,
+  viewState: GeneratorProgramViewState,
   index: number,
   name: string,
 }) {
   const { viewState, index, name } = props;
-  const formatInput = viewState.generatorProgram.format;
-  const dialogState = viewState.generatorProgram.addFormatComponentDialog;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
+  const formatInput = viewState.format;
+  const dialogState = viewState.addFormatComponentDialog;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
   const onAddComponentClick = () => {
     dispatchGeneratorProgram(
       GeneratorProgramViewState.action.setAddFormatComponentDialog({
@@ -444,11 +506,10 @@ function FormatWordListEntry(props: {
   );
 }
 
-function InitProgramEntry(props: { viewState: DefRulesViewState }) {
+function InitProgramEntry(props: { viewState: GeneratorProgramViewState }) {
   const { viewState } = props;
-  const programText = viewState.generatorProgram.initProgram;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
+  const programText = viewState.initProgram;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
   const onChange = (programText: string) => {
     console.log("InitProgramEntry.onChange", programText);
     dispatchGeneratorProgram(
@@ -463,11 +524,10 @@ function InitProgramEntry(props: { viewState: DefRulesViewState }) {
   );
 }
 
-function IterationsEntry(props: { viewState: DefRulesViewState }) {
+function IterationsEntry(props: { viewState: GeneratorProgramViewState }) {
   const { viewState } = props;
-  const iterations = viewState.generatorProgram.iterations;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
+  const iterations = viewState.iterations;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
   const onChange = (iterations: string) => {
     console.log("IterationsEntry.onChange", iterations);
     dispatchGeneratorProgram(
@@ -502,11 +562,10 @@ function IterationsEntry(props: { viewState: DefRulesViewState }) {
   );
 }
 
-function PairwiseProgramEntry(props: { viewState: DefRulesViewState }) {
+function PairwiseProgramEntry(props: { viewState: GeneratorProgramViewState }) {
   const { viewState } = props;
-  const programText = viewState.generatorProgram.pairwiseProgram;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
+  const programText = viewState.pairwiseProgram;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
   const onChange = (programText: string) => {
     console.log("PairwiseProgramEntry.onChange", programText);
     dispatchGeneratorProgram(
@@ -521,11 +580,10 @@ function PairwiseProgramEntry(props: { viewState: DefRulesViewState }) {
   );
 }
 
-function MergeProgramEntry(props: { viewState: DefRulesViewState }) {
+function MergeProgramEntry(props: { viewState: GeneratorProgramViewState }) {
   const { viewState } = props;
-  const programText = viewState.generatorProgram.mergeProgram;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
+  const programText = viewState.mergeProgram;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
   const onChange = (programText: string) => {
     console.log("MergeProgramEntry.onChange", programText);
     dispatchGeneratorProgram(
@@ -540,11 +598,10 @@ function MergeProgramEntry(props: { viewState: DefRulesViewState }) {
   );
 }
 
-function FinalProgramEntry(props: { viewState: DefRulesViewState }) {
+function FinalProgramEntry(props: { viewState: GeneratorProgramViewState }) {
   const { viewState } = props;
-  const programText = viewState.generatorProgram.finalProgram;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
+  const programText = viewState.finalProgram;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
   const onChange = (programText: string) => {
     console.log("FinalProgramEntry.onChange", programText);
     dispatchGeneratorProgram(

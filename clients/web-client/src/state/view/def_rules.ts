@@ -2,64 +2,46 @@ import { Reducer } from "@reduxjs/toolkit";
 import { ruleset } from "renfrew-river-protocol-client";
 
 import {
-  DefRulesEntryCategory,
-  DefRulesEntrySelection,
+  DefineRulesEntryCategory,
+  DefineRulesEntrySelection,
 } from "./def_rules/ruleset";
 
-import PerlinFieldsViewState, {
-  PerlinFieldsAction,
-} from "./def_rules/perlin_fields";
+import TerrainGenerationViewState, { TerrainGenerationAction }
+  from "./def_rules/terrain_generation";
 
-import GeneratorProgramViewState, {
-  GeneratorProgramAction,
-} from "./def_rules/generator_program";
-
-type DefRulesDispatchTargets =
-  | "perlin_fields"
-  | "generator_program";
-
-type DefRulesAction =
-  | SetCategoryAction
-  | SetEntrySelectionAction
-  | SetValidationAction
-  | PerlinFieldsDispatchAction
-  | GeneratorProgramDispatchAction;
-
-type DefRulesViewState = {
-  category: DefRulesEntryCategory | null,
-  entrySelection: DefRulesEntrySelection | null,
-  perlinFields: PerlinFieldsViewState,
-  generatorProgram: GeneratorProgramViewState,
+type DefineRulesViewState = {
+  category: DefineRulesEntryCategory | null,
+  entrySelection: DefineRulesEntrySelection | null,
+  terrainGeneration: TerrainGenerationViewState,
   validation: ruleset.RulesetValidation | null,
 };
 
-const DefRulesViewState = {
-  createRulesetInput(state: DefRulesViewState): ruleset.RulesetInput {
+const DefineRulesViewState = {
+  createRulesetInput(state: DefineRulesViewState): ruleset.RulesetInput {
     return {
       name: "",
       description: "",
       terrainGen: {
-        perlin: state.perlinFields,
-        stage: state.generatorProgram,
-      },
+        perlin: state.terrainGeneration.perlinFields,
+        stage: state.terrainGeneration.generatorProgram,
+      }
     };
   },
 
   initialState: {
     category: null,
     entrySelection: null,
-    perlinFields: PerlinFieldsViewState.initialState,
-    generatorProgram: GeneratorProgramViewState.initialState,
+    terrainGeneration: TerrainGenerationViewState.initialState,
     validation: null,
-  } as DefRulesViewState,
+  } as DefineRulesViewState,
 
   action: {
-    setCategory(category: DefRulesEntryCategory | null)
+    setCategory(category: DefineRulesEntryCategory | null)
       : SetCategoryAction
     {
       return { type: "set_category" as const, category };
     },
-    setEntrySelection(entrySelection: DefRulesEntrySelection | null)
+    setEntrySelection(entrySelection: DefineRulesEntrySelection | null)
       : SetEntrySelectionAction
     {
       return { type: "set_entry_selection" as const, entrySelection };
@@ -69,91 +51,69 @@ const DefRulesViewState = {
     {
       return { type: "set_validation" as const, validation };
     },
-    perlinFields(action: PerlinFieldsAction): PerlinFieldsDispatchAction {
-      return {
-        type: "dispatch" as const,
-        target: "perlin_fields",
-        action,
-      };
-    },
-    generatorProgram(action: GeneratorProgramAction)
-      : GeneratorProgramDispatchAction
+    terrainGeneration(action: TerrainGenerationAction)
+      : TerrainGenerationDispatchAction
     {
-      return {
-        type: "dispatch" as const,
-        target: "generator_program",
-        action,
-      };
+      return { type: "dispatch" as const, target: "terrain_generation", action };
     }
   },
 
   reducers: {
-    set_category(state: DefRulesViewState, action: SetCategoryAction)
-      : DefRulesViewState
+    set_category(state: DefineRulesViewState, action: SetCategoryAction)
+      : DefineRulesViewState
     {
       return { ...state, category: action.category };
     },
     set_entry_selection(
-      state: DefRulesViewState,
+      state: DefineRulesViewState,
       action: SetEntrySelectionAction
-    ): DefRulesViewState {
+    ): DefineRulesViewState {
       return { ...state, entrySelection: action.entrySelection }
     },
-    set_validation(state: DefRulesViewState, action: SetValidationAction)
-      : DefRulesViewState
+    set_validation(state: DefineRulesViewState, action: SetValidationAction)
+      : DefineRulesViewState
     {
       return { ...state, validation: action.validation };
     },
-    perlin_fields(
-      state: DefRulesViewState,
-      action: PerlinFieldsDispatchAction,
-    ): DefRulesViewState {
+    terrain_generation(
+      state: DefineRulesViewState,
+      action: TerrainGenerationDispatchAction
+    ): DefineRulesViewState {
       return {
         ...state,
-        perlinFields: PerlinFieldsViewState.reducer(
-          state.perlinFields, action.action
-        ),
-      };
-    },
-    generator_program(
-      state: DefRulesViewState,
-      action: GeneratorProgramDispatchAction,
-    ): DefRulesViewState {
-      return {
-        ...state,
-        generatorProgram: GeneratorProgramViewState.reducer(
-          state.generatorProgram, action.action
+        terrainGeneration: TerrainGenerationViewState.reducer(
+          state.terrainGeneration, action.action
         ),
       };
     },
   },
 
-  reducer(state: DefRulesViewState, action: DefRulesAction): DefRulesViewState {
+  reducer(state: DefineRulesViewState, action: DefineRulesAction): DefineRulesViewState {
     if (action.type === "dispatch") {
       const target = action.target;
-      const reducer = DefRulesViewState.reducers[target];
-      return (reducer as Reducer<DefRulesViewState>)(
+      const reducer = DefineRulesViewState.reducers[target];
+      return (reducer as Reducer<DefineRulesViewState>)(
         state,
-        action as PerlinFieldsDispatchAction
+        action as TerrainGenerationDispatchAction
       );
     }
-    const fn = DefRulesViewState.reducers[action.type];
+    const fn = DefineRulesViewState.reducers[action.type];
     if (!fn) {
-      console.warn("DefRulesViewState.reducer: Unknown action", action);
+      console.warn("DefineRulesViewState.reducer: Unknown action", action);
       return state;
     }
-    return (fn as Reducer<DefRulesViewState>)(state, action);
+    return (fn as Reducer<DefineRulesViewState>)(state, action);
   }
 };
 
 type SetCategoryAction = {
   type: "set_category",
-  category: DefRulesEntryCategory | null,
+  category: DefineRulesEntryCategory | null,
 };
 
 type SetEntrySelectionAction = {
   type: "set_entry_selection",
-  entrySelection: DefRulesEntrySelection | null,
+  entrySelection: DefineRulesEntrySelection | null,
 };
 
 type SetValidationAction = {
@@ -161,27 +121,31 @@ type SetValidationAction = {
   validation: ruleset.RulesetValidation | null,
 };
 
-type TargetedDefRulesAction<T extends DefRulesDispatchTargets> = {
+type TargetedDefineRulesAction<T extends DefineRulesDispatchTargets> = {
   type: "dispatch",
   target: T,
   action: ({
-    "perlin_fields": PerlinFieldsAction,
-    "generator_program": GeneratorProgramAction,
+    "terrain_generation": TerrainGenerationAction,
   })[T],
 }
 
-type PerlinFieldsDispatchAction =
-  TargetedDefRulesAction<"perlin_fields">;
+type TerrainGenerationDispatchAction =
+  TargetedDefineRulesAction<"terrain_generation">;
 
-type GeneratorProgramDispatchAction =
-  TargetedDefRulesAction<"generator_program">;
+type DefineRulesDispatchTargets =
+  | "terrain_generation";
 
-export default DefRulesViewState;
+type DefineRulesAction =
+  | SetCategoryAction
+  | SetEntrySelectionAction
+  | SetValidationAction
+  | TerrainGenerationDispatchAction
+
+export default DefineRulesViewState;
 export type {
-  DefRulesAction,
+  DefineRulesAction,
   SetCategoryAction,
   SetEntrySelectionAction,
   SetValidationAction,
-  PerlinFieldsDispatchAction,
-  GeneratorProgramDispatchAction,
+  TerrainGenerationDispatchAction,
 };

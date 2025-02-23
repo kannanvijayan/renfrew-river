@@ -1,10 +1,12 @@
 use serde;
 
-use super::mode::define_rules::response::DefineRulesSubcmdResponse;
+use super::mode::define_rules::DefineRulesSubcmdResponse;
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) enum ResponseEnvelope {
+  Ok {},
+  Failed(FailedResponse),
   DefineRulesSubcmd(DefineRulesSubcmdResponse),
 }
 
@@ -20,5 +22,9 @@ impl FailedResponse {
 
   pub(crate) fn new_vec(messages: Vec<String>) -> FailedResponse {
     FailedResponse { messages }
+  }
+
+  pub(crate) fn messages(&self) -> &[String] {
+    &self.messages
   }
 }

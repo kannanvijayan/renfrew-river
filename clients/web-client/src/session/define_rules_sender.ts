@@ -7,6 +7,10 @@ export default class DefineRulesSender {
     this.gameClient_ = gameClient;
   }
 
+  public async enter(): Promise<true> {
+    return this.gameClient_.defineRules.enter();
+  }
+
   public async validateRules(rulesetInput: ruleset.RulesetInput)
     : Promise<true|ruleset.RulesetValidation>
   {

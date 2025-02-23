@@ -2,7 +2,7 @@ import GameClient from "renfrew-river-protocol-client";
 import WsTransport from "./ws_transport";
 import DefineRulesSender from "./define_rules_sender";
 import { BumpTimeout } from "../util/bump_timeout";
-import DefRulesViewState from "../state/view/def_rules";
+import DefineRulesViewState from "../state/view/def_rules";
 import { store } from "../store/root";
 import RootState from "../state/root";
 import ViewState from "../state/view";
@@ -20,7 +20,7 @@ export default class Session {
   public readonly client: GameClient;
 
   public readonly send: SessionSender;
-  public readonly defRules: DefRulesModule;
+  public readonly defRules: DefineRulesModule;
 
   public static async connectToServer(serverAddr: string): Promise<Session> {
     const currentSession = Session.maybeGetInstance();
@@ -82,7 +82,7 @@ export default class Session {
     this.serverAddr = args.serverAddr;
     this.client = args.client;
     this.send = new SessionSender(args.client);
-    this.defRules = new DefRulesModule(this);
+    this.defRules = new DefineRulesModule(this);
   }
 
   private static createInstance(args: {
@@ -110,24 +110,29 @@ export class SessionSender {
   }
 }
 
-export class DefRulesModule {
+export class DefineRulesModule {
   public readonly session: Session;
-  public readonly view: DefRulesViewController;
+  public readonly view: DefineRulesViewController;
 
   constructor(session: Session) {
     this.session = session;
-    this.view = new DefRulesViewController(this);
+    this.view = new DefineRulesViewController(this);
+  }
+
+  public async enter(): Promise<true> {
+    return this.session.client.defineRules.enter();
   }
 }
 
-export class DefRulesViewController {
-  private readonly module_: DefRulesModule;
+export class DefineRulesViewController {
+  private readonly module_: DefineRulesModule;
   private validationBumpTimout_: BumpTimeout | null;
 
-  constructor(module: DefRulesModule) {
+  constructor(module: DefineRulesModule) {
     this.module_ = module;
     this.validationBumpTimout_ = null;
   }
+
 
   public bumpValidationTimeout() {
     let timeout = this.validationBumpTimout_;
@@ -144,20 +149,20 @@ export class DefRulesViewController {
   }
 
   private async validateInput() {
-    console.log("DefRulesViewController.validateInput");
+    console.log("DefineRulesViewController.validateInput");
     const state = store.getState();
-    const defRulesViewState = state.view.connected.defRules;
+    const defRulesViewState = state.view.connected.defineRules;
     if (!defRulesViewState) {
       return;
     }
-    const input = DefRulesViewState.createRulesetInput(defRulesViewState);
+    const input = DefineRulesViewState.createRulesetInput(defRulesViewState);
     const result = await this.gameClient.defineRules.validateRules(input);
     const validation = result === true ? null : result;
-    console.log("DefRulesViewController.validateInput", validation);
+    console.log("DefineRulesViewController.validateInput", validation);
     store.dispatch(RootState.action.view(
       ViewState.action.connected(
-        ConnectedViewState.action.defRules(
-          DefRulesViewState.action.setValidation(validation)
+        ConnectedViewState.action.defineRules(
+          DefineRulesViewState.action.setValidation(validation)
         )
       )
     ));

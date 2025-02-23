@@ -1,30 +1,30 @@
 import { Reducer } from "@reduxjs/toolkit";
-import DefRulesViewState, { DefRulesAction } from "./def_rules";
+import DefineRulesViewState, { DefineRulesAction } from "./def_rules";
 
 type ConnectedViewMode =
   | "main_menu"
-  | "define_ruleset";
+  | "define_rules";
 
 type ConnectedViewDispatchTargets =
-  | "def_rules";
+  | "define_rules";
 
 type ConnectedViewAction =
   | SetWsUrlAction
   | SetViewModeAction
-  | SetDefRulesAction
-  | DefRulesDispatchAction
+  | SetDefineRulesAction
+  | DefineRulesDispatchAction
 
 type ConnectedViewState = {
   wsUrl: string,
   viewMode: ConnectedViewMode,
-  defRules: DefRulesViewState | null,
+  defineRules: DefineRulesViewState | null,
 };
 
 const ConnectedViewState = {
   initialState: {
     wsUrl: "",
     viewMode: "main_menu",
-    defRules: null,
+    defineRules: null,
   } as ConnectedViewState,
 
   action: {
@@ -37,11 +37,11 @@ const ConnectedViewState = {
     setViewMode(viewMode: ConnectedViewMode): SetViewModeAction {
       return { type: "set_view_mode" as const, viewMode };
     },
-    setDefRules(defRules: DefRulesViewState): SetDefRulesAction {
-      return { type: "set_def_rules" as const, defRules };
+    setDefineRules(defRules: DefineRulesViewState): SetDefineRulesAction {
+      return { type: "set_define_rules" as const, defRules };
     },
-    defRules(action: DefRulesAction): DefRulesDispatchAction {
-      return { type: "dispatch" as const, target: "def_rules", action };
+    defineRules(action: DefineRulesAction): DefineRulesDispatchAction {
+      return { type: "dispatch" as const, target: "define_rules", action };
     },
   },
 
@@ -56,23 +56,23 @@ const ConnectedViewState = {
     {
       return { ...state, viewMode: action.viewMode };
     },
-    set_def_rules(state: ConnectedViewState, action: SetDefRulesAction)
+    set_define_rules(state: ConnectedViewState, action: SetDefineRulesAction)
       : ConnectedViewState
     {
-      return { ...state, defRules: action.defRules };
+      return { ...state, defineRules: action.defRules };
     },
-    def_rules(
+    define_rules(
       state: ConnectedViewState,
-      action: DefRulesDispatchAction,
+      action: DefineRulesDispatchAction,
     ): ConnectedViewState {
-      const defRules = state.defRules;
+      const defRules = state.defineRules;
       if (!defRules) {
         console.warn("ConnectedViewState.reducer: defRules is null");
         return state;
       }
       return {
         ...state,
-        defRules: DefRulesViewState.reducer(defRules, action.action),
+        defineRules: DefineRulesViewState.reducer(defRules, action.action),
       };
     },
   },
@@ -85,7 +85,7 @@ const ConnectedViewState = {
       const reducer = ConnectedViewState.reducers[target];
       return (reducer as Reducer<ConnectedViewState>)(
         state,
-        action as DefRulesDispatchAction
+        action as DefineRulesDispatchAction
       );
     }
     const fn = ConnectedViewState.reducers[action.type];
@@ -107,27 +107,27 @@ type SetViewModeAction = {
   viewMode: ConnectedViewMode,
 };
 
-type SetDefRulesAction = {
-  type: "set_def_rules",
-  defRules: DefRulesViewState,
+type SetDefineRulesAction = {
+  type: "set_define_rules",
+  defRules: DefineRulesViewState,
 };
 
 type TargetedConnectedViewAction<T extends ConnectedViewDispatchTargets> = {
   type: "dispatch",
   target: T,
-  action: ({
-    "def_rules": DefRulesAction,
-  })[T],
+  action: ({ "define_rules": DefineRulesAction })[T],
 }
 
-type DefRulesDispatchAction =
-  TargetedConnectedViewAction<"def_rules">;
+type DefineRulesDispatchAction =
+  TargetedConnectedViewAction<"define_rules">;
 
 export default ConnectedViewState;
 export type {
+  ConnectedViewMode,
+
   ConnectedViewAction,
   SetWsUrlAction,
   SetViewModeAction,
-  DefRulesDispatchAction,
-  ConnectedViewMode,
+  SetDefineRulesAction,
+  DefineRulesDispatchAction,
 };

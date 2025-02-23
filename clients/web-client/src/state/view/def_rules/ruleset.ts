@@ -1,21 +1,21 @@
 
-export type DefRulesEntryCategory =
+export type DefineRulesEntryCategory =
   | "terrain_gen/perlin_rules"
   | "terrain_gen/generator_program";
 
-export type DefRulesEntrySelection =
-  | DefRulesPerlinField
-  | DefRulesGeneratorProgramSection;
+export type DefineRulesEntrySelection =
+  | DefineRulesPerlinField
+  | DefineRulesGeneratorProgramSection;
 
-export const DefRulesEntrySelection = {
-  mapToId(entry: DefRulesEntrySelection): string {
+export const DefineRulesEntrySelection = {
+  mapToId(entry: DefineRulesEntrySelection): string {
     if (entry.startsWith("terrain_gen/perlin_rules")) {
-      return DefRulesPerlinField.mapToId(
-        entry as DefRulesPerlinField
+      return DefineRulesPerlinField.mapToId(
+        entry as DefineRulesPerlinField
       );
     } else if (entry.startsWith("terrain_gen/generator_program")) {
-      return DefRulesGeneratorProgramSection.mapToId(
-        entry as DefRulesGeneratorProgramSection
+      return DefineRulesGeneratorProgramSection.mapToId(
+        entry as DefineRulesGeneratorProgramSection
       );
     } else {
       throw new Error(`Invalid DefRulesEntrySelection: ${entry}`);
@@ -23,14 +23,14 @@ export const DefRulesEntrySelection = {
   }
 }
 
-export type DefRulesPerlinField =
+export type DefineRulesPerlinField =
   | "terrain_gen/perlin_rules/seed"
   | "terrain_gen/perlin_rules/octaves"
   | "terrain_gen/perlin_rules/frequency"
   | "terrain_gen/perlin_rules/amplitude"
   | "terrain_gen/perlin_rules/outreg";
 
-export const DefRulesPerlinField = {
+export const DefineRulesPerlinField = {
   elementId: {
     seed: "DefineRulesetPerlinSeed",
     octaves: "DefineRulesetPerlinOctaves",
@@ -45,13 +45,13 @@ export const DefRulesPerlinField = {
   AMPLITUDE: "terrain_gen/perlin_rules/amplitude" as const,
   OUTREG: "terrain_gen/perlin_rules/outreg" as const,
 
-  mapToId(entry: DefRulesPerlinField): string {
+  mapToId(entry: DefineRulesPerlinField): string {
     const piece = entry.split("/").pop()!;
-    return DefRulesPerlinField.elementId[piece];
+    return DefineRulesPerlinField.elementId[piece];
   }
 } as const;
 
-export type DefRulesGeneratorProgramSection =
+export type DefineRulesGeneratorProgramSection =
   | "terrain_gen/generator_program/format"
   | "terrain_gen/generator_program/init_program"
   | "terrain_gen/generator_program/iterations"
@@ -60,7 +60,7 @@ export type DefRulesGeneratorProgramSection =
   | "terrain_gen/generator_program/merge_program"
   | "terrain_gen/generator_program/final_program";
 
-export const DefRulesGeneratorProgramSection = {
+export const DefineRulesGeneratorProgramSection = {
   elementId: {
     format: "DefineRulesetGeneratorProgramFormat",
     init_program: "DefineRulesetGeneratorProgramInitProgram",
@@ -79,8 +79,8 @@ export const DefRulesGeneratorProgramSection = {
   MERGE_PROGRAM: "terrain_gen/generator_program/merge_program" as const,
   FINAL_PROGRAM: "terrain_gen/generator_program/final_program" as const,
 
-  mapToId(section: DefRulesGeneratorProgramSection): string {
+  mapToId(section: DefineRulesGeneratorProgramSection): string {
     const piece = section.split("/").pop()!;
-    return DefRulesGeneratorProgramSection.elementId[piece];
+    return DefineRulesGeneratorProgramSection.elementId[piece];
   }
 } as const;

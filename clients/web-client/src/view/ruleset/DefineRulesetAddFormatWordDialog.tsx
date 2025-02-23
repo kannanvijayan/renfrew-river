@@ -2,7 +2,6 @@ import { Box, Button, Dialog, Input, styled, Typography }
   from "@mui/material";
 import { useAppDispatch } from "../../store/hooks";
 import GeneratorProgramViewState from "../../state/view/def_rules/generator_program";
-import DefRulesViewState from "../../state/view/def_rules";
 
 const StyledDialog = styled(Dialog)({
   margin: 0,
@@ -24,14 +23,14 @@ const AddWordDialogBox = styled(Box)({
 });
 
 export default function DefineRulesetAddFormatWordDialog(props: {
-  viewState: DefRulesViewState,
+  viewState: GeneratorProgramViewState,
   visible: boolean,
 }) {
   const { viewState, visible } = props;
   const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
-  const formatState = viewState.generatorProgram.format;
-  const dialogState = viewState.generatorProgram.addFormatWordDialog;
+    useAppDispatch.view.connected.defRules.terrainGeneration.generatorProgram();
+  const formatState = viewState.format;
+  const dialogState = viewState.addFormatWordDialog;
   const onNameChange = (value: string) => {
     console.log("onNameChange", value);
     dispatchGeneratorProgram(
@@ -108,11 +107,11 @@ const CloseButton = styled(Button)({
   },
 });
 
-function AddWordDialogTitle(props: { viewState: DefRulesViewState }) {
+function AddWordDialogTitle(props: { viewState: GeneratorProgramViewState }) {
   const { viewState } = props;
   const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
-  const dialogState = viewState.generatorProgram.addFormatWordDialog;
+    useAppDispatch.view.connected.defRules.terrainGeneration.generatorProgram();
+  const dialogState = viewState.addFormatWordDialog;
   const onCloseClick = () => {
     dispatchGeneratorProgram(
       GeneratorProgramViewState.action.setAddFormatWordDialog({

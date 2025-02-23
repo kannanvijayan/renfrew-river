@@ -4,7 +4,24 @@ use crate::{
     command::{ Command, CommandEnvelope },
     mode::define_rules::response::DefineRulesSubcmdResponse,
     response::ResponseEnvelope,
-  }, gpu::shady_vm::{ShasmParseError, ShasmProgramValidation}, ruleset::{ FormatComponentInput, FormatComponentValidation, FormatInput, FormatValidation, FormatWordInput, FormatWordValidation, RulesetInput, RulesetValidation, TerrainGenInput, TerrainGenPerlinInput, TerrainGenPerlinValidation, TerrainGenStageInput, TerrainGenStageValidation, TerrainGenValidation }
+  },
+  gpu::shady_vm::{ShasmParseError, ShasmProgramValidation},
+  ruleset::{
+    FormatComponentInput,
+    FormatComponentValidation,
+    FormatInput,
+    FormatValidation,
+    FormatWordInput,
+    FormatWordValidation,
+    RulesetInput,
+    RulesetValidation,
+    TerrainGenInput,
+    TerrainGenPerlinInput,
+    TerrainGenPerlinValidation,
+    TerrainGenStageInput,
+    TerrainGenStageValidation,
+    TerrainGenValidation,
+  },
 };
 use super::DefineRulesSubcmdEnvelope;
 
@@ -36,7 +53,7 @@ impl Command for ValidateRulesCmd {
   }
   fn to_queue_command(&self) -> CommandEnvelope {
     CommandEnvelope::DefineRulesSubcmd(
-      Box::new(DefineRulesSubcmdEnvelope::ValidateRules(self.clone()))
+      DefineRulesSubcmdEnvelope::ValidateRules(self.clone())
     )
   }
   fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response> {

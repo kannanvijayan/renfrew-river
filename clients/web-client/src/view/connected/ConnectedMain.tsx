@@ -23,9 +23,9 @@ function MainContent(props: {
       return (
         <MainMenu />
       );
-    case "define_ruleset":
+    case "define_rules":
       return (
-        <DefineRulesetMain viewState={props.viewState.defRules} />
+        <DefineRulesetMain viewState={props.viewState.defineRules} />
       );
     default:
       console.error("Unknown view mode: " + props.viewState.viewMode);

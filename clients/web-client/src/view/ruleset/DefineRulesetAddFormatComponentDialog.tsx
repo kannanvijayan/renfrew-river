@@ -2,7 +2,9 @@ import { Box, Button, Dialog, Input, styled, Typography }
   from "@mui/material";
 import { useAppDispatch } from "../../store/hooks";
 import GeneratorProgramViewState, { AddFormatWordComponentDialogState } from "../../state/view/def_rules/generator_program";
-import DefRulesViewState from "../../state/view/def_rules";
+
+const useGeneratorProgramDispatch =
+  useAppDispatch.view.connected.defRules.terrainGeneration.generatorProgram;
 
 const StyledDialog = styled(Dialog)({
   margin: 0,
@@ -24,15 +26,14 @@ const AddComponentDialogBox = styled(Box)({
 });
 
 export default function DefineRulesetAddFormatComponentDialog(props: {
-  viewState: DefRulesViewState,
+  viewState: GeneratorProgramViewState,
   wordIndex: number,
   visible: boolean,
 }) {
   const { viewState, wordIndex, visible } = props;
-  const formatState = viewState.generatorProgram.format;
-  const dialogState = viewState.generatorProgram.addFormatComponentDialog;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
+  const formatState = viewState.format;
+  const dialogState = viewState.addFormatComponentDialog;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
   const dispatchDialogUpdate =
     (dialogUpdate: Partial<AddFormatWordComponentDialogState>) => {
       dispatchGeneratorProgram(
@@ -156,14 +157,13 @@ const WordNumLabel = styled(Typography)({
 });
 
 function AddComponentDialogTitle(props: {
-  viewState: DefRulesViewState,
+  viewState: GeneratorProgramViewState,
   wordIndex: number,
 }) {
   const { viewState, wordIndex } = props;
-  const dispatchGeneratorProgram =
-    useAppDispatch.view.connected.defRules.generatorProgram();
-  const formatState = viewState.generatorProgram.format;
-  const dialogState = viewState.generatorProgram.addFormatComponentDialog;
+  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
+  const formatState = viewState.format;
+  const dialogState = viewState.addFormatComponentDialog;
   const wordInfo = formatState.wordFormats[wordIndex];
 
   const onCloseClick = () => {

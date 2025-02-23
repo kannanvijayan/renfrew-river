@@ -3,17 +3,14 @@ use std::{
   sync::mpsc,
 };
 use log;
-use crate::game::Game;
 use crate::protocol::{
-  CommandEnvelope,
-  ResponseEnvelope,
   mode::{
-    GameMode,
     define_rules::{
-      command::DefineRulesSubcmdEnvelope,
-      response::DefineRulesSubcmdResponse,
-    },
-  },
+      DefineRulesMode,
+      DefineRulesSubcmdEnvelope,
+      DefineRulesSubcmdResponse,
+    }, GameMode, GameModeInfo
+  }, CommandEnvelope, EnterModeCmd, FailedResponse, ResponseEnvelope
 };
 
 /**
@@ -52,7 +49,7 @@ impl GameServer {
 pub(crate) struct GameServerInner {
   command_rx: mpsc::Receiver<CommandEnvelope>,
   response_tx: mpsc::Sender<ResponseEnvelope>,
-  mode: GameModeWrap,
+  mode: Option<GameMode>,
   stop: bool,
 }
 impl GameServerInner {
@@ -63,7 +60,7 @@ impl GameServerInner {
       let mut inner = GameServerInner {
         command_rx,
         response_tx,
-        mode: GameModeWrap::Empty,
+        mode: None,
         stop: false,
       };
       inner.run();
@@ -98,54 +95,50 @@ impl GameServerInner {
 
   fn handle_command(&mut self, command: CommandEnvelope) -> ResponseEnvelope {
     match command {
+      CommandEnvelope::EnterMode(enter_mode_cmd) => {
+        let response = self.handle_enter_mode_cmd(enter_mode_cmd);
+        return response;
+      },
       CommandEnvelope::DefineRulesSubcmd(define_rules_subcmd) => {
-        let envelope = self.handle_define_rules_subcmd(*define_rules_subcmd);
+        let envelope = self.handle_define_rules_subcmd(define_rules_subcmd);
         return ResponseEnvelope::DefineRulesSubcmd(envelope);
-      }
+      },
     };
+  }
+
+  fn handle_enter_mode_cmd(&mut self, enter_mode_cmd: EnterModeCmd)
+    -> ResponseEnvelope
+  {
+    log::debug!("GameServerInner::handle_enter_mode_cmd");
+
+    let mode = enter_mode_cmd.mode;
+    match mode {
+      GameModeInfo::DefineRules(_) => {
+        if ! self.mode.is_none() {
+          log::warn!(
+            "GameServerInner::handle_enter_mode_cmd: Already in a mode"
+          );
+          return ResponseEnvelope::Failed(FailedResponse::new(
+            "Cannot enter mode: already in a mode".to_string()
+          ));
+        }
+        self.mode = Some(GameMode::DefineRules(DefineRulesMode::new()));
+        ResponseEnvelope::Ok {}
+      },
+    }
   }
 
   fn handle_define_rules_subcmd(&mut self, subcmd: DefineRulesSubcmdEnvelope)
     -> DefineRulesSubcmdResponse
   {
     log::debug!("GameServerInner::handle_define_rules_subcommand");
-    if let GameModeWrap::GameMode(
-      GameMode::DefineRules(ref mut define_rules_mode)
-    ) = self.mode {
+    if let Some(GameMode::DefineRules(ref mut define_rules_mode)) = self.mode {
       define_rules_mode.handle_subcommand(subcmd)
     } else {
       log::warn!("GameServerInner::handle_define_rules_subcommand: Bad game mode");
       DefineRulesSubcmdResponse::Failed(
         vec!["No game mode to define rules".to_string()]
       )
-    }
-  }
-}
-
-
-// This is a temporary wrapper around `GameMode`.
-// Should be removed after the `Game` struct functionality is moved to
-// the `PlayGameMode` struct within `crate::game::mode`.
-pub(crate) enum GameModeWrap {
-  Empty,
-  Game(Game),
-  GameMode(GameMode),
-}
-impl GameModeWrap {
-  fn is_game(&self) -> bool {
-    match self {
-      GameModeWrap::Game(_) => true,
-      _ => false,
-    }
-  }
-
-  fn take_game(&mut self) -> Option<Game> {
-    match std::mem::replace(self, GameModeWrap::Empty) {
-      GameModeWrap::Game(game) => Some(game),
-      m@_ => {
-        *self = m;
-        None
-      }
     }
   }
 }

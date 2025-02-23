@@ -16,6 +16,10 @@ const DefaultTheme = createTheme({
       // contrastText: "#ffddaa",
       contrastText: "#773326",
     },
+    success: {
+      main: "#669922",
+      contrastText: "#ddffbb",
+    }
   },
   components: {
     MuiContainer: {
@@ -34,6 +38,17 @@ const DefaultTheme = createTheme({
         },
         maxWidthXs: {
           maxWidth: "10000px",
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: "none",
+          "&.Mui-disabled": {
+            color: "#c84",
+            backgroundColor: "#864",
+          }
         },
       },
     }

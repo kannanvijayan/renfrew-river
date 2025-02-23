@@ -3,7 +3,8 @@ use serde_json;
 use super::{
   response::ResponseEnvelope,
   documentation::ProtocolCommandDocumentation,
-  mode::define_rules::command::DefineRulesSubcmdEnvelope,
+  mode::define_rules::DefineRulesSubcmdEnvelope,
+  enter_mode_cmd::EnterModeCmd,
 };
 
 /** Base trait implemented by all commands. */
@@ -54,5 +55,6 @@ pub(crate) fn make_command_example<C: Command>()
 #[derive(Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) enum CommandEnvelope {
-  DefineRulesSubcmd(Box<DefineRulesSubcmdEnvelope>),
+  EnterMode(EnterModeCmd),
+  DefineRulesSubcmd(DefineRulesSubcmdEnvelope),
 }
