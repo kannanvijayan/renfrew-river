@@ -1,5 +1,5 @@
 import ConnectedViewState from "../../state/view/connected_view";
-import DefineRulesetMain from "../ruleset/DefineRulesetMain";
+import DefineRules from "../define_rules/DefineRules";
 import TopBar from "../TopBar";
 import MainMenu from "./MainMenu";
 
@@ -25,7 +25,7 @@ function MainContent(props: {
       );
     case "define_rules":
       return (
-        <DefineRulesetMain viewState={props.viewState.defineRules} />
+        <DefineRules viewState={props.viewState.defineRules} />
       );
     default:
       console.error("Unknown view mode: " + props.viewState.viewMode);

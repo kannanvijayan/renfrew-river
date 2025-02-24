@@ -5,7 +5,7 @@ import { BumpTimeout } from "../util/bump_timeout";
 import DefineRulesViewState from "../state/view/def_rules";
 import { store } from "../store/root";
 import RootState from "../state/root";
-import ViewState from "../state/view";
+import ViewState, { ViewMode } from "../state/view";
 import ConnectedViewState from "../state/view/connected_view";
 
 /**
@@ -35,21 +35,31 @@ export default class Session {
       return Session.instancePromise;
     }
 
+    const resetViewState = () => {
+      Session.instance = null;
+      Session.instancePromise = null;
+      store.dispatch(RootState.action.view(
+        ViewState.action.setMode(ViewMode.UNCONNECTED)
+      ));
+    };
+
+    Session.instancePromise = null;
     Session.instancePromise = (async () => {
       const ws = new WebSocket(serverAddr);
       const transport = new WsTransport(ws);
-      const client = await new Promise<GameClient>((resolve, reject) => {
-        console.log("Session.connectToServer 3", serverAddr);
+      const client = await new Promise<GameClient>(resolve => {
         const client = new GameClient({
           transport,
           callbacks: {
             onConnect: () => resolve(client),
-            onError: (err) => reject(new Error("Failed to connect to server: " + err)),
-          }
+            onError: (err) => {
+              console.error("Session: Failed to connect to server", err);
+              resetViewState();
+            },
+            onClose: () => resetViewState(),
+          },
         });
       });
-      console.log("Session.connectToServer 4", serverAddr);
-      Session.instancePromise = null;
       return Session.createInstance({ serverAddr, client });
     })();
 
@@ -120,27 +130,36 @@ export class DefineRulesModule {
   }
 
   public async enter(): Promise<true> {
-    return this.session.client.defineRules.enter();
+    await this.session.client.defineRules.enter();
+    this.view.bumpValidationTimeout(10);
+    return true;
+  }
+
+  public async leave(): Promise<true> {
+    await this.session.client.defineRules.leave();
+    return true;
   }
 }
 
 export class DefineRulesViewController {
+  private static readonly DEFAULT_BUMP_INTERVAL = 500;
   private readonly module_: DefineRulesModule;
-  private validationBumpTimout_: BumpTimeout | null;
+  private validationTimeout_: BumpTimeout | null;
 
   constructor(module: DefineRulesModule) {
     this.module_ = module;
-    this.validationBumpTimout_ = null;
+    this.validationTimeout_ = null;
   }
 
 
-  public bumpValidationTimeout() {
-    let timeout = this.validationBumpTimout_;
+  public bumpValidationTimeout(interval?: number) {
+    let timeout = this.validationTimeout_;
+    interval = interval ?? DefineRulesViewController.DEFAULT_BUMP_INTERVAL;
     if (timeout) {
-      timeout.bump();
+      timeout.bump(interval);
     } else {
-      timeout = new BumpTimeout(500, () => this.validateInput());
-      this.validationBumpTimout_ = timeout;
+      timeout = new BumpTimeout(interval, () => this.validateInput());
+      this.validationTimeout_ = timeout;
     }
   }
 
@@ -166,6 +185,6 @@ export class DefineRulesViewController {
         )
       )
     ));
-    this.validationBumpTimout_ = null;
+    this.validationTimeout_ = null;
   }
 }

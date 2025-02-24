@@ -1,5 +1,5 @@
 import { Box, Input, Typography } from "@mui/material";
-import DefineRulesetEditorBox from "./DefineRulesetEditorBox";
+import EditorBox from "./EditorBox";
 import { useAppDispatch } from "../../store/hooks";
 import { DefineRulesPerlinField } from "../../state/view/def_rules/ruleset";
 import PerlinFieldsViewState from "../../state/view/def_rules/perlin_fields";
@@ -10,7 +10,7 @@ const useDefineRulesDispatch = useAppDispatch.view.connected.defRules;
 const usePerlinFieldsDispatch =
   useDefineRulesDispatch.terrainGeneration.perlinFields;
 
-export default function DefineRulesetPerlinEdit(props: {
+export default function PerlinEdit(props: {
   viewState: DefineRulesViewState,
 }) {
   const { viewState } = props;
@@ -21,13 +21,13 @@ export default function DefineRulesetPerlinEdit(props: {
   const amplitudeErrors = validation?.amplitude || [];
   const outregErrors = validation?.register || [];
   return (
-    <DefineRulesetEditorBox title="Perlin Rules">
+    <EditorBox title="Perlin Rules">
       <DefineRulsetPerlinSeedField viewState={viewState} errors={seedErrors} />
       <DefineRulesetPerlinOctavesField viewState={viewState} errors={octavesErrors} />
       <DefineRulesetPerlinFrequencyField viewState={viewState} errors={frequencyErrors} />
       <DefineRulesetPerlinAmplitudeField viewState={viewState} errors={amplitudeErrors} />
       <DefineRulesetPerlinOutregField viewState={viewState} errors={outregErrors} />
-    </DefineRulesetEditorBox>
+    </EditorBox>
   );
 }
 

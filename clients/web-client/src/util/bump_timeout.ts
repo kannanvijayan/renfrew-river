@@ -4,7 +4,7 @@
  * to the current time.
  */
 export class BumpTimeout {
-  private readonly interval: number;
+  private interval: number;
   private readonly callback: () => void;
   private timeout: number | undefined;
 
@@ -14,7 +14,11 @@ export class BumpTimeout {
     this.timeout = this.createTimeout();
   }
 
-  public bump() {
+  public bump(newInterval?: number) {
+    if (newInterval !== undefined) {
+      this.interval = newInterval;
+    }
+
     // If already triggered, don't bump.
     if (this.timeout === undefined) {
       console.warn("BumpTimeout: bumping already triggered timeout");

@@ -86,6 +86,7 @@ export default class GameClient {
     this.defineRules = new GameClientDefineRules({
       send: this.sendSubcmd.bind(this),
       enterMode: this.enterMode.bind(this),
+      enterMainMenuMode: this.enterMainMenuMode.bind(this),
     });
   }
 
@@ -99,6 +100,14 @@ export default class GameClient {
       return true;
     }
     throw new Error("EnterMode: unexpected response: " + result.Error.join(", "));
+  }
+
+  private async enterMainMenuMode(): Promise<true> {
+    const result = await this.sendCommand("EnterMainMenuMode", {});
+    if ("Ok" in result) {
+      return true;
+    }
+    throw new Error("EnterMainMenuMode: unexpected response: " + result.Error.join(", "));
   }
 
   private async sendCommand<T extends ProtocolCommandName>(
@@ -219,6 +228,7 @@ interface SubcmdSender {
   ): Promise<ProtocolSubcmdResponse<S, T>>;
 
   enterMode(mode: GameModeInfo): Promise<true>;
+  enterMainMenuMode(): Promise<true>;
 }
 
 class GameClientSendSubcommand<S extends ProtocolSubcmdSpec> {
@@ -247,6 +257,10 @@ export class GameClientDefineRules
 
   public async enter(): Promise<true> {
     return this.sender_.enterMode({ DefineRules: {}});
+  }
+
+  public async leave(): Promise<true> {
+    return this.sender_.enterMainMenuMode();
   }
 
   public async validateRules(rulesetInput: RulesetInput)

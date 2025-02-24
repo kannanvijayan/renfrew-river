@@ -1,12 +1,13 @@
 import { Box, Divider, styled, Typography } from "@mui/material";
-import DefineRulesetSidebar from "./DefineRulesetSidebar";
-import DefineRulesetPerlinEdit from "./DefineRulesetPerlinEdit";
-import DefineRulesetGeneratorProgramEdit from "./DefineRulesetGeneratorProgramEdit";
+import Sidebar from "./Sidebar";
+import PerlinEdit from "./PerlinEdit";
+import GeneratorProgramEdit from "./GeneratorProgramEdit";
 import DefineRulesViewState from "../../state/view/def_rules";
-import { useAppListener } from "../../store/hooks";
+import { useAppDispatch, useAppListener } from "../../store/hooks";
 import Session from "../../session/session";
+import ConnectedViewState from "../../state/view/connected_view";
 
-const DefineRulesetBox = styled(Box)({
+const DefineRulesBox = styled(Box)({
   display: "flex",
   flexDirection: "column",
   textAlign: "center",
@@ -18,7 +19,7 @@ const DefineRulesetBox = styled(Box)({
   padding: "2rem 0 0 0",
 });
 
-export default function DefineRulesetMain(props: {
+export default function DefineRules(props: {
   viewState: DefineRulesViewState | null,
 }) {
   const { viewState } = props;
@@ -37,7 +38,7 @@ export default function DefineRulesetMain(props: {
   }
 
   return (
-    <DefineRulesetBox sx={{
+    <DefineRulesBox sx={{
       backgroundColor: "primary.dark",
     }}>
       <Title />
@@ -48,15 +49,29 @@ export default function DefineRulesetMain(props: {
         margin: 0,
       }}/>
       <Contents viewState={viewState} />
-    </DefineRulesetBox>
+    </DefineRulesBox>
   )
 }
 
 function Title() {
+  const dispatchConnected = useAppDispatch.view.connected();
+  const onBackClicked = async () => {
+    const session = Session.getInstance();
+    await session.defRules.leave();
+    dispatchConnected(ConnectedViewState.action.setViewMode("main_menu"));
+  };
   return (
-    <Typography className="DefineRulesetTitle" variant="h1"
-      color={"primary.contrastText"}
-      sx={{ margin: 0, flex: 0 }}>
+    <Typography variant="h1" color={"primary.contrastText"} position="relative"
+        sx={{ margin: 0, flex: 0 }}>
+      <Typography display="block" position="absolute" fontSize="5rem" left="2rem"
+          onClick={onBackClicked}
+          sx={{
+            float: "left",
+            filter: "brightness(3)",
+            "&:hover": { textShadow: "0 0 0.05rem #ccaa66" },
+            }}>
+        🔙
+      </Typography>
       Define Ruleset
     </Typography>
   )
@@ -73,7 +88,7 @@ function Contents(props: { viewState: DefineRulesViewState }) {
         backgroundColor: "secondary.dark",
         borderRadius: "0 0 2.5rem 2.5rem",
        }}>
-      <DefineRulesetSidebar viewState={viewState} />
+      <Sidebar viewState={viewState} />
       <Divider orientation="vertical" flexItem sx={{
         backgroundColor: "secondary.main",
         width: "2px",
@@ -88,10 +103,10 @@ function Contents(props: { viewState: DefineRulesViewState }) {
 function Editor(props: { viewState: DefineRulesViewState }) {
   const { viewState } = props;
   if (viewState.category === "terrain_gen/perlin_rules") {
-    return <DefineRulesetPerlinEdit viewState={viewState} />
+    return <PerlinEdit viewState={viewState} />
   }
   if (viewState.category === "terrain_gen/generator_program") {
-    return <DefineRulesetGeneratorProgramEdit viewState={viewState} />
+    return <GeneratorProgramEdit viewState={viewState} />
   }
   return <Box width="100%" height="100%" />
 }

@@ -1,48 +1,43 @@
 use serde;
 use super::{
   command::{ Command, CommandEnvelope },
-  mode::{
-    define_rules::DefineRulesModeInfo,
-    GameModeInfo,
-  },
-  response::{ FailedResponse, ResponseEnvelope },
+  response::{FailedResponse, ResponseEnvelope}
 };
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct EnterModeCmd {
-  pub(crate) mode: GameModeInfo,
+pub(crate) struct EnterMainMenuModeCmd {
 }
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) enum EnterModeRsp {
+pub(crate) enum EnterMainMenuModeRsp {
   Ok,
   Error(Vec<String>),
 }
-impl Command for EnterModeCmd {
-  type Response = EnterModeRsp;
+impl Command for EnterMainMenuModeCmd {
+  type Response = EnterMainMenuModeRsp;
   fn name() -> &'static str {
-    "EnterMode"
+    "EnterMainMenuMode"
   }
   fn description() -> &'static str {
-    "Enter the specified mode."
+    "Enter the main menu mode."
   }
   fn to_queue_command(&self) -> CommandEnvelope {
-    CommandEnvelope::EnterMode(EnterModeCmd { mode: self.mode.clone() })
+    CommandEnvelope::EnterMainMenuMode(EnterMainMenuModeCmd {})
   }
   fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response> {
     match response {
-      ResponseEnvelope::Ok {} => Some(EnterModeRsp::Ok),
+      ResponseEnvelope::Ok {} => Some(EnterMainMenuModeRsp::Ok),
       ResponseEnvelope::Failed(failed_rsp) =>
-        Some(EnterModeRsp::Error(failed_rsp.messages().to_vec())),
+        Some(EnterMainMenuModeRsp::Error(failed_rsp.messages().to_vec())),
       _ => None,
     }
   }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     match response {
-      EnterModeRsp::Ok => ResponseEnvelope::Ok {},
-      EnterModeRsp::Error(messages) =>
+      EnterMainMenuModeRsp::Ok => ResponseEnvelope::Ok {},
+      EnterMainMenuModeRsp::Error(messages) =>
         ResponseEnvelope::Failed(FailedResponse::new_vec(messages)),
     }
   }
@@ -52,13 +47,11 @@ impl Command for EnterModeCmd {
   }
 
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>) {
-    let enter_mode_example = EnterModeCmd {
-      mode: GameModeInfo::DefineRules(DefineRulesModeInfo {})
-    };
+    let enter_mode_example = EnterMainMenuModeCmd {};
 
-    let enter_mode_ok_response = EnterModeRsp::Ok;
-    let enter_mode_err_response = EnterModeRsp::Error(vec![
-      "Already in mode 'CreateWorld'.".to_string(),
+    let enter_mode_ok_response = EnterMainMenuModeRsp::Ok;
+    let enter_mode_err_response = EnterMainMenuModeRsp::Error(vec![
+      "Failed to enter main menu mode.".to_string(),
     ]);
     (
       vec![enter_mode_example],

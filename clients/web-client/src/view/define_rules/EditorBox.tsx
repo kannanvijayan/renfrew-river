@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 
-export default function DefineRulesetEditorBox(props: {
+export default function EditorBox(props: {
   title: string,
   children: React.ReactNode,
 }) {

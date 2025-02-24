@@ -22,7 +22,7 @@ const AddWordDialogBox = styled(Box)({
   alignItems: "center",
 });
 
-export default function DefineRulesetAddFormatWordDialog(props: {
+export default function AddFormatWordDialog(props: {
   viewState: GeneratorProgramViewState,
   visible: boolean,
 }) {

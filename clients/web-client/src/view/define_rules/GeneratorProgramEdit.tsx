@@ -1,20 +1,20 @@
 import { Box, Button, Divider, Input, styled, Typography } from "@mui/material";
-import DefineRulesetEditorBox from "./DefineRulesetEditorBox";
+import EditorBox from "./EditorBox";
 import { useAppDispatch } from "../../store/hooks";
 import DefineRulesViewState from "../../state/view/def_rules";
 import { DefineRulesEntrySelection, DefineRulesGeneratorProgramSection } from "../../state/view/def_rules/ruleset";
 import GeneratorProgramViewState from "../../state/view/def_rules/generator_program";
-import DefineRulesetAddFormatWordDialog from "./DefineRulesetAddFormatWordDialog";
+import AddFormatWordDialog from "./AddFormatWordDialog";
 import ShasmProgramInput from "../common/ShasmProgramInput";
 import ShasmProgramErrors from "../common/ShasmProgramErrors";
-import DefineRulesetAddFormatComponentDialog from "./DefineRulesetAddFormatComponentDialog";
+import AddFormatComponentDialog from "./AddFormatComponentDialog";
 import ValidationErrors from "./ValidationErrors";
 import { ShasmParseError } from "renfrew-river-protocol-client";
 
 const useGeneratorProgramDispatch =
   useAppDispatch.view.connected.defRules.terrainGeneration.generatorProgram;
 
-export default function DefineRulesetGeneratorProgramEdit(props: {
+export default function GeneratorProgramEdit(props: {
   viewState: DefineRulesViewState,
 }) {
   const { viewState } = props;
@@ -22,7 +22,7 @@ export default function DefineRulesetGeneratorProgramEdit(props: {
   const generatorProgramViewState = terrainGenerationViewState.generatorProgram;
   const generatorProgramValidation = viewState.validation?.terrainGen?.stage;
   return (
-    <DefineRulesetEditorBox title="Generator Program">
+    <EditorBox title="Generator Program">
       <Box display="flex" flexDirection="row" margin="1rem 0 0 0" padding="0"
         width="100%">
         <ItemList>
@@ -88,7 +88,7 @@ export default function DefineRulesetGeneratorProgramEdit(props: {
           }}
         />
       </Box>
-    </DefineRulesetEditorBox>
+    </EditorBox>
   );
 }
 
@@ -386,7 +386,7 @@ function FormatEntry(props: { viewState: GeneratorProgramViewState }) {
         Add Word
       </Button>
       <FormatWordList viewState={viewState} />
-      <DefineRulesetAddFormatWordDialog
+      <AddFormatWordDialog
           visible={dialogState.visible} viewState={viewState} />
     </>
   );
@@ -500,7 +500,7 @@ function FormatWordListEntry(props: {
         width: "100%",
         margin: "1rem 0 0.5rem 0",
       }}/>
-      <DefineRulesetAddFormatComponentDialog viewState={viewState}
+      <AddFormatComponentDialog viewState={viewState}
           wordIndex={index} visible={dialogState.visible} />
     </Box>
   );

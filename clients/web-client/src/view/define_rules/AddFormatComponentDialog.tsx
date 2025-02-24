@@ -25,7 +25,7 @@ const AddComponentDialogBox = styled(Box)({
   alignItems: "center",
 });
 
-export default function DefineRulesetAddFormatComponentDialog(props: {
+export default function AddFormatComponentDialog(props: {
   viewState: GeneratorProgramViewState,
   wordIndex: number,
   visible: boolean,

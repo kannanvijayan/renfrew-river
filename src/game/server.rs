@@ -9,8 +9,15 @@ use crate::protocol::{
       DefineRulesMode,
       DefineRulesSubcmdEnvelope,
       DefineRulesSubcmdResponse,
-    }, GameMode, GameModeInfo
-  }, CommandEnvelope, EnterModeCmd, FailedResponse, ResponseEnvelope
+    },
+    GameMode,
+    GameModeInfo,
+  },
+  CommandEnvelope,
+  EnterModeCmd,
+  EnterMainMenuModeCmd,
+  FailedResponse,
+  ResponseEnvelope,
 };
 
 /**
@@ -99,6 +106,10 @@ impl GameServerInner {
         let response = self.handle_enter_mode_cmd(enter_mode_cmd);
         return response;
       },
+      CommandEnvelope::EnterMainMenuMode(enter_main_menu_mode_cmd) => {
+        let response = self.handle_enter_main_menu_mode_cmd(enter_main_menu_mode_cmd);
+        return response;
+      },
       CommandEnvelope::DefineRulesSubcmd(define_rules_subcmd) => {
         let envelope = self.handle_define_rules_subcmd(define_rules_subcmd);
         return ResponseEnvelope::DefineRulesSubcmd(envelope);
@@ -126,6 +137,14 @@ impl GameServerInner {
         ResponseEnvelope::Ok {}
       },
     }
+  }
+
+  fn handle_enter_main_menu_mode_cmd(&mut self,
+    _enter_main_menu_mode_cmd: EnterMainMenuModeCmd
+  ) -> ResponseEnvelope {
+    log::debug!("GameServerInner::handle_enter_main_menu_mode_cmd");
+    self.mode = None;
+    ResponseEnvelope::Ok {}
   }
 
   fn handle_define_rules_subcmd(&mut self, subcmd: DefineRulesSubcmdEnvelope)

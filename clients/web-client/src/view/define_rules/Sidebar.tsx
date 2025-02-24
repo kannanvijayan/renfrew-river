@@ -5,7 +5,7 @@ import { RulesetValidation } from "renfrew-river-protocol-client/dist/types/rule
 import { ruleset } from "renfrew-river-protocol-client";
 import ValidationErrors from "./ValidationErrors";
 
-export default function DefineRulesetSidebar(props: {
+export default function Sidebar(props: {
   viewState: DefineRulesViewState,
 }) {
   const { viewState } = props;
