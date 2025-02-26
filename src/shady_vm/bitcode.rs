@@ -1,5 +1,6 @@
 use serde::{ Serialize, Deserialize };
-use crate::gpu::GpuBufferDataType;
+
+use crate::cog::CogBufferType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[derive(Serialize, Deserialize)]
@@ -28,14 +29,18 @@ impl Instruction {
     }
   }
 }
-impl GpuBufferDataType for Instruction {
-  type NativeType = [u32; 2];
-  fn to_native(&self) -> Self::NativeType {
+impl CogBufferType for Instruction {
+  type GpuType = [u32; 2];
+}
+impl Into<[u32; 2]> for Instruction {
+  fn into(self) -> <Self as CogBufferType>::GpuType {
     let w0 = self.op_word.to_u32() | (self.dst_word.to_u32() << 16);
     let w1 = self.src1_word.to_u32() | (self.src2_word.to_u32() << 16);
     [w0, w1]
   }
-  fn from_native(parts: Self::NativeType) -> Self {
+}
+impl From<[u32; 2]> for Instruction {
+  fn from(parts: <Self as CogBufferType>::GpuType) -> Self {
     let op_word = OpWord::from_u32(parts[0] & 0xFFFF);
     let dst_word = DstWord::from_u32(parts[0] >> 16);
     let src1_word = op_word.parse_src1_word(parts[1] & 0xFFFF);

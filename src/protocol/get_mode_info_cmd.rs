@@ -30,15 +30,6 @@ impl Command for GetModeInfoCmd {
   fn to_queue_command(&self) -> CommandEnvelope {
     CommandEnvelope::GetModeInfo(GetModeInfoCmd {})
   }
-  fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response> {
-    match response {
-      ResponseEnvelope::InMode(mode_info) =>
-        Some(ModeInfoRsp::ModeInfo(mode_info.clone())),
-      ResponseEnvelope::InMainMenuMode {} =>
-        Some(ModeInfoRsp::MainMenu),
-      _ => None,
-    }
-  }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     match response {
       ModeInfoRsp::ModeInfo(mode_info) =>
@@ -47,11 +38,6 @@ impl Command for GetModeInfoCmd {
         ResponseEnvelope::InMainMenuMode {},
     }
   }
-
-  fn validate(&self, _errors: &mut Vec<String>) -> bool {
-    true
-  }
-
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>) {
     let get_mode_info_example = GetModeInfoCmd {};
 

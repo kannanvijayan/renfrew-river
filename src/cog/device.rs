@@ -11,9 +11,10 @@ use std::{
     atomic::AtomicBool,
   },
 };
-use crate::gpu::GPU_MIN_BUFFER_SIZE;
-
-use super::CogInvoke;
+use super::{
+  constants::GPU_MIN_BUFFER_SIZE,
+  CogInvoke,
+};
 
 
 /**

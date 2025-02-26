@@ -31,24 +31,12 @@ impl Command for EnterModeCmd {
   fn to_queue_command(&self) -> CommandEnvelope {
     CommandEnvelope::EnterMode(EnterModeCmd { mode: self.mode.clone() })
   }
-  fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response> {
-    match response {
-      ResponseEnvelope::Ok {} => Some(EnterModeRsp::Ok),
-      ResponseEnvelope::Failed(failed_rsp) =>
-        Some(EnterModeRsp::Error(failed_rsp.messages().to_vec())),
-      _ => None,
-    }
-  }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     match response {
       EnterModeRsp::Ok => ResponseEnvelope::Ok {},
       EnterModeRsp::Error(messages) =>
         ResponseEnvelope::Failed(FailedResponse::new_vec(messages)),
     }
-  }
-
-  fn validate(&self, _errors: &mut Vec<String>) -> bool {
-    true
   }
 
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>) {

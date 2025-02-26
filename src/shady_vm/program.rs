@@ -1,10 +1,8 @@
 use serde;
 use std::mem;
-use crate::gpu::{
-  GpuDevice,
-  GpuSeqBuffer,
-  GpuBufferDataType,
-  shady_vm::bitcode,
+use crate::{
+  cog::{ CogBufferType, CogDevice, CogSeqBuffer },
+  shady_vm::bitcode::{self, Instruction},
 };
 
 /**
@@ -20,12 +18,12 @@ impl ShadyProgram {
     ShadyProgram { bitcode }
   }
 
-  pub(crate) async fn write_to_buffer(&self,
-    device: &GpuDevice,
+  pub(crate) fn write_to_buffer(&self,
+    device: &CogDevice,
     offset: usize,
     buffer: &ShadyProgramGpuBuffer,
   ) {
-    buffer.write_iter_staged(device, offset, self.bitcode.iter()).await;
+    buffer.write_slice(offset, &self.bitcode);
   }
 
   pub(crate) fn num_instrs(&self) -> usize {
@@ -34,7 +32,7 @@ impl ShadyProgram {
 
   pub(crate) fn encoded_len(&self) -> usize {
     self.bitcode.len() *
-      mem::size_of::<<bitcode::Instruction as GpuBufferDataType>::NativeType>()
+      mem::size_of::<<bitcode::Instruction as CogBufferType>::GpuType>()
   }
 
   pub(crate) fn iter_instructions(&self)
@@ -54,7 +52,7 @@ impl ShadyProgram {
     eprintln!();
     eprintln!("  BYTES:");
     for (i, instr) in self.bitcode.iter().enumerate() {
-      let nat = instr.to_native();
+      let nat: <Instruction as CogBufferType>::GpuType = (*instr).into();
       let instr: [u16; 4] = bytemuck::cast(nat);
       eprintln!("        {}: op={:04x} dst={:04x} s1={:04x} s2={:04x}",
         i, instr[0], instr[1], instr[2], instr[3]);
@@ -62,7 +60,7 @@ impl ShadyProgram {
   }
 }
 
-pub(crate) type ShadyProgramGpuBuffer = GpuSeqBuffer<bitcode::Instruction>;
+pub(crate) type ShadyProgramGpuBuffer = CogSeqBuffer<bitcode::Instruction>;
 
 /**
  * Wrapper type for the position of a program in a ShadyProgramGpuBuffer
@@ -84,13 +82,16 @@ impl ShadyProgramIndex {
     self.offset
   }
 }
-impl GpuBufferDataType for ShadyProgramIndex {
-  type NativeType = u32;
-
-  fn from_native(data_type: Self::NativeType) -> Self {
-    ShadyProgramIndex { offset: data_type }
-  }
-  fn to_native(&self) -> Self::NativeType {
+impl CogBufferType for ShadyProgramIndex {
+  type GpuType = u32;
+}
+impl Into<u32> for ShadyProgramIndex {
+  fn into(self) -> u32 {
     self.offset
+  }
+}
+impl From<u32> for ShadyProgramIndex {
+  fn from(offset: u32) -> Self {
+    ShadyProgramIndex { offset }
   }
 }

@@ -1,6 +1,5 @@
-use std::iter;
 use serde;
-use crate::gpu::GpuBufferDataType;
+use crate::cog::CogBufferType;
 use super::WorldDims;
 
 /**
@@ -75,12 +74,16 @@ impl PartialOrd for CellCoord {
 /**
  * GPU-mapping for cell coordinates.
  */
-impl GpuBufferDataType for CellCoord {
-  type NativeType = u32;
-  fn to_native(&self) -> Self::NativeType {
+impl CogBufferType for CellCoord {
+  type GpuType = u32;
+}
+impl Into<u32> for CellCoord {
+  fn into(self) -> u32 {
     self.encode_u32()
   }
-  fn from_native(native: Self::NativeType) -> Self {
+}
+impl From<u32> for CellCoord {
+  fn from(native: u32) -> Self {
     CellCoord::decode_u32(native)
   }
 }

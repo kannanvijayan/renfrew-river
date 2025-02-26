@@ -20,11 +20,7 @@ pub(crate) trait Command:
   fn name() -> &'static str;
   fn description() -> &'static str;
   fn to_queue_command(&self) -> CommandEnvelope;
-  fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response>;
   fn embed_response(response: Self::Response) -> ResponseEnvelope;
-  fn validate(&self, _errors: &mut Vec<String>) -> bool {
-    true
-  }
 
   // Get a list of examples of commands and responses, as json values.
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>);

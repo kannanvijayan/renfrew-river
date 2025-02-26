@@ -5,7 +5,7 @@ use crate::{
     mode::define_rules::response::DefineRulesSubcmdResponse,
     response::ResponseEnvelope,
   },
-  gpu::shady_vm::{ShasmParseError, ShasmProgramValidation},
+  shady_vm::{ShasmParseError, ShasmProgramValidation},
   ruleset::{
     FormatComponentInput,
     FormatComponentValidation,
@@ -56,22 +56,10 @@ impl Command for ValidateRulesCmd {
       DefineRulesSubcmdEnvelope::ValidateRules(self.clone())
     )
   }
-  fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response> {
-    match response {
-      ResponseEnvelope::DefineRulesSubcmd(
-        DefineRulesSubcmdResponse::Validation(ref validate_rules_rsp)
-      )  => Some(validate_rules_rsp.clone()),
-      _ => None,
-    }
-  }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     ResponseEnvelope::DefineRulesSubcmd(
       DefineRulesSubcmdResponse::Validation(response)
     )
-  }
-
-  fn validate(&self, _errors: &mut Vec<String>) -> bool {
-    true
   }
 
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>) {

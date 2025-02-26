@@ -1,4 +1,4 @@
-use crate::gpu::shady_vm::{ bitcode, register_file };
+use super::{ bitcode, register_file };
 
 const SHADY_JUMP_OFFSET_MAX: i32 = 0x7FF;
 const SHADY_JUMP_OFFSET_MIN: i32 = -0x800;

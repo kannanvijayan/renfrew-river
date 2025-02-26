@@ -28,8 +28,4 @@ impl FailedResponse {
   pub(crate) fn new_vec(messages: Vec<String>) -> FailedResponse {
     FailedResponse { messages }
   }
-
-  pub(crate) fn messages(&self) -> &[String] {
-    &self.messages
-  }
 }

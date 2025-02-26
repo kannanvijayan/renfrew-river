@@ -1,4 +1,4 @@
-use crate::gpu::GpuBufferDataType;
+use crate::cog::CogBufferType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -21,10 +21,14 @@ impl ShadyRegisterFile {
     self.regs[reg as usize]
   }
 }
-impl GpuBufferDataType for ShadyRegisterFile {
-  type NativeType = [i32; SHADY_REG_COUNT];
-  fn to_native(&self) -> Self::NativeType { self.regs }
-  fn from_native(regs: Self::NativeType) -> Self { Self { regs } }
+impl CogBufferType for ShadyRegisterFile {
+  type GpuType = [i32; SHADY_REG_COUNT];
+}
+impl From<[i32; SHADY_REG_COUNT]> for ShadyRegisterFile {
+  fn from(regs: <Self as CogBufferType>::GpuType) -> Self { Self { regs } }
+}
+impl Into<[i32; SHADY_REG_COUNT]> for ShadyRegisterFile {
+  fn into(self) -> <Self as CogBufferType>::GpuType { self.regs }
 }
 
 /*

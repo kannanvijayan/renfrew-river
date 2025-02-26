@@ -1,4 +1,4 @@
-use crate::gpu::shady_vm::{
+use super::{
   ShadyProgram,
   bytecode::*,
   register_file,

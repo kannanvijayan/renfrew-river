@@ -26,24 +26,12 @@ impl Command for EnterMainMenuModeCmd {
   fn to_queue_command(&self) -> CommandEnvelope {
     CommandEnvelope::EnterMainMenuMode(EnterMainMenuModeCmd {})
   }
-  fn extract_response(response: &ResponseEnvelope) -> Option<Self::Response> {
-    match response {
-      ResponseEnvelope::Ok {} => Some(EnterMainMenuModeRsp::Ok),
-      ResponseEnvelope::Failed(failed_rsp) =>
-        Some(EnterMainMenuModeRsp::Error(failed_rsp.messages().to_vec())),
-      _ => None,
-    }
-  }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     match response {
       EnterMainMenuModeRsp::Ok => ResponseEnvelope::Ok {},
       EnterMainMenuModeRsp::Error(messages) =>
         ResponseEnvelope::Failed(FailedResponse::new_vec(messages)),
     }
-  }
-
-  fn validate(&self, _errors: &mut Vec<String>) -> bool {
-    true
   }
 
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>) {

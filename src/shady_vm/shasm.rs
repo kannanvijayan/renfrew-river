@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use chumsky::{error::EmptyErr, Parser};
 use regex::Regex;
-use crate::gpu::shady_vm::{
+use super::{
   bitcode::{
     self,
     SHADY_INS_DST_BUMP_MAX,

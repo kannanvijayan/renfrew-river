@@ -1,12 +1,12 @@
 
-mod game;
-mod world;
-mod network;
-mod gpu;
 mod cog;
-mod persist;
-mod ruleset;
+mod game;
+mod network;
+//mod gpu;
 mod protocol;
+mod ruleset;
+mod shady_vm;
+mod world;
 
 pub use self::{
   protocol::{

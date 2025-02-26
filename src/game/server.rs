@@ -3,23 +3,24 @@ use std::{
   sync::mpsc,
 };
 use log;
-use crate::protocol::{
-  mode::{
-    define_rules::{
-      DefineRulesMode,
-      DefineRulesModeInfo,
-      DefineRulesSubcmdEnvelope,
-      DefineRulesSubcmdResponse,
+use crate::{
+  game::mode::{ DefineRulesMode, GameMode },
+  protocol::{
+    mode::{
+      define_rules::{
+        DefineRulesModeInfo,
+        DefineRulesSubcmdEnvelope,
+        DefineRulesSubcmdResponse,
+      },
+      GameModeInfo,
     },
-    GameMode,
-    GameModeInfo,
+    CommandEnvelope,
+    EnterMainMenuModeCmd,
+    EnterModeCmd,
+    FailedResponse,
+    GetModeInfoCmd,
+    ResponseEnvelope,
   },
-  CommandEnvelope,
-  EnterMainMenuModeCmd,
-  EnterModeCmd,
-  FailedResponse,
-  GetModeInfoCmd,
-  ResponseEnvelope,
 };
 
 /**

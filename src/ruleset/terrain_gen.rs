@@ -1,8 +1,4 @@
-use crate::gpu::shady_vm::{
-  ShadyRegister,
-  ShasmProgram,
-  ShasmProgramValidation,
-};
+use crate::shady_vm::{ ShadyRegister, ShasmProgram, ShasmProgramValidation };
 use super::{ FormatInput, FormatRules, FormatValidation };
 
 #[derive(Debug, Clone)]
