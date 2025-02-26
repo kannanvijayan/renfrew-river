@@ -1,23 +1,13 @@
-import { CellCoord } from "./types/cell_coord";
-import { GameConstants } from "./types/game_constants";
-import { AnimalData } from "./types/animal_data";
-import { GameSettings } from "./types/game_settings";
-import { WorldDims } from "./types/world_dims";
-import { CellInfo } from "./types/cell_info";
-import { TurnStepResult } from "./types/turn_step_result";
-import { SettingsLimits } from "./types/settings_limits";
-import { GameSnapshot } from "./types/game_snapshot";
-import Ruleset, { RulesetInput, RulesetValidation } from "./types/ruleset";
-import { ShasmParseError } from "./types/shady_vm";
+import { RulesetInput, RulesetValidation } from "./types/ruleset/ruleset";
 import {
   ProtocolSubcmdParams,
   ProtocolSubcmdName,
   ProtocolSubcmdResponse,
   ProtocolSubcmdSpec,
 } from "./protocol/subcommand";
-import DefineRulesSubcmd from "./protocol/commands/define_rules_subcmd";
+import DefineRulesSubcmd from "./protocol/commands/define_rules/define_rules_subcmd";
 import { ProtocolCommandName, ProtocolCommandParams, ProtocolCommandResponse } from "./protocol/command";
-import { GameModeInfo } from "./types/game_mode_info";
+import GameModeInfo from "./types/game_mode_info";
 
 export type GameClientTransportListeners = {
   open: () => void;
@@ -92,6 +82,14 @@ export default class GameClient {
 
   public disconnect(): void {
     this.transport_.close();
+  }
+
+  public async getModeInfo(): Promise<GameModeInfo | null> {
+    const result = await this.sendCommand("GetModeInfo", {});
+    if ("InMode" in result) {
+      return result.InMode;
+    }
+    return null;
   }
 
   private async enterMode(mode: GameModeInfo): Promise<true> {

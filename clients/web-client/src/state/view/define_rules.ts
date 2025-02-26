@@ -1,23 +1,23 @@
 import { Reducer } from "@reduxjs/toolkit";
-import { ruleset } from "renfrew-river-protocol-client";
+import { RulesetValidation, RulesetInput } from "renfrew-river-protocol-client";
 
 import {
   DefineRulesEntryCategory,
   DefineRulesEntrySelection,
-} from "./def_rules/ruleset";
+} from "./define_rules/ruleset";
 
 import TerrainGenerationViewState, { TerrainGenerationAction }
-  from "./def_rules/terrain_generation";
+  from "./define_rules/terrain_generation";
 
 type DefineRulesViewState = {
   category: DefineRulesEntryCategory | null,
   entrySelection: DefineRulesEntrySelection | null,
   terrainGeneration: TerrainGenerationViewState,
-  validation: ruleset.RulesetValidation | null,
+  validation: RulesetValidation | null,
 };
 
 const DefineRulesViewState = {
-  createRulesetInput(state: DefineRulesViewState): ruleset.RulesetInput {
+  createRulesetInput(state: DefineRulesViewState): RulesetInput {
     return {
       name: "",
       description: "",
@@ -46,7 +46,7 @@ const DefineRulesViewState = {
     {
       return { type: "set_entry_selection" as const, entrySelection };
     },
-    setValidation(validation: ruleset.RulesetValidation | null)
+    setValidation(validation: RulesetValidation | null)
       : SetValidationAction
     {
       return { type: "set_validation" as const, validation };
@@ -118,7 +118,7 @@ type SetEntrySelectionAction = {
 
 type SetValidationAction = {
   type: "set_validation",
-  validation: ruleset.RulesetValidation | null,
+  validation: RulesetValidation | null,
 };
 
 type TargetedDefineRulesAction<T extends DefineRulesDispatchTargets> = {

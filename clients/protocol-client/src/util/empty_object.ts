@@ -1,1 +1,2 @@
-export type EmptyObject = Record<string, never>;
+type EmptyObject = Record<string, never>;
+export default EmptyObject;

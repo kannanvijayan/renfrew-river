@@ -2,10 +2,10 @@ import { Box, Divider, styled, Typography } from "@mui/material";
 import Sidebar from "./Sidebar";
 import PerlinEdit from "./PerlinEdit";
 import GeneratorProgramEdit from "./GeneratorProgramEdit";
-import DefineRulesViewState from "../../state/view/def_rules";
+import DefineRulesViewState from "../../state/view/define_rules";
 import { useAppDispatch, useAppListener } from "../../store/hooks";
 import Session from "../../session/session";
-import ConnectedViewState from "../../state/view/connected_view";
+import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 
 const DefineRulesBox = styled(Box)({
   display: "flex",
@@ -58,7 +58,9 @@ function Title() {
   const onBackClicked = async () => {
     const session = Session.getInstance();
     await session.defRules.leave();
-    dispatchConnected(ConnectedViewState.action.setViewMode("main_menu"));
+    dispatchConnected(ConnectedViewState.action.setViewMode(
+      ConnectedViewMode.MAIN_MENU
+    ));
   };
   return (
     <Typography variant="h1" color={"primary.contrastText"} position="relative"

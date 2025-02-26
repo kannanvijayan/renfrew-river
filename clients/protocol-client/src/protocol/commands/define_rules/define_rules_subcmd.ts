@@ -1,5 +1,5 @@
 import ValidateRulesCmd, { ValidateRulesRsp }
-  from "./define_rules/validate_rules_cmd";
+  from "./validate_rules_cmd";
 
 type DefineRulesSubcmd = {
   ValidateRules: {

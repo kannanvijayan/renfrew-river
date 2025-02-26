@@ -1,9 +1,9 @@
 import { Box, Button, Divider, Input, styled, Typography } from "@mui/material";
 import EditorBox from "./EditorBox";
 import { useAppDispatch } from "../../store/hooks";
-import DefineRulesViewState from "../../state/view/def_rules";
-import { DefineRulesEntrySelection, DefineRulesGeneratorProgramSection } from "../../state/view/def_rules/ruleset";
-import GeneratorProgramViewState from "../../state/view/def_rules/generator_program";
+import DefineRulesViewState from "../../state/view/define_rules";
+import { DefineRulesEntrySelection, DefineRulesGeneratorProgramSection } from "../../state/view/define_rules/ruleset";
+import GeneratorProgramViewState from "../../state/view/define_rules/generator_program";
 import AddFormatWordDialog from "./AddFormatWordDialog";
 import ShasmProgramInput from "../common/ShasmProgramInput";
 import ShasmProgramErrors from "../common/ShasmProgramErrors";

@@ -1,50 +1,57 @@
-import { useRootDispatch } from "../store/hooks";
+import { useAppDispatch } from "../store/hooks";
 import Button from "@mui/material/Button";
 
 import { Box, Container, Input, Typography } from "@mui/material";
 
-import ConnectedViewState from "../state/view/connected_view";
+import ConnectedViewState, { ConnectedViewMode } from "../state/view/connected_view";
 import UnconnectedViewState from "../state/view/unconnected_view";
-import RootState from "../state/root";
 import ViewState, { ViewMode } from "../state/view";
 
 import Session from "../session/session";
 
 import "./Splash.css";
+import DefineRulesViewState from "../state/view/define_rules";
 
 export default function Splash(props: {
   viewState: UnconnectedViewState,
 }) {
   const { viewState } = props;
 
-  const dispatch = useRootDispatch();
+  const dispatchView = useAppDispatch.view();
+  const dispatchConnected = useAppDispatch.view.connected();
+  const dispatchUnconnected = useAppDispatch.view.unconnected();
 
   const connect = async () => {
     const wsUrl = viewState.wsUrlInput;
     try {
       // Connect to session.
-      await Session.connectToServer(wsUrl);
+      const session = await Session.connectToServer(wsUrl);
+
+      // Get the session, and check the current mode.
+      const modeInfo = await session.gameModeInfo();
 
       // Update view.
-      dispatch(RootState.action.view(
-        ViewState.action.setMode(ViewMode.CONNECTED)
+      dispatchView(ViewState.action.setMode(ViewMode.CONNECTED));
+      dispatchConnected(ConnectedViewState.action.setWsUrl(wsUrl));
+      const viewMode = (modeInfo === null)
+        ? ConnectedViewMode.MAIN_MENU
+        : ConnectedViewMode.DEFINE_RULES;
+      dispatchConnected(ConnectedViewState.action.setViewMode(viewMode));
+      dispatchConnected(ConnectedViewState.action.setDefineRules(
+        DefineRulesViewState.initialState
       ));
-      dispatch(RootState.action.view(
-        ViewState.action.connected(
-          ConnectedViewState.action.setWsUrl(wsUrl)
-        )
-      ));
+      if (viewMode === ConnectedViewMode.DEFINE_RULES) {
+        session.defRules.view.bumpValidationTimeout();
+      }
     } catch (err) {
       console.error("Failed to connect to server", err);
     }
   };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(RootState.action.view(
-      ViewState.action.unconnected(
-        UnconnectedViewState.action.setWsUrlInput(event.target.value)
-      )
-    ));
+    dispatchUnconnected(
+      UnconnectedViewState.action.setWsUrlInput(event.target.value)
+    );
   }
 
   const wsUrlInput = props.viewState.wsUrlInput;

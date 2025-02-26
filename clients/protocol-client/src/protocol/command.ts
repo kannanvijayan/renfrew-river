@@ -1,5 +1,6 @@
 import EnterModeCmd from "./commands/enter_mode_cmd";
 import EnterMainMenuModeCmd from "./commands/enter_main_menu_mode_cmd";
+import GetModeInfoCmd from "./commands/get_mode_info_cmd";
 
 /**
  * Protocol commands.
@@ -7,6 +8,7 @@ import EnterMainMenuModeCmd from "./commands/enter_main_menu_mode_cmd";
 export type ProtocolCommand = {
   EnterMode: EnterModeCmd,
   EnterMainMenuMode: EnterMainMenuModeCmd,
+  GetModeInfo: GetModeInfoCmd,
 };
 
 export type ProtocolCommandName = keyof ProtocolCommand;

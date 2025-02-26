@@ -4,14 +4,14 @@ import RootState from "../state/root";
 import ViewState, { ViewAction } from "../state/view";
 import UnconnectedViewState, { UnconnectedViewAction } from "../state/view/unconnected_view";
 import ConnectedViewState, { ConnectedViewAction } from "../state/view/connected_view";
-import { PerlinFieldsAction } from "../state/view/def_rules/perlin_fields";
-import { GeneratorProgramAction } from "../state/view/def_rules/generator_program";
+import { PerlinFieldsAction } from "../state/view/define_rules/perlin_fields";
+import { GeneratorProgramAction } from "../state/view/define_rules/generator_program";
 
 import { RootDispatch, RootStore, StateChangeListener, subscribeToChange } from "./root";
 import { functionObject } from "../util/function_object";
-import DefineRulesViewState, { DefineRulesAction } from "../state/view/def_rules";
+import DefineRulesViewState, { DefineRulesAction } from "../state/view/define_rules";
 import { useEffect } from "react";
-import TerrainGenerationViewState, { TerrainGenerationAction } from "../state/view/def_rules/terrain_generation";
+import TerrainGenerationViewState, { TerrainGenerationAction } from "../state/view/define_rules/terrain_generation";
 
 export const useRootDispatch = useDispatch.withTypes<RootDispatch>();
 export const useRootSelector = useSelector.withTypes<RootState>();

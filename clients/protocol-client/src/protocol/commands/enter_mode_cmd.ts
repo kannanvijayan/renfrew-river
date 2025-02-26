@@ -1,4 +1,4 @@
-import { GameModeInfo } from "../../types/game_mode_info";
+import GameModeInfo from "../../types/game_mode_info";
 
 type EnterModeCmd = {
   params: {

@@ -1,5 +1,5 @@
 import { Reducer } from "@reduxjs/toolkit";
-import { ruleset } from "renfrew-river-protocol-client";
+import { FormatInput } from "renfrew-river-protocol-client";
 
 type AddFormatWordDialogState = {
   visible: boolean,
@@ -14,7 +14,7 @@ type AddFormatWordComponentDialogState = {
 };
 
 type GeneratorProgramViewState = {
-  format: ruleset.FormatInput,
+  format: FormatInput,
   addFormatWordDialog: AddFormatWordDialogState,
   addFormatComponentDialog: AddFormatWordComponentDialogState,
   initProgram: string,
@@ -47,7 +47,7 @@ const GeneratorProgramViewState = {
   } as GeneratorProgramViewState,
 
   action: {
-    setFormat(formatInput: ruleset.FormatInput): SetFormatAction {
+    setFormat(formatInput: FormatInput): SetFormatAction {
       return {
         type: "set_format" as const,
         formatInput,
@@ -177,7 +177,7 @@ const GeneratorProgramViewState = {
 
 type SetFormatAction = {
   type: "set_format",
-  formatInput: ruleset.FormatInput,
+  formatInput: FormatInput,
 };
 
 type SetAddFormatWordDialogAction = {

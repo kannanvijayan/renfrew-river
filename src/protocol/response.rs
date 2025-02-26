@@ -1,12 +1,17 @@
 use serde;
 
-use super::mode::define_rules::DefineRulesSubcmdResponse;
+use super::mode::{
+  define_rules::DefineRulesSubcmdResponse,
+  GameModeInfo
+};
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) enum ResponseEnvelope {
   Ok {},
   Failed(FailedResponse),
+  InMode(GameModeInfo),
+  InMainMenuMode {},
   DefineRulesSubcmd(DefineRulesSubcmdResponse),
 }
 

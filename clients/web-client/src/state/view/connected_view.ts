@@ -1,9 +1,14 @@
 import { Reducer } from "@reduxjs/toolkit";
-import DefineRulesViewState, { DefineRulesAction } from "./def_rules";
+import DefineRulesViewState, { DefineRulesAction } from "./define_rules";
 
 type ConnectedViewMode =
   | "main_menu"
   | "define_rules";
+
+const ConnectedViewMode = {
+  MAIN_MENU: "main_menu" as const,
+  DEFINE_RULES: "define_rules" as const,
+}
 
 type ConnectedViewDispatchTargets =
   | "define_rules";
@@ -123,11 +128,12 @@ type DefineRulesDispatchAction =
 
 export default ConnectedViewState;
 export type {
-  ConnectedViewMode,
-
   ConnectedViewAction,
   SetWsUrlAction,
   SetViewModeAction,
   SetDefineRulesAction,
   DefineRulesDispatchAction,
+};
+export {
+  ConnectedViewMode
 };

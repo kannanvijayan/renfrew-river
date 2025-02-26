@@ -1,8 +1,10 @@
 import { Box, Button, Container, styled, Typography } from "@mui/material";
+import {
+  RulesetValidation,
+  TerrainGenValidation,
+} from "renfrew-river-protocol-client";
 import { useAppDispatch } from "../../store/hooks";
-import DefineRulesViewState from "../../state/view/def_rules";
-import { RulesetValidation } from "renfrew-river-protocol-client/dist/types/ruleset";
-import { ruleset } from "renfrew-river-protocol-client";
+import DefineRulesViewState from "../../state/view/define_rules";
 import ValidationErrors from "./ValidationErrors";
 
 export default function Sidebar(props: {
@@ -56,7 +58,7 @@ function TerrainGen(props: {
 
 function Category(props: {
   categoryName: string,
-  validation?: ruleset.TerrainGenValidation,
+  validation?: TerrainGenValidation,
   children?: React.ReactNode,
 }) {
   const { categoryName, validation, children } = props;

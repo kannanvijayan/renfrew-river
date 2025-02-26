@@ -1,4 +1,4 @@
-import { RulesetInput, RulesetValidation } from "../../../types/ruleset";
+import { RulesetInput, RulesetValidation } from "../../../types/ruleset/ruleset";
 
 type ValidateRulesCmd = {
   rulesetInput: RulesetInput;

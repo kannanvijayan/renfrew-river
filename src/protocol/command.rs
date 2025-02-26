@@ -6,6 +6,7 @@ use super::{
   mode::define_rules::DefineRulesSubcmdEnvelope,
   enter_mode_cmd::EnterModeCmd,
   enter_main_menu_mode_cmd::EnterMainMenuModeCmd,
+  get_mode_info_cmd::GetModeInfoCmd,
 };
 
 /** Base trait implemented by all commands. */
@@ -58,5 +59,6 @@ pub(crate) fn make_command_example<C: Command>()
 pub(crate) enum CommandEnvelope {
   EnterMode(EnterModeCmd),
   EnterMainMenuMode(EnterMainMenuModeCmd),
+  GetModeInfo(GetModeInfoCmd),
   DefineRulesSubcmd(DefineRulesSubcmdEnvelope),
 }

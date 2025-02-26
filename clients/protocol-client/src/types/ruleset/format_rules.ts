@@ -1,9 +1,19 @@
 
+type FormatRules = {
+  wordFormats: FormatWordRules[],
+};
+export default FormatRules;
+
+export type FormatWordRules = {
+  components: FormatComponentRules[],
+};
+
 export type FormatComponentRules = {
   name: string,
   offset: number,
   bits: number,
 };
+
 export type FormatComponentInput = {
   name: string,
   offset: string,
@@ -15,10 +25,6 @@ export type FormatComponentValidation = {
   offset: string[],
   bits: string[],
 };
-
-export type FormatWordRules = {
-  components: FormatComponentRules[],
-};
 export type FormatWordInput = {
   name: string,
   components: FormatComponentInput[],
@@ -26,10 +32,6 @@ export type FormatWordInput = {
 export type FormatWordValidation = {
   errors: string[],
   components: FormatComponentValidation[],
-};
-
-export type FormatRules = {
-  wordFormats: FormatWordRules[],
 };
 export type FormatInput = {
   wordFormats: FormatWordInput[],

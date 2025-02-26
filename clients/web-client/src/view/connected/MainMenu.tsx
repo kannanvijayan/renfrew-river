@@ -2,8 +2,8 @@ import { Button, Container, Divider, styled, Typography } from "@mui/material";
 
 import "./MainMenu.css";
 import { useAppDispatch } from "../../store/hooks";
-import ConnectedViewState from "../../state/view/connected_view";
-import DefineRulesViewState from "../../state/view/def_rules";
+import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
+import DefineRulesViewState from "../../state/view/define_rules";
 import Session from "../../session/session";
 
 export default function MainMenu() {
@@ -54,7 +54,9 @@ function DefineRulesetButton() {
   const onClick = async () => {
     const session = Session.getInstance();
     await session.defRules.enter();
-    dispatchConnected(ConnectedViewState.action.setViewMode("define_rules"));
+    dispatchConnected(ConnectedViewState.action.setViewMode(
+      ConnectedViewMode.DEFINE_RULES
+    ));
     dispatchConnected(ConnectedViewState.action.setDefineRules(
       DefineRulesViewState.initialState
     ));
@@ -104,11 +106,12 @@ const StyledButton = styled(Button)({
   margin: "1rem 8rem 1rem 8rem",
   width: "100%",
   "&:hover": {
-    boxShadow: "0.5rem 0.5rem 1rem #d66",
+    boxShadow: "0rem 0rem 1rem #d66",
   },
   "&:disabled": {
-    border: "0.5em solid #d07a7a",
+    border: "0.5em solid #b88",
     backgroundColor: "#a88",
+    color: "#866"
   }
 });
 

@@ -1,7 +1,7 @@
 import { Box, Button, Dialog, Input, styled, Typography }
   from "@mui/material";
 import { useAppDispatch } from "../../store/hooks";
-import GeneratorProgramViewState, { AddFormatWordComponentDialogState } from "../../state/view/def_rules/generator_program";
+import GeneratorProgramViewState, { AddFormatWordComponentDialogState } from "../../state/view/define_rules/generator_program";
 
 const useGeneratorProgramDispatch =
   useAppDispatch.view.connected.defRules.terrainGeneration.generatorProgram;

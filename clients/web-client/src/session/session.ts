@@ -2,11 +2,12 @@ import GameClient from "renfrew-river-protocol-client";
 import WsTransport from "./ws_transport";
 import DefineRulesSender from "./define_rules_sender";
 import { BumpTimeout } from "../util/bump_timeout";
-import DefineRulesViewState from "../state/view/def_rules";
+import DefineRulesViewState from "../state/view/define_rules";
 import { store } from "../store/root";
 import RootState from "../state/root";
 import ViewState, { ViewMode } from "../state/view";
 import ConnectedViewState from "../state/view/connected_view";
+import { GameModeInfo } from "renfrew-river-protocol-client";
 
 /**
  * The behavioural logic for maintaining a client connection (session)
@@ -85,6 +86,10 @@ export default class Session {
     return Session.instance;
   }
 
+  public gameModeInfo(): Promise<GameModeInfo | null> {
+    return this.client.getModeInfo()
+  }
+
   private constructor(args: {
     serverAddr: string,
     client: GameClient,
@@ -142,7 +147,7 @@ export class DefineRulesModule {
 }
 
 export class DefineRulesViewController {
-  private static readonly DEFAULT_BUMP_INTERVAL = 500;
+  private static readonly DEFAULT_BUMP_INTERVAL = 50;
   private readonly module_: DefineRulesModule;
   private validationTimeout_: BumpTimeout | null;
 

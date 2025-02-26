@@ -1,10 +1,12 @@
 import { ShadyRegister, ShasmProgram, ShasmProgramValidation } from "../shady_vm";
-import { FormatRules, FormatInput, FormatValidation } from "./format_rules";
+import FormatRules, { FormatInput, FormatValidation } from "./format_rules";
 
-export type TerrainGenRules = {
+type TerrainGenRules = {
   perlin: TerrainGenPerlinRules,
   stage: TerrainGenStageRules,
 };
+export default TerrainGenRules;
+
 export type TerrainGenInput = {
   perlin: TerrainGenPerlinInput,
   stage: TerrainGenStageInput,

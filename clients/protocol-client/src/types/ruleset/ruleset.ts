@@ -1,7 +1,5 @@
 
-import GameClient from "../game_client";
-import {
-  FormatRules,
+import FormatRules, {
   FormatInput,
   FormatValidation,
   FormatWordRules,
@@ -11,17 +9,16 @@ import {
   FormatComponentInput,
   FormatComponentValidation,
   addFormatRuleComponent,
-} from "./ruleset/format_rules";
+} from "./format_rules";
 
-import {
+import TerrainGenRules, {
   defaultTerrainGenRules,
   validateTerrainGenRules,
   TerrainGenPerlinRules,
   TerrainGenStageRules,
-  TerrainGenRules,
   TerrainGenInput,
   TerrainGenValidation,
-} from "./ruleset/terrain_gen";
+} from "./terrain_gen_rules";
 
 export type Ruleset = {
   name: string,
