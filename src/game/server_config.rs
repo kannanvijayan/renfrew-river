@@ -3,21 +3,17 @@ use std::env;
 /**
  * Server configuration
  */
-pub struct NetworkServerConfig {
-  pub serve_addr: String,
+#[derive(Debug, Clone)]
+pub struct GameServerConfig {
   pub data_root: String,
 }
-impl NetworkServerConfig {
-  pub fn new(serve_addr: String, data_root: String) -> NetworkServerConfig {
-    NetworkServerConfig { serve_addr, data_root }
+impl GameServerConfig {
+  pub fn new(data_root: String) -> GameServerConfig {
+    GameServerConfig { data_root }
   }
 
-  pub fn default() -> NetworkServerConfig {
-    // Read data root from system environment.
-    NetworkServerConfig::new(
-      "127.0.0.1:3030".to_string(),
-      default_data_root(),
-    )
+  pub fn default() -> GameServerConfig {
+    GameServerConfig { data_root: default_data_root() }
   }
 }
 

@@ -1,9 +1,9 @@
 use std::{
-  thread::JoinHandle,
-  sync::mpsc,
+  path::PathBuf, sync::mpsc, thread::JoinHandle
 };
 use log;
 use crate::{
+  data_store::DataStore,
   game::mode::{ DefineRulesMode, GameMode },
   protocol::{
     mode::{
@@ -19,9 +19,11 @@ use crate::{
     EnterModeCmd,
     FailedResponse,
     GetModeInfoCmd,
+    ListRulesetsCmd,
     ResponseEnvelope,
   },
 };
+use super::GameServerConfig;
 
 /**
  * A server that fronts the game engine running on another thread.
@@ -39,8 +41,8 @@ pub(crate) struct GameServer {
   response_rx: mpsc::Receiver<ResponseEnvelope>,
 }
 impl GameServer {
-  pub(crate) fn new() -> GameServer {
-    GameServerInner::start_thread()
+  pub(crate) fn new(config: &GameServerConfig) -> GameServer {
+    GameServerInner::start_thread(config)
   }
 
   pub(crate) fn perform_command(&self, command: CommandEnvelope) -> ResponseEnvelope {
@@ -60,17 +62,25 @@ pub(crate) struct GameServerInner {
   command_rx: mpsc::Receiver<CommandEnvelope>,
   response_tx: mpsc::Sender<ResponseEnvelope>,
   mode: Option<GameMode>,
+  data_store: DataStore,
   stop: bool,
 }
 impl GameServerInner {
-  pub(crate) fn start_thread() -> GameServer {
+  pub(crate) fn start_thread(config: &GameServerConfig) -> GameServer {
+
     let (command_tx, command_rx) = mpsc::channel::<CommandEnvelope>();
     let (response_tx, response_rx) = mpsc::channel::<ResponseEnvelope>();
+
+    let path: PathBuf = config.data_root.clone().try_into().expect(
+      format!("Failed to convert data_root to PathBuf: {}", &config.data_root).as_str()
+    );
+    let data_store = DataStore::new(&path);
     let join_handle = std::thread::spawn(move || {
       let mut inner = GameServerInner {
         command_rx,
         response_tx,
         mode: None,
+        data_store,
         stop: false,
       };
       inner.run();
@@ -116,7 +126,11 @@ impl GameServerInner {
       CommandEnvelope::GetModeInfo(get_mode_info_cmd) => {
         let response = self.handle_get_mode_info_cmd(get_mode_info_cmd);
         return response;
-      }
+      },
+      CommandEnvelope::ListRulesets(list_rulesets_cmd) => {
+        let response = self.handle_list_rulesets_cmd(list_rulesets_cmd);
+        return response;
+      },
       CommandEnvelope::DefineRulesSubcmd(define_rules_subcmd) => {
         let envelope = self.handle_define_rules_subcmd(define_rules_subcmd);
         return ResponseEnvelope::DefineRulesSubcmd(envelope);
@@ -167,12 +181,22 @@ impl GameServerInner {
     }
   }
 
+  fn handle_list_rulesets_cmd(&mut self, _list_rulesets_cmd: ListRulesetsCmd)
+    -> ResponseEnvelope
+  {
+    log::debug!("GameServerInner::handle_list_rulesets_cmd");
+    let rulesets = self.data_store.rulesets().list().into_iter().map(
+      |rs| rs.into_ruleset_entry()
+    ).collect::<Vec<_>>();
+    ResponseEnvelope::RulesetList(rulesets)
+  }
+
   fn handle_define_rules_subcmd(&mut self, subcmd: DefineRulesSubcmdEnvelope)
     -> DefineRulesSubcmdResponse
   {
     log::debug!("GameServerInner::handle_define_rules_subcommand");
     if let Some(GameMode::DefineRules(ref mut define_rules_mode)) = self.mode {
-      define_rules_mode.handle_subcommand(subcmd)
+      define_rules_mode.handle_subcommand(subcmd, &mut self.data_store)
     } else {
       log::warn!("GameServerInner::handle_define_rules_subcommand: Bad game mode");
       DefineRulesSubcmdResponse::Failed(

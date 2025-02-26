@@ -26,24 +26,27 @@ impl TerrainGenInput {
     }
   }
 
-  pub(crate) fn validate(&self) -> TerrainGenValidation {
-    let mut validation = TerrainGenValidation::new();
-    self.validate_perlin(&mut validation);
-    self.validate_stage(&mut validation);
-    validation
-  }
-
-  fn validate_perlin(&self, validation: &mut TerrainGenValidation) {
-    let perlin_validation = self.perlin.validate();
-    if !perlin_validation.is_valid() {
-      validation.perlin = Some(perlin_validation);
-    }
-  }
-
-  fn validate_stage(&self, validation: &mut TerrainGenValidation) {
-    let stage_validation = self.stage.validate();
-    if !stage_validation.is_valid() {
-      validation.stage = Some(stage_validation);
+  pub(crate) fn to_validated(&self) -> Result<TerrainGenRules, TerrainGenValidation> {
+    let perlin = self.perlin.to_validated();
+    let stage = self.stage.to_validated();
+    match (perlin, stage) {
+      (Ok(perlin), Ok(stage)) => Ok(TerrainGenRules { perlin, stage }),
+      (Err(perlin_validation), Err(stage_validation)) => {
+        let mut validation = TerrainGenValidation::new();
+        validation.perlin = Some(perlin_validation);
+        validation.stage = Some(stage_validation);
+        Err(validation)
+      },
+      (Err(perlin_validation), _) => {
+        let mut validation = TerrainGenValidation::new();
+        validation.perlin = Some(perlin_validation);
+        Err(validation)
+      },
+      (_, Err(stage_validation)) => {
+        let mut validation = TerrainGenValidation::new();
+        validation.stage = Some(stage_validation);
+        Err(validation)
+      },
     }
   }
 }
@@ -141,111 +144,50 @@ impl TerrainGenStageInput {
     }
   }
 
-  pub(crate) fn validate(&self) -> TerrainGenStageValidation {
-    let mut validation = TerrainGenStageValidation::new();
-    self.validate_format(&mut validation);
-    self.validate_init_program(&mut validation);
-    self.validate_iterations(&mut validation);
-    self.validate_pairwise_program(&mut validation);
-    self.validate_pairwise_output_registers(&mut validation);
-    self.validate_merge_program(&mut validation);
-    self.validate_final_program(&mut validation);
-    validation
-  }
-
-  fn validate_format(&self, validation: &mut TerrainGenStageValidation) {
-    let format_validation = self.format.validate();
-    if !format_validation.errors.is_empty() {
-      validation.errors.push("The `format` value is invalid.".to_string());
-      validation.format = Some(format_validation);
-    }
-  }
-
-  fn validate_init_program(&self, validation: &mut TerrainGenStageValidation) {
-    if self.init_program.is_empty() {
-      validation.errors.push("The `initProgram` value is required.".to_string());
-    }
-    let program_validation = ShasmProgram::validate(&self.init_program);
-    if !program_validation.is_valid() {
-      validation.init_program = Some(program_validation);
-    }
-  }
-
-  fn validate_iterations(&self, validation: &mut TerrainGenStageValidation) {
-    if self.iterations.is_empty() {
-      validation.errors.push("The `iterations` value is required.".to_string());
-    }
+  pub(crate) fn to_validated(&self) -> Result<TerrainGenStageRules, TerrainGenStageValidation> {
+    let maybe_format = self.format.to_validated();
+    let maybe_init_program = ShasmProgram::to_validated(&self.init_program);
     let maybe_iterations = self.iterations.parse::<u32>();
-    match maybe_iterations {
-      Ok(iterations) => {
-        if iterations == 0 {
-          validation.iterations.push(
-            "The iterations must be a positive number.".to_string()
-          );
-        }
-      },
-      _ => validation.iterations.push(
-        "The iterations must be a number.".to_string()
-      ),
-    }
-  }
+    let maybe_pairwise_program = ShasmProgram::to_validated(&self.pairwise_program);
+    let maybe_pairwise_output_registers = self.pairwise_output_registers.parse::<u8>();
+    let maybe_merge_program = ShasmProgram::to_validated(&self.merge_program);
+    let maybe_final_program = ShasmProgram::to_validated(&self.final_program);
 
-  fn validate_pairwise_program(&self,
-    validation: &mut TerrainGenStageValidation
-  ) {
-    if self.pairwise_program.is_empty() {
-      validation.errors.push(
-        "The `pairwiseProgram` value is required.".to_string()
-      );
+    if maybe_format.is_err() ||
+       maybe_init_program.is_err() ||
+        maybe_iterations.is_err() ||
+        maybe_pairwise_program.is_err() ||
+        maybe_pairwise_output_registers.is_err() ||
+        maybe_merge_program.is_err() ||
+        maybe_final_program.is_err() {
+      let mut validation = TerrainGenStageValidation::new();
+      validation.format = maybe_format.err();
+      validation.init_program = maybe_init_program.err();
+      if let Err(_) = maybe_iterations {
+        validation.iterations.push("The iterations must be a positive number.".to_string());
+      }
+      validation.pairwise_program = maybe_pairwise_program.err();
+      if let Err(_) = maybe_pairwise_output_registers {
+        validation.pairwise_output_registers.push(
+          "The pairwise output registers must be a positive number.".to_string()
+        );
+      }
+      validation.merge_program = maybe_merge_program.err();
+      validation.final_program = maybe_final_program.err();
+      Err(validation)
+    } else {
+      Ok(TerrainGenStageRules {
+        format: maybe_format.unwrap(),
+        init_program: maybe_init_program.unwrap(),
+        iterations: maybe_iterations.unwrap(),
+        pairwise_program: maybe_pairwise_program.unwrap(),
+        pairwise_output_registers: maybe_pairwise_output_registers.unwrap(),
+        merge_program: maybe_merge_program.unwrap(),
+        final_program: maybe_final_program.unwrap(),
+      })
     }
-    let program_validation = ShasmProgram::validate(&self.pairwise_program);
-    if !program_validation.is_valid() {
-      validation.pairwise_program = Some(program_validation);
-    }
-  }
 
-  fn validate_pairwise_output_registers(&self, validation: &mut TerrainGenStageValidation) {
-    if self.pairwise_output_registers.is_empty() {
-      validation.errors.push(
-        "The `pairwiseOutputRegisters` value is required.".to_string()
-      );
-    }
-    let maybe_pairwise_output_registers =
-      self.pairwise_output_registers.parse::<u8>();
-    match maybe_pairwise_output_registers {
-      Ok(pairwise_output_registers) => {
-        if pairwise_output_registers == 0 {
-          validation.pairwise_output_registers.push(
-            "The pairwise output registers must be a positive number.".to_string()
-          );
-        }
-      },
-      _ => validation.pairwise_output_registers.push(
-        "The pairwise output registers must be a number.".to_string()
-      ),
-    }
   }
-
-  fn validate_merge_program(&self, validation: &mut TerrainGenStageValidation) {
-    if self.merge_program.is_empty() {
-      validation.errors.push("The `mergeProgram` value is required.".to_string());
-    }
-    let program_validation = ShasmProgram::validate(&self.merge_program);
-    if !program_validation.is_valid() {
-      validation.merge_program = Some(program_validation);
-    }
-  }
-
-  fn validate_final_program(&self, validation: &mut TerrainGenStageValidation) {
-    if self.final_program.is_empty() {
-      validation.errors.push("The `finalProgram` value is required.".to_string());
-    }
-    let program_validation = ShasmProgram::validate(&self.final_program);
-    if !program_validation.is_valid() {
-      validation.final_program = Some(program_validation);
-    }
-  }
-
 }
 
 #[derive(Debug, Clone)]
@@ -336,30 +278,48 @@ impl TerrainGenPerlinInput {
     }
   }
 
-  pub(crate) fn validate(&self) -> TerrainGenPerlinValidation {
+  pub(crate) fn to_validated(&self) -> Result<TerrainGenPerlinRules, TerrainGenPerlinValidation> {
     let mut validation = TerrainGenPerlinValidation::new();
-    self.validate_seed(&mut validation);
-    self.validate_octaves(&mut validation);
-    self.validate_frequency(&mut validation);
-    self.validate_amplitude(&mut validation);
-    self.validate_register(&mut validation);
-    validation
+    let maybe_seed = self.validate_seed(&mut validation);
+    let maybe_octaves = self.validate_octaves(&mut validation);
+    let maybe_frequency = self.validate_frequency(&mut validation);
+    let maybe_amplitude = self.validate_amplitude(&mut validation);
+    let maybe_register = self.validate_register(&mut validation);
+    if maybe_seed.is_none() ||
+      maybe_octaves.is_none() ||
+      maybe_frequency.is_none() ||
+      maybe_amplitude.is_none() ||
+      maybe_register.is_none() {
+      Err(validation)
+    } else {
+      Ok(TerrainGenPerlinRules {
+        seed: maybe_seed.unwrap(),
+        octaves: maybe_octaves.unwrap(),
+        frequency: maybe_frequency.unwrap(),
+        amplitude: maybe_amplitude.unwrap(),
+        register: maybe_register.unwrap(),
+      })
+    }
+      
   }
 
-  fn validate_seed(&self, validation: &mut TerrainGenPerlinValidation) {
+  fn validate_seed(&self, validation: &mut TerrainGenPerlinValidation) -> Option<u64> {
     if self.seed.is_empty() {
       validation.errors.push("The `seed` value is required.".to_string());
     }
     let maybe_seed = self.seed.parse::<u64>();
     match maybe_seed {
-      Ok(_) => {},
-      _ => validation.seed.push(
-        "The seed must be a non-negative number.".to_string()
-      ),
+      Ok(_) => maybe_seed.ok(),
+      _ => {
+        validation.seed.push(
+          "The seed must be a non-negative number.".to_string()
+        );
+        None
+      }
     }
   }
 
-  fn validate_octaves(&self, validation: &mut TerrainGenPerlinValidation) {
+  fn validate_octaves(&self, validation: &mut TerrainGenPerlinValidation) -> Option<u8> {
     if self.octaves.is_empty() {
       validation.errors.push("The `octaves` value is required.".to_string());
     }
@@ -370,15 +330,21 @@ impl TerrainGenPerlinInput {
           validation.octaves.push(
             "The octaves must be a positive number.".to_string()
           );
+          None
+        } else {
+          Some(octaves)
         }
       },
-      _ => validation.octaves.push(
-        "The octaves must be a number.".to_string()
-      ),
+      _ => {
+        validation.octaves.push(
+          "The octaves must be a number.".to_string()
+        );
+        None
+      }
     }
   }
 
-  fn validate_frequency(&self, validation: &mut TerrainGenPerlinValidation) {
+  fn validate_frequency(&self, validation: &mut TerrainGenPerlinValidation) -> Option<u8> {
     if self.frequency.is_empty() {
       validation.errors.push("The `frequency` value is required.".to_string());
     }
@@ -389,15 +355,19 @@ impl TerrainGenPerlinInput {
           validation.frequency.push(
             "The frequency must be a positive number.".to_string()
           );
+          None
+        } else {
+          Some(frequency)
         }
       },
-      _ => validation.frequency.push(
-        "The frequency must be a number.".to_string()
-      ),
+      _ => {
+        validation.frequency.push("The frequency must be a number.".to_string());
+        None
+      },
     }
   }
 
-  fn validate_amplitude(&self, validation: &mut TerrainGenPerlinValidation) {
+  fn validate_amplitude(&self, validation: &mut TerrainGenPerlinValidation) -> Option<u8> {
     if self.amplitude.is_empty() {
       validation.errors.push("The `amplitude` value is required.".to_string());
     }
@@ -405,27 +375,32 @@ impl TerrainGenPerlinInput {
     match maybe_amplitude {
       Ok(amplitude) => {
         if amplitude == 0 {
-          validation.amplitude.push(
-            "The amplitude must be a positive number.".to_string()
-          );
+          validation.amplitude.push("The amplitude must be a positive number.".to_string());
+          None
+        } else {
+          Some(amplitude)
         }
       },
-      _ => validation.amplitude.push(
-        "The amplitude must be a number.".to_string()
-      ),
+      _ => {
+        validation.amplitude.push("The amplitude must be a number.".to_string());
+        None
+      },
     }
   }
 
-  fn validate_register(&self, validation: &mut TerrainGenPerlinValidation) {
+  fn validate_register(&self, validation: &mut TerrainGenPerlinValidation) -> Option<ShadyRegister> {
     if self.register.is_empty() {
       validation.errors.push("The `register` value is required.".to_string());
     }
     let maybe_register = self.register.parse::<u8>();
     match maybe_register {
-      Ok(_) => {},
-      _ => validation.register.push(
-        "The register must be a valid register.".to_string()
-      ),
+      Ok(_) => Some(ShadyRegister::new(maybe_register.unwrap())),
+      _ => {
+        validation.register.push(
+          "The register must be a valid register.".to_string()
+        );
+        None
+      }
     }
   }
 }

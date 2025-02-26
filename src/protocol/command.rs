@@ -7,6 +7,7 @@ use super::{
   enter_mode_cmd::EnterModeCmd,
   enter_main_menu_mode_cmd::EnterMainMenuModeCmd,
   get_mode_info_cmd::GetModeInfoCmd,
+  list_rulesets_cmd::ListRulesetsCmd,
 };
 
 /** Base trait implemented by all commands. */
@@ -56,5 +57,6 @@ pub(crate) enum CommandEnvelope {
   EnterMode(EnterModeCmd),
   EnterMainMenuMode(EnterMainMenuModeCmd),
   GetModeInfo(GetModeInfoCmd),
+  ListRulesets(ListRulesetsCmd),
   DefineRulesSubcmd(DefineRulesSubcmdEnvelope),
 }

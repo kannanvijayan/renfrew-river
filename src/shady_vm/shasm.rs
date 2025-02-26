@@ -28,13 +28,13 @@ impl ShasmProgram {
   pub(crate) fn new(program_text: String) -> ShasmProgram {
     ShasmProgram { program_text }
   }
-   
-   pub(crate) fn validate(text: &str) -> ShasmProgramValidation {
-      match shasm_program_parser(text) {
-        Ok(_) => ShasmProgramValidation { errors: Vec::new() },
-        Err(errors) => ShasmProgramValidation { errors },
-      }
-   }
+
+  pub(crate) fn to_validated(text: &str) -> Result<ShasmProgram, ShasmProgramValidation> {
+    match shasm_program_parser(text) {
+      Ok(_program) => Ok(ShasmProgram::new(text.to_string())),
+      Err(errors) => Err(ShasmProgramValidation { errors }),
+    }
+  }
 }
 
 #[derive(Debug, Clone)]

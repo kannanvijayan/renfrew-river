@@ -181,13 +181,11 @@ function AddComponentDialogTitle(props: {
         ❌
       </CloseButton>
       <Box display="flex" flexDirection="column" margin="auto" padding="0">
-        <Typography className="AddComponentDialogTitle" variant="h2"
-            color={"primary.contrastText"} fontSize={"3rem"}
+        <Typography variant="h2" color={"primary.contrastText"} fontSize={"3rem"}
             sx={{ margin: "1rem auto 0 auto", width: "100%" }}>
           Add Component
         </Typography>
-        <Typography className="AddComponentDialogSubtitle" variant="h3"
-            color={"primary.contrastText"} fontSize={"2rem"}
+        <Typography variant="h3" color={"primary.contrastText"} fontSize={"2rem"}
             sx={{ margin: "1rem auto", textAlign: "center", width: "100%" }}>
           <span style={{ fontWeight: 700 }}>{wordInfo.name}</span>
         </Typography>

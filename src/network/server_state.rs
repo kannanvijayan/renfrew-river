@@ -4,7 +4,7 @@ use std::sync::{
   atomic::{ AtomicBool, Ordering },
 };
 use crate::{
-  game::GameServer,
+  game::{GameServer, GameServerConfig},
   protocol::{ CommandEnvelope, ResponseEnvelope },
 };
 
@@ -16,9 +16,9 @@ struct ServerStateInner {
 #[derive(Clone)]
 pub(crate) struct ServerState(Arc<ServerStateInner>);
 impl ServerState {
-  pub(crate) fn new() -> ServerState {
+  pub(crate) fn new(config: &GameServerConfig) -> ServerState {
     let inner = ServerStateInner {
-      game_server: Mutex::new(GameServer::new()),
+      game_server: Mutex::new(GameServer::new(config)),
       has_client: AtomicBool::new(false),
     };
     ServerState(Arc::new(inner))

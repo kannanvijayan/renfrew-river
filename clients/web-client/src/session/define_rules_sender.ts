@@ -1,4 +1,7 @@
-import GameClient, { ruleset } from "renfrew-river-protocol-client";
+import GameClient, {
+  RulesetInput,
+  RulesetValidation,
+} from "renfrew-river-protocol-client";
 
 export default class DefineRulesSender {
   private readonly gameClient_: GameClient;
@@ -11,8 +14,8 @@ export default class DefineRulesSender {
     return this.gameClient_.defineRules.enter();
   }
 
-  public async validateRules(rulesetInput: ruleset.RulesetInput)
-    : Promise<true|ruleset.RulesetValidation>
+  public async validateRules(rulesetInput: RulesetInput)
+    : Promise<true | RulesetValidation>
   {
     return this.gameClient_.defineRules.validateRules(rulesetInput);
   }

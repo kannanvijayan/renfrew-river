@@ -11,16 +11,16 @@ use warp::{
   ws::Message,
 };
 use crate::{
-  network::{NetworkServerConfig, ServerState},
-  protocol::CommandEnvelope,
+  game::GameServerConfig, network::{NetworkServerConfig, ServerState}, protocol::CommandEnvelope
 };
 
 /**
  * The network server.  Fronts a game-server over a socket.
  */
 pub async fn ws_serve(config: NetworkServerConfig) {
-
-  let server_state = ServerState::new();
+  let mut game_server_config = GameServerConfig::default();
+  game_server_config.data_root = config.data_root.clone();
+  let server_state = ServerState::new(&game_server_config);
 
   log::debug!("serve");
   // Serve websocket on '/ws'

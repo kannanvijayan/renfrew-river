@@ -14,6 +14,10 @@ struct CommandLineArgs {
   /** Address to serve on. */
   #[clap(short, long, name="serve-addr")]
   serve_addr: Option<String>,
+
+  /** Root path of data store. */
+  #[clap(short, long, name="data-root")]
+  data_root: Option<String>,
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -27,6 +31,10 @@ pub async fn main() {
 
   if let Some(ref serve_addr) = args.serve_addr {
     network_server_config.serve_addr = serve_addr.clone();
+  }
+
+  if let Some(ref data_root) = args.data_root {
+    network_server_config.data_root = data_root.clone();
   }
 
   ws_serve(network_server_config).await;

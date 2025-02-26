@@ -122,13 +122,12 @@ function AddWordDialogTitle(props: { viewState: GeneratorProgramViewState }) {
   };
   return (
     <Box display="flex" flexDirection="row" margin="0" padding="0"
-      textAlign={"center"} width="100%">
+        textAlign={"center"} width="100%">
       <CloseButton onClick={onCloseClick}>
         ❌
       </CloseButton>
-      <Typography className="AddWordDialogTitle" variant="h2"
-        color={"primary.contrastText"}
-        sx={{ margin: "1rem", textAlign: "center", width: "100%" }}>
+      <Typography variant="h2" color={"primary.contrastText"}
+          sx={{ margin: "1rem", textAlign: "center", width: "100%" }}>
         Add Word
       </Typography>
     </Box>

@@ -4,8 +4,7 @@ export default function ShasmProgramInput(props: {
 }) {
   const { programText, onChange } = props;
   return (
-    <textarea spellCheck="false"
-        onChange={e => onChange(e.target.value)}
+    <textarea spellCheck="false" onChange={e => onChange(e.target.value)}
         value={programText}
         style={{
           backgroundColor: "#cb8",

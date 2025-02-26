@@ -6,10 +6,9 @@ export default function EditorBox(props: {
 }) {
   const { title, children } = props;
   return (
-    <Box className="DefineRulesetEditor"
-      display="flex" flexDirection="column"
-      margin="0" padding="0" width="100%" height="100%" textAlign={"left"}
-      minHeight="5rem" position="relative">
+    <Box display="flex" flexDirection="column"
+        margin="0" padding="0" width="100%" height="100%" textAlign={"left"}
+        minHeight="5rem" position="relative">
       <DefineRulesetEditorBoxTitle title={title} />
       <Box display="flex" flexDirection="column" margin="0 0 2rem 0" padding="0"
            width="100%" textAlign="left" flex="1"

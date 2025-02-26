@@ -271,17 +271,15 @@ function Item(props: {
 function ItemList(props: { children: React.ReactNode }) {
   const { children } = props;
   return (
-    <Box className="DefineRulesetGeneratorProgramItemList"
-      display="flex" flexDirection="column" flex="0"
-      minHeight="5rem"
-      minWidth="20rem"
-      margin="1rem 0rem auto 1rem" width="auto" height="auto"
-      padding="1rem 0rem 1rem 0.5rem"
-      border="2px dotted #622" borderRadius="2rem"
-      fontSize="1.5rem" color="#622"
-      position="sticky" top="1rem"
-      sx={{ textAlign: "right" }}
-      >
+    <Box display="flex" flexDirection="column" flex="0"
+        minHeight="5rem"
+        minWidth="20rem"
+        margin="1rem 0rem auto 1rem" width="auto" height="auto"
+        padding="1rem 0rem 1rem 0.5rem"
+        border="2px dotted #622" borderRadius="2rem"
+        fontSize="1.5rem" color="#622"
+        position="sticky" top="1rem"
+        sx={{ textAlign: "right" }}>
       {children}
     </Box>
   );
@@ -316,8 +314,7 @@ function FieldList(props: {
   const dispatch = useAppDispatch.view.connected.defRules();
   const entries = Object.entries(fields);
   return (
-    <Box className="DefineRulesetGeneratorProgramFieldList"
-        display="flex" flexDirection="column" flex="1"
+    <Box display="flex" flexDirection="column" flex="1"
         width="auto" fontSize="1.5rem" color="#622" textAlign="left"
         margin="0" padding="0 1rem 0 1rem">
       {entries.map(([id, { selection, label, node }], index) => {

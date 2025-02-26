@@ -5,6 +5,7 @@ mod response;
 mod enter_mode_cmd;
 mod enter_main_menu_mode_cmd;
 mod get_mode_info_cmd;
+mod list_rulesets_cmd;
 
 pub(crate) mod mode;
 
@@ -16,6 +17,8 @@ pub(crate) use self::{
   enter_main_menu_mode_cmd::{ EnterMainMenuModeCmd, EnterMainMenuModeRsp },
 
   get_mode_info_cmd::{ GetModeInfoCmd, ModeInfoRsp },
+
+  list_rulesets_cmd::{ ListRulesetsCmd, ListRulesetsRsp },
 };
 pub use self::documentation::{
   ProtocolCommandDocumentation,

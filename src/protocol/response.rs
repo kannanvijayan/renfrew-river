@@ -1,5 +1,6 @@
 use serde;
 
+use crate::ruleset::RulesetEntry;
 use super::mode::{
   define_rules::DefineRulesSubcmdResponse,
   GameModeInfo
@@ -12,6 +13,7 @@ pub(crate) enum ResponseEnvelope {
   Failed(FailedResponse),
   InMode(GameModeInfo),
   InMainMenuMode {},
+  RulesetList(Vec<RulesetEntry>),
   DefineRulesSubcmd(DefineRulesSubcmdResponse),
 }
 

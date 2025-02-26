@@ -12,18 +12,21 @@ import TerrainGenerationViewState, { TerrainGenerationAction }
 type DefineRulesViewState = {
   category: DefineRulesEntryCategory | null,
   entrySelection: DefineRulesEntrySelection | null,
+  name: string,
+  description: string,
   terrainGeneration: TerrainGenerationViewState,
   validation: RulesetValidation | null,
 };
 
 const DefineRulesViewState = {
   createRulesetInput(state: DefineRulesViewState): RulesetInput {
+    const { name, description, terrainGeneration } = state;
     return {
-      name: "",
-      description: "",
+      name,
+      description,
       terrainGen: {
-        perlin: state.terrainGeneration.perlinFields,
-        stage: state.terrainGeneration.generatorProgram,
+        perlin: terrainGeneration.perlinFields,
+        stage: terrainGeneration.generatorProgram,
       }
     };
   },
@@ -31,6 +34,8 @@ const DefineRulesViewState = {
   initialState: {
     category: null,
     entrySelection: null,
+    name: "",
+    description: "",
     terrainGeneration: TerrainGenerationViewState.initialState,
     validation: null,
   } as DefineRulesViewState,
@@ -45,6 +50,12 @@ const DefineRulesViewState = {
       : SetEntrySelectionAction
     {
       return { type: "set_entry_selection" as const, entrySelection };
+    },
+    setName(name: string): SetNameAction {
+      return { type: "set_name" as const, name };
+    },
+    setDescription(description: string): SetDescriptionAction {
+      return { type: "set_description" as const, description };
     },
     setValidation(validation: RulesetValidation | null)
       : SetValidationAction
@@ -69,6 +80,16 @@ const DefineRulesViewState = {
       action: SetEntrySelectionAction
     ): DefineRulesViewState {
       return { ...state, entrySelection: action.entrySelection }
+    },
+    set_name(state: DefineRulesViewState, action: SetNameAction)
+      : DefineRulesViewState
+    {
+      return { ...state, name: action.name };
+    },
+    set_description(state: DefineRulesViewState, action: SetDescriptionAction)
+      : DefineRulesViewState
+    {
+      return { ...state, description: action.description };
     },
     set_validation(state: DefineRulesViewState, action: SetValidationAction)
       : DefineRulesViewState
@@ -116,6 +137,16 @@ type SetEntrySelectionAction = {
   entrySelection: DefineRulesEntrySelection | null,
 };
 
+type SetNameAction = {
+  type: "set_name",
+  name: string,
+};
+
+type SetDescriptionAction = {
+  type: "set_description",
+  description: string,
+};
+
 type SetValidationAction = {
   type: "set_validation",
   validation: RulesetValidation | null,
@@ -138,6 +169,8 @@ type DefineRulesDispatchTargets =
 type DefineRulesAction =
   | SetCategoryAction
   | SetEntrySelectionAction
+  | SetNameAction
+  | SetDescriptionAction
   | SetValidationAction
   | TerrainGenerationDispatchAction
 
@@ -146,6 +179,8 @@ export type {
   DefineRulesAction,
   SetCategoryAction,
   SetEntrySelectionAction,
+  SetNameAction,
+  SetDescriptionAction,
   SetValidationAction,
   TerrainGenerationDispatchAction,
 };

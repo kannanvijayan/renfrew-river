@@ -82,14 +82,13 @@ function Title() {
 function Contents(props: { viewState: DefineRulesViewState }) {
   const { viewState } = props;
   return (
-    <Box className="DefineRulesetContents" display="flex" flexDirection="row"
-      flex={1}
-      sx={{
-        minHeight: "5rem",
-        width: "100%", margin: 0, padding: 0,
-        backgroundColor: "secondary.dark",
-        borderRadius: "0 0 2.5rem 2.5rem",
-       }}>
+    <Box display="flex" flexDirection="row" flex={1}
+        sx={{
+          minHeight: "5rem",
+          width: "100%", margin: 0, padding: 0,
+          backgroundColor: "secondary.dark",
+          borderRadius: "0 0 2.5rem 2.5rem",
+        }}>
       <Sidebar viewState={viewState} />
       <Divider orientation="vertical" flexItem sx={{
         backgroundColor: "secondary.main",

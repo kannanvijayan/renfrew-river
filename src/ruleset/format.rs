@@ -27,19 +27,29 @@ impl FormatInput {
     }
   }
 
-  pub(crate) fn validate(&self) -> FormatValidation {
+  pub(crate) fn to_validated(&self) -> Result<FormatRules, FormatValidation> {
     let mut validation = FormatValidation {
       errors: Vec::new(),
       word_formats: Vec::new(),
     };
 
     // Validate each word.
+    let mut word_rules = Vec::new();
     for word in &self.word_formats {
-      let word_validation = word.validate();
-      validation.word_formats.push(word_validation);
+      let maybe_validated = word.to_validated();
+      match maybe_validated {
+        Ok(validated) => word_rules.push(validated),
+        Err(word_validation) => validation.word_formats.push(word_validation),
+      }
     }
 
-    validation
+    if validation.is_valid() {
+      Ok(FormatRules {
+        word_formats: word_rules,
+      })
+    } else {
+      Err(validation)
+    }
   }
 }
 
@@ -91,7 +101,7 @@ pub(crate) struct FormatWordInput {
   pub(crate) components: Vec<FormatComponentInput>,
 }
 impl FormatWordInput {
-  pub(crate) fn validate(&self) -> FormatWordValidation {
+  pub(crate) fn to_validated(&self) -> Result<FormatWordRules, FormatWordValidation> {
     let mut validation = FormatWordValidation {
       errors: Vec::new(),
       components: Vec::new(),
@@ -103,12 +113,23 @@ impl FormatWordInput {
     }
 
     // Validate each component.
+    let mut component_rules = Vec::new();
     for component in &self.components {
-      let component_validation = component.validate();
-      validation.components.push(component_validation);
+      let maybe_validated = component.to_validated();
+      match maybe_validated {
+        Ok(validated) => component_rules.push(validated),
+        Err(component_validation) => validation.components.push(component_validation),
+      }
     }
 
-    validation
+    if validation.is_valid() {
+      Ok(FormatWordRules {
+        name: self.name.clone(),
+        components: component_rules,
+      })
+    } else {
+      Err(validation)
+    }
   }
 }
 
@@ -163,9 +184,9 @@ pub(crate) struct FormatComponentInput {
   pub(crate) bits: String,
 }
 impl FormatComponentInput {
-  pub(crate) fn validate(&self) -> FormatComponentValidation {
+  pub(crate) fn to_validated(&self) -> Result<FormatComponentRules, FormatComponentValidation> {
     let mut validation = FormatComponentValidation::new();
-    self.validate_name(&mut validation);
+    let name = self.validate_name(&mut validation);
     let offset = self.validate_offset(&mut validation);
     let bits = self.validate_bits(&mut validation);
 
@@ -178,12 +199,25 @@ impl FormatComponentInput {
       }
     }
 
-    validation
+    if validation.is_valid() {
+      Ok(FormatComponentRules {
+        name: name.unwrap(),
+        offset: offset.unwrap(),
+        bits: bits.unwrap(),
+      })
+    } else {
+      Err(validation)
+    }
   }
 
-  fn validate_name(&self, validation: &mut FormatComponentValidation) {
+  fn validate_name(&self, validation: &mut FormatComponentValidation)
+    -> Option<String>
+  {
     if self.name.is_empty() {
       validation.name.push("The name is required.".to_string());
+      None
+    } else {
+      Some(self.name.clone())
     }
   }
 
