@@ -13,7 +13,6 @@ import FormatRules, {
 
 import TerrainGenRules, {
   defaultTerrainGenRules,
-  validateTerrainGenRules,
   TerrainGenPerlinRules,
   TerrainGenStageRules,
   TerrainGenInput,

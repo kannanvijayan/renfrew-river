@@ -270,7 +270,7 @@ function SidebarValidation(props: {
           p="0 1rem 1rem 1rem"
           width="100%">
         {
-          errors ?
+          !enabled ?
             <ValidationErrors errors={errors} exclaimSx={exclaimSx} />
           : undefined
         }

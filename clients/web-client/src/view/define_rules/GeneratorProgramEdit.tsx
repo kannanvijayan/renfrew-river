@@ -34,8 +34,6 @@ export default function GeneratorProgramEdit(props: {
               errors={generatorProgramValidation?.iterations} />
           <PairwiseProgramItem viewState={viewState}
               errors={generatorProgramValidation?.pairwiseProgram?.errors} />
-          <PairwiseOutRegsItem viewState={viewState}
-              errors={generatorProgramValidation?.pairwiseOutputRegisters} />
           <MergeProgramItem viewState={viewState}
               errors={generatorProgramValidation?.mergeProgram?.errors} />
           <FinalProgramItem viewState={viewState}
@@ -63,17 +61,6 @@ export default function GeneratorProgramEdit(props: {
               selection: DefineRulesGeneratorProgramSection.PAIRWISE_PROGRAM,
               label: "Pairwise Program",
               node: <PairwiseProgramEntry viewState={generatorProgramViewState} />,
-            },
-            DefineRulesetGeneratorProgramPairwiseOutRegs: {
-              selection: DefineRulesGeneratorProgramSection.PAIRWISE_OUTREGS,
-              label: "Pairwise OutRegs",
-              node: (
-                <Typography variant="h5" color={"primary.dark"}
-                    margin="0 1rem 0 0" padding="0.5rem" fontWeight={700}
-                    width="auto">
-                  Pairwise OutRegs
-                </Typography>
-              ),
             },
             DefineRulesetGeneratorProgramMergeProgram: {
               selection: DefineRulesGeneratorProgramSection.MERGE_PROGRAM,
@@ -153,26 +140,6 @@ function PairwiseProgramItem(props: {
         entrySelection={DefineRulesGeneratorProgramSection.PAIRWISE_PROGRAM}
         elementId={"DefineRulesetGeneratorProgramPairwiseProgram"}
         errors={errors} />
-  );
-}
-
-function PairwiseOutRegsItem(props: {
-  viewState: DefineRulesViewState,
-  errors: string[] | undefined,
-}) {
-  const { viewState, errors } = props;
-  const defRulesDispatch = useAppDispatch.view.connected.defRules();
-  const PAIRWISE_OUTREGS = DefineRulesGeneratorProgramSection.PAIRWISE_OUTREGS;
-  const onClick = () => {
-    defRulesDispatch(
-      DefineRulesViewState.action.setEntrySelection(PAIRWISE_OUTREGS)
-    );
-    location.hash = "#DefineRulesetGeneratorProgramPairwiseOutRegs";
-  };
-  const isSelected = viewState.entrySelection === PAIRWISE_OUTREGS;
-  return (
-    <Item name="Pairwise OutRegs" onClick={onClick}
-        isSelected={isSelected} errors={errors} />
   );
 }
 

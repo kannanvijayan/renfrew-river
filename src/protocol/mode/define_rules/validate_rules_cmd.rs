@@ -91,15 +91,10 @@ impl Command for ValidateRulesCmd {
             init_program: "mov r0, r1, r2\nadd r1, r3, 33\n".to_string(),
             iterations: "100".to_string(),
             pairwise_program: "add r0, r1, 33\n".to_string(),
-            pairwise_output_registers: "8".to_string(),
             merge_program: "add r0, r1, 33\n".to_string(),
             final_program: "add r0, r1, 33\n".to_string(),
           },
           perlin: TerrainGenPerlinInput {
-            seed: "1".to_string(),
-            octaves: "5".to_string(),
-            frequency: "9".to_string(),
-            amplitude: "3".to_string(),
             register: "4".to_string(),
           }
         }
@@ -191,7 +186,6 @@ impl Command for ValidateRulesCmd {
                 }
               ],
             }),
-            pairwise_output_registers: vec!["error_19".to_string()],
             merge_program: Some(ShasmProgramValidation {
               errors: vec![
                 ShasmParseError {

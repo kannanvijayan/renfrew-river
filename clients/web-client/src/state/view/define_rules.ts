@@ -42,11 +42,13 @@ const DefineRulesViewState = {
 
   action: {
     setCategory(category: DefineRulesEntryCategory | null)
-      : SetCategoryAction {
+      : SetCategoryAction
+    {
       return { type: "set_category" as const, category };
     },
     setEntrySelection(entrySelection: DefineRulesEntrySelection | null)
-      : SetEntrySelectionAction {
+      : SetEntrySelectionAction
+    {
       return { type: "set_entry_selection" as const, entrySelection };
     },
     setName(name: string): SetNameAction {
@@ -56,18 +58,21 @@ const DefineRulesViewState = {
       return { type: "set_description" as const, description };
     },
     setValidation(validation: RulesetValidation | null)
-      : SetValidationAction {
+      : SetValidationAction
+    {
       return { type: "set_validation" as const, validation };
     },
     terrainGeneration(action: TerrainGenerationAction)
-      : TerrainGenerationDispatchAction {
+      : TerrainGenerationDispatchAction
+    {
       return { type: "dispatch" as const, target: "terrain_generation", action };
     }
   },
 
   reducers: {
     set_category(state: DefineRulesViewState, action: SetCategoryAction)
-      : DefineRulesViewState {
+      : DefineRulesViewState
+    {
       return { ...state, category: action.category };
     },
     set_entry_selection(
@@ -77,15 +82,18 @@ const DefineRulesViewState = {
       return { ...state, entrySelection: action.entrySelection }
     },
     set_name(state: DefineRulesViewState, action: SetNameAction)
-      : DefineRulesViewState {
+      : DefineRulesViewState
+    {
       return { ...state, name: action.name };
     },
     set_description(state: DefineRulesViewState, action: SetDescriptionAction)
-      : DefineRulesViewState {
+      : DefineRulesViewState
+    {
       return { ...state, description: action.description };
     },
     set_validation(state: DefineRulesViewState, action: SetValidationAction)
-      : DefineRulesViewState {
+      : DefineRulesViewState
+    {
       return { ...state, validation: action.validation };
     },
     terrain_generation(

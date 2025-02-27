@@ -15,111 +15,11 @@ export default function PerlinEdit(props: {
 }) {
   const { viewState } = props;
   const validation = viewState.validation?.terrainGen?.perlin;
-  const seedErrors = validation?.seed || [];
-  const octavesErrors = validation?.octaves || [];
-  const frequencyErrors = validation?.frequency || [];
-  const amplitudeErrors = validation?.amplitude || [];
   const outregErrors = validation?.register || [];
   return (
     <EditorBox title="Perlin Rules">
-      <DefineRulsetPerlinSeedField viewState={viewState} errors={seedErrors} />
-      <DefineRulesetPerlinOctavesField viewState={viewState} errors={octavesErrors} />
-      <DefineRulesetPerlinFrequencyField viewState={viewState} errors={frequencyErrors} />
-      <DefineRulesetPerlinAmplitudeField viewState={viewState} errors={amplitudeErrors} />
       <DefineRulesetPerlinOutregField viewState={viewState} errors={outregErrors} />
     </EditorBox>
-  );
-}
-
-function DefineRulsetPerlinSeedField(props: {
-  viewState: DefineRulesViewState,
-  errors: string[],
-}) {
-  const { viewState, errors } = props;
-  const dispatchPerlinFields = usePerlinFieldsDispatch();
-  const dispatchDefineRules =  useDefineRulesDispatch();
-  const SEED = DefineRulesPerlinField.SEED;
-  const onChange = (value: string) => {
-    dispatchPerlinFields(PerlinFieldsViewState.action.setSeedInput(value));
-  };
-  const onClick = () => {
-    dispatchDefineRules(DefineRulesViewState.action.setEntrySelection(SEED));
-  };
-  const selected = viewState.entrySelection === SEED;
-  const value = viewState.terrainGeneration.perlinFields.seed;
-  return (
-    <DefineRulesetInputField label="Seed"
-        onChange={onChange} onClick={onClick}
-        selected={selected} value={value} errors={errors} />
-  );
-}
-
-function DefineRulesetPerlinOctavesField(props: {
-  viewState: DefineRulesViewState,
-  errors: string[],
-}) {
-  const { viewState, errors } = props;
-  const dispatchPerlinFields = usePerlinFieldsDispatch();
-  const dispatchDefineRules =  useDefineRulesDispatch();
-  const OCTAVES = DefineRulesPerlinField.OCTAVES;
-  const onChange = (value: string) => {
-    dispatchPerlinFields(PerlinFieldsViewState.action.setOctavesInput(value));
-  };
-  const onClick = () => {
-    dispatchDefineRules(DefineRulesViewState.action.setEntrySelection(OCTAVES));
-  };
-  const selected = viewState.entrySelection === OCTAVES;
-  const value = viewState.terrainGeneration.perlinFields.octaves;
-  return (
-    <DefineRulesetInputField label="Octaves"
-        onChange={onChange} onClick={onClick}
-        selected={selected} value={value} errors={errors} />
-  );
-}
-
-function DefineRulesetPerlinFrequencyField(props: {
-  viewState: DefineRulesViewState,
-  errors: string[],
-}) {
-  const { viewState, errors } = props;
-  const dispatchPerlinFields = usePerlinFieldsDispatch();
-  const dispatchDefineRules = useDefineRulesDispatch();
-  const FREQUENCY = DefineRulesPerlinField.FREQUENCY;
-  const onChange = (value: string) => {
-    dispatchPerlinFields(PerlinFieldsViewState.action.setFrequencyInput(value));
-  };
-  const onClick = () => {
-    dispatchDefineRules(DefineRulesViewState.action.setEntrySelection(FREQUENCY));
-  };
-  const selected = viewState.entrySelection === FREQUENCY;
-  const value = viewState.terrainGeneration.perlinFields.frequency
-  return (
-    <DefineRulesetInputField label="Frequency"
-        onChange={onChange} onClick={onClick}
-        selected={selected} value={value} errors={errors} />
-  );
-}
-
-function DefineRulesetPerlinAmplitudeField(props: {
-  viewState: DefineRulesViewState,
-  errors: string[],
-}) {
-  const { viewState, errors } = props;
-  const dispatchPerlinFields = usePerlinFieldsDispatch();
-  const dispatchDefineRules = useDefineRulesDispatch();
-  const AMPLITUDE = DefineRulesPerlinField.AMPLITUDE;
-  const onChange = (value: string) => {
-    dispatchPerlinFields(PerlinFieldsViewState.action.setAmplitudeInput(value));
-  };
-  const onClick = () => {
-    dispatchDefineRules(DefineRulesViewState.action.setEntrySelection(AMPLITUDE));
-  };
-  const selected = viewState.entrySelection === AMPLITUDE;
-  const value = viewState.terrainGeneration.perlinFields.amplitude;
-  return (
-    <DefineRulesetInputField label="Amplitude"
-        onChange={onChange} onClick={onClick}
-        selected={selected} value={value} errors={errors} />
   );
 }
 

@@ -27,8 +27,13 @@ impl RulesetStore {
   const INDEX_FILENAME: &'static str = "rulesets.json";
 
   pub(crate) fn new(subtree: FileManagerSubtree) -> Self {
-    let ruleset_json = subtree.read(Self::INDEX_FILENAME)
-      .expect("Failed to read rulesets.json");
+    let ruleset_json = match subtree.read(Self::INDEX_FILENAME) {
+      Ok(json) => json,
+      Err(_) => {
+        log::warn!("Failed to read ruleset index file, using empty one.");
+        "[]".to_string()
+      }
+    };
     let entries: Vec<RulesetStoreEntry> =
       serde_json::from_str(&ruleset_json).expect("Failed to parse index.json");
 

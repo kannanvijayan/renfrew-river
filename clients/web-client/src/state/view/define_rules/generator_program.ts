@@ -20,7 +20,6 @@ type GeneratorProgramViewState = {
   initProgram: string,
   iterations: string,
   pairwiseProgram: string,
-  pairwiseOutputRegisters: string,
   mergeProgram: string,
   finalProgram: string,
 }
@@ -41,7 +40,6 @@ const GeneratorProgramViewState = {
     initProgram: "",
     iterations: "",
     pairwiseProgram: "",
-    pairwiseOutputRegisters: "",
     mergeProgram: "",
     finalProgram: "",
   } as GeneratorProgramViewState,
@@ -85,14 +83,6 @@ const GeneratorProgramViewState = {
       return {
         type: "set_pairwise_program" as const,
         pairwiseProgramInput: pairwiseProgram,
-      };
-    },
-    setPairwiseOutputRegisters(pairwiseOutputRegisters: string)
-      : SetPairwiseOutputRegistersAction
-    {
-      return {
-        type: "set_pairwise_output_registers" as const,
-        pairwiseOutputRegistersInput: pairwiseOutputRegisters,
       };
     },
     setMergeProgram(mergeProgram: string): SetMergeProgramAction {
@@ -141,14 +131,6 @@ const GeneratorProgramViewState = {
       : GeneratorProgramViewState
     {
       return { ...state, pairwiseProgram: action.pairwiseProgramInput };
-    },
-    set_pairwise_output_registers(state: GeneratorProgramViewState, action: SetPairwiseOutputRegistersAction)
-      : GeneratorProgramViewState
-    {
-      return {
-        ...state,
-        pairwiseOutputRegisters: action.pairwiseOutputRegistersInput,
-      };
     },
     set_merge_program(state: GeneratorProgramViewState, action: SetMergeProgramAction)
       : GeneratorProgramViewState
@@ -205,10 +187,6 @@ type SetPairwiseProgramAction = {
   pairwiseProgramInput: string,
 };
 
-type SetPairwiseOutputRegistersAction = {
-  type: "set_pairwise_output_registers",
-  pairwiseOutputRegistersInput: string,
-};
 
 type SetMergeProgramAction = {
   type: "set_merge_program",
@@ -228,7 +206,6 @@ type GeneratorProgramAction =
   | SetInitProgramAction
   | SetIterationsAction
   | SetPairwiseProgramAction
-  | SetPairwiseOutputRegistersAction
   | SetMergeProgramAction
   | SetFinalProgramAction;
 
@@ -243,7 +220,6 @@ export type {
   SetInitProgramAction,
   SetIterationsAction,
   SetPairwiseProgramAction,
-  SetPairwiseOutputRegistersAction,
   SetMergeProgramAction,
   SetFinalProgramAction,
   GeneratorProgramAction,
