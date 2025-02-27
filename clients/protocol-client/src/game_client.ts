@@ -1,4 +1,8 @@
-import { RulesetInput, RulesetValidation } from "./types/ruleset/ruleset";
+import {
+  RulesetEntry,
+  RulesetInput,
+  RulesetValidation,
+} from "./types/ruleset/ruleset";
 import {
   ProtocolSubcmdParams,
   ProtocolSubcmdName,
@@ -6,7 +10,11 @@ import {
   ProtocolSubcmdSpec,
 } from "./protocol/subcommand";
 import DefineRulesSubcmd from "./protocol/commands/define_rules/define_rules_subcmd";
-import { ProtocolCommandName, ProtocolCommandParams, ProtocolCommandResponse } from "./protocol/command";
+import {
+  ProtocolCommandName,
+  ProtocolCommandParams,
+  ProtocolCommandResponse,
+} from "./protocol/command";
 import GameModeInfo from "./types/game_mode_info";
 
 export type GameClientTransportListeners = {
@@ -90,6 +98,14 @@ export default class GameClient {
       return result.InMode;
     }
     return null;
+  }
+
+  public async listRulesets(): Promise<RulesetEntry[]> {
+    const result = await this.sendCommand("ListRulesets", {});
+    if ("RulesetList" in result) {
+      return result.RulesetList;
+    }
+    throw new Error("ListRulesets: unexpected response");
   }
 
   private async enterMode(mode: GameModeInfo): Promise<true> {

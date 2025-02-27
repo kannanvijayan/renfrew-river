@@ -8,6 +8,7 @@ import RootState from "../state/root";
 import ViewState, { ViewMode } from "../state/view";
 import ConnectedViewState from "../state/view/connected_view";
 import { GameModeInfo } from "renfrew-river-protocol-client";
+import SessionState from "../state/session";
 
 /**
  * The behavioural logic for maintaining a client connection (session)
@@ -90,6 +91,13 @@ export default class Session {
     return this.client.getModeInfo()
   }
 
+  public async updateRulesetList() {
+    const rulesets = await this.client.listRulesets();
+    store.dispatch(RootState.action.session(
+      SessionState.action.setRulesetList(rulesets)
+    ));
+  }
+
   private constructor(args: {
     serverAddr: string,
     client: GameClient,
@@ -109,6 +117,7 @@ export default class Session {
       throw new Error("Session already initialized");
     }
     Session.instance = new Session({ serverAddr, client });
+    Session.instance.updateRulesetList();
     return Session.instance;
   }
 

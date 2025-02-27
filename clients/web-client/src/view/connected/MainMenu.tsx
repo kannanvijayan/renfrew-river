@@ -5,14 +5,19 @@ import { useAppDispatch } from "../../store/hooks";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import DefineRulesViewState from "../../state/view/define_rules";
 import Session from "../../session/session";
+import SessionState from "../../state/session";
+import { RulesetEntry } from "renfrew-river-protocol-client";
 
-export default function MainMenu() {
+export default function MainMenu(props:{
+  sessionState: SessionState,
+}) {
+  const { sessionState } = props;
   return (
     <Container className="MainMenu" sx={{ backgroundColor: "secondary.dark" }}>
       <MainMenuTitle />
       <Separator />
       <DefineRulesetButton />
-      <LoadRulesetButton />
+      <LoadRulesetButton rulesets={sessionState.rulesetList || []} />
       <Separator />
       <CreateWorldButton />
       <LoadWorldButton />
@@ -67,9 +72,13 @@ function DefineRulesetButton() {
   );
 }
 
-function LoadRulesetButton() {
+function LoadRulesetButton(props: {
+  rulesets: RulesetEntry[],
+}) {
+  const { rulesets } = props;
+  const disabled = rulesets.length === 0;
   return (
-    <MainMenuButton label="Load Ruleset" onClick={() => {}} disabled />
+    <MainMenuButton label="Load Ruleset" onClick={() => {}} disabled={disabled} />
   );
 }
 

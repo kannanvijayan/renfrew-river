@@ -1,3 +1,4 @@
+import SessionState from "../../state/session";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import DefineRules from "../define_rules/DefineRules";
 import TopBar from "../TopBar";
@@ -5,28 +6,29 @@ import MainMenu from "./MainMenu";
 
 export default function ConnectedMain(props: {
   viewState: ConnectedViewState,
+  sessionState: SessionState,
 }) {
-  const { viewState } = props;
+  const { viewState, sessionState } = props;
   return (
     <>
       <TopBar viewState={viewState} />
-      <MainContent viewState={viewState } />
+      <MainContent viewState={viewState} sessionState={sessionState} />
     </>
   );
 }
 
 function MainContent(props: {
   viewState: ConnectedViewState,
+  sessionState: SessionState,
 }) {
-  switch (props.viewState.viewMode) {
+  const { viewState, sessionState } = props;
+  switch (viewState.viewMode) {
     case ConnectedViewMode.MAIN_MENU:
-      return (<MainMenu />);
+      return (<MainMenu sessionState={sessionState} />);
     case ConnectedViewMode.DEFINE_RULES:
-      return (<DefineRules viewState={props.viewState.defineRules} />);
+      return (<DefineRules viewState={viewState.defineRules} />);
     default:
-      console.error("Unknown view mode: " + props.viewState.viewMode);
-      return (
-        <></>
-      );
+      console.error("Unknown view mode: " + viewState.viewMode);
+      return (<></>);
   }
 }

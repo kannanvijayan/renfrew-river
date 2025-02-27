@@ -292,13 +292,14 @@ function CreateButton(props: {
     const session = Session.getInstance();
     try {
       await session.send.defineRules.saveRules();
+      await session.updateRulesetList();
     } catch (e) {
       console.error("Failed to save rules", e);
       return;
     }
 
     try {
-      await session.send.defineRules.leave();
+      await session.defRules.leave();
     } catch (e) {
       console.error("Failed to leave define_rules mode.", e);
       return;

@@ -19,6 +19,10 @@ import TerrainGenRules, {
   TerrainGenValidation,
 } from "./terrain_gen_rules";
 
+export type RulesetEntry = {
+  name: string,
+  description: string,
+};
 export type Ruleset = {
   name: string,
   description: string,

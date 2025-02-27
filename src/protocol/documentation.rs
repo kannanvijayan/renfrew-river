@@ -2,6 +2,10 @@ use serde_json;
 use super::{
   command::Command,
   mode::define_rules,
+  enter_main_menu_mode_cmd::EnterMainMenuModeCmd,
+  enter_mode_cmd::EnterModeCmd,
+  get_mode_info_cmd::GetModeInfoCmd,
+  list_rulesets_cmd::ListRulesetsCmd,
 };
 
 pub struct ProtocolCommandDocumentation {
@@ -24,7 +28,21 @@ pub struct ProtocolCategoryDocumentation {
 pub fn get_protocol_docs() -> Vec<ProtocolCategoryDocumentation> {
   let mut result = Vec::new();
   result.push(define_rules::get_category_docs());
+  result.push(main_category_docs());
   return result;
+}
+
+fn main_category_docs() -> ProtocolCategoryDocumentation {
+  ProtocolCategoryDocumentation {
+    name: "Main".to_string(),
+    description: "Commands for entering and exiting modes".to_string(),
+    commands: vec![
+      make_example::<EnterMainMenuModeCmd>(),
+      make_example::<EnterModeCmd>(),
+      make_example::<GetModeInfoCmd>(),
+      make_example::<ListRulesetsCmd>(),
+    ],
+  }
 }
 
 fn make_example<C: Command>() -> ProtocolCommandDocumentation {

@@ -11,8 +11,8 @@ import ConnectedMain from "./connected/ConnectedMain";
 import { ViewMode } from "../state/view";
 
 export default function App() {
-  const view = useRootSelector((state) => {
-    return state.view;
+  const { view, session } = useRootSelector((state) => {
+    return { view: state.view, session: state.session };
   });
 
   return (
@@ -26,7 +26,7 @@ export default function App() {
     if (view.mode === ViewMode.UNCONNECTED) {
       return <Splash viewState={view.unconnected} />;
     } else {
-      return <ConnectedMain viewState={view.connected} />;
+      return <ConnectedMain viewState={view.connected} sessionState={session} />;
     }
   }
 }
