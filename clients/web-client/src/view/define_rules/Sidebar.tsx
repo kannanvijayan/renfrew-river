@@ -7,6 +7,7 @@ import { useAppDispatch } from "../../store/hooks";
 import DefineRulesViewState from "../../state/view/define_rules";
 import ValidationErrors from "./ValidationErrors";
 import Session from "../../session/session";
+import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 
 export default function Sidebar(props: {
   viewState: DefineRulesViewState,
@@ -284,6 +285,30 @@ function CreateButton(props: {
   enabled: boolean,
 }) {
   const { enabled } = props;
+
+  const dispatchConnected = useAppDispatch.view.connected();
+
+  const onClick = async () => {
+    const session = Session.getInstance();
+    try {
+      await session.send.defineRules.saveRules();
+    } catch (e) {
+      console.error("Failed to save rules", e);
+      return;
+    }
+
+    try {
+      await session.send.defineRules.leave();
+    } catch (e) {
+      console.error("Failed to leave define_rules mode.", e);
+      return;
+    }
+
+    dispatchConnected(
+      ConnectedViewState.action.setViewMode(ConnectedViewMode.MAIN_MENU)
+    );
+  };
+
   return (
     <Button variant="contained" color="success"
       sx={{
@@ -291,6 +316,7 @@ function CreateButton(props: {
         padding: "1rem",
         fontSize: "2rem",
       }}
+      onClick={onClick}
       disabled={!enabled}>
       Create
     </Button>

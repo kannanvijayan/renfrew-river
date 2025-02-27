@@ -26,7 +26,6 @@ export function defaultTerrainGenRules(): TerrainGenRules {
 export type TerrainGenStageRules = {
   format: FormatRules,
   initProgram: ShasmProgram,
-  iterations: number,
   pairwiseProgram: ShasmProgram,
   mergeProgram: ShasmProgram,
   finalProgram: ShasmProgram,
@@ -34,7 +33,6 @@ export type TerrainGenStageRules = {
 export type TerrainGenStageInput = {
   format: FormatInput,
   initProgram: string,
-  iterations: string,
   pairwiseProgram: string,
   mergeProgram: string,
   finalProgram: string,
@@ -44,7 +42,6 @@ export type TerrainGenStageValidation = {
 
   format: FormatValidation,
   initProgram: ShasmProgramValidation,
-  iterations: string[],
   pairwiseProgram: ShasmProgramValidation,
   mergeProgram: ShasmProgramValidation,
   finalProgram: ShasmProgramValidation,
@@ -53,7 +50,6 @@ function defaultTerrainGenStageRules(): TerrainGenStageRules {
   return {
     format: { wordFormats: [] },
     initProgram: { programText: "" },
-    iterations: 1,
     pairwiseProgram: { programText: "" },
     mergeProgram: { programText: "" },
     finalProgram: { programText: "" },

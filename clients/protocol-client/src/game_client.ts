@@ -277,7 +277,8 @@ export class GameClientDefineRules
 
   public async saveRules(): Promise<true> {
     const result = await this.sendSubcmd("SaveRules", {});
-    if ("Ok" in result) {
+    console.log("SaveRules result:", result);
+    if ("RulesSaved" in result) {
       return true;
     }
     throw new Error("SaveRules: unexpected response: " + result.Failed.join(", "));

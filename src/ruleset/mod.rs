@@ -95,14 +95,19 @@ impl RulesetInput {
       name_errors.push("A ruleset with this name already exists.".to_string());
     }
 
+    log::debug!("Validating terrain generator... name_errors: {:?}, description_errors: {:?}",
+      name_errors, description_errors);
+
     let maybe_terrain_gen = self.terrain_gen.to_validated();
     if name_errors.is_empty() && description_errors.is_empty() && maybe_terrain_gen.is_ok() {
+      log::debug!("   => OK!");
       Ok(Ruleset {
         name: self.name.clone(),
         description: self.description.clone(),
         terrain_gen: maybe_terrain_gen.unwrap(),
       })
     } else {
+      log::debug!("   => ERR!");
       Err(RulesetValidation {
         errors,
         name: name_errors,
@@ -152,6 +157,8 @@ impl RulesetValidation {
 
   pub(crate) fn is_valid(&self) -> bool {
     self.errors.is_empty()
+      && self.name.is_empty()
+      && self.description.is_empty()
       && self.terrain_gen.as_ref().map_or(true, |tgv| tgv.is_valid())
   }
 }

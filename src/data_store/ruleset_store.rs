@@ -26,12 +26,15 @@ pub(crate) struct RulesetStore {
 impl RulesetStore {
   const INDEX_FILENAME: &'static str = "rulesets.json";
 
-  pub(crate) fn new(subtree: FileManagerSubtree) -> Self {
-    let ruleset_json = match subtree.read(Self::INDEX_FILENAME) {
-      Ok(json) => json,
-      Err(_) => {
-        log::warn!("Failed to read ruleset index file, using empty one.");
+  pub(crate) fn new(subtree: FileManagerSubtree, is_new: bool) -> Self {
+    let ruleset_json = {
+      if is_new {
+        subtree.write(Self::INDEX_FILENAME, "[]")
+          .expect("Failed to write ruleset index file");
         "[]".to_string()
+      } else {
+        subtree.read(Self::INDEX_FILENAME)
+          .expect("Failed to read ruleset index file")
       }
     };
     let entries: Vec<RulesetStoreEntry> =
@@ -56,8 +59,8 @@ impl RulesetStore {
     let ruleset_str = serde_json::to_string(ruleset)
       .expect("Failed to serialize ruleset to JSON");
     let filename = format!("rls{}_{}.json", self.entries.len(), name);
-    self.subtree.write(name, &ruleset_str)
-      .expect(format!("Failed to write ruleset file: {}", name).as_str());
+    self.subtree.write(&filename, &ruleset_str)
+      .expect(format!("Failed to write ruleset file: {}", &filename).as_str());
 
     let entry = RulesetStoreEntry {
       name: ruleset.name.clone(),

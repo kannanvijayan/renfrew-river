@@ -26,6 +26,10 @@ impl FileManagerSubtree {
     FileManagerSubtree { subtree_dir }
   }
 
+  pub(crate) fn path(&self) -> &Path {
+    &self.subtree_dir
+  }
+
   pub(crate) fn subdir(&self, name: &str) -> FileManagerSubtree {
     let mut path = self.subtree_dir.clone();
     path.push(name);

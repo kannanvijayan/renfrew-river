@@ -13,7 +13,7 @@ type DefineRulesSubcmd = {
   SaveRules: {
     params: SaveRulesCmd,
     response: {
-      Ok: {}
+      RulesSaved: {},
       Failed: string[],
     },
   },

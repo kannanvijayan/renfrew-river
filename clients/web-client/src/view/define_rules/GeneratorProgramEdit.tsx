@@ -1,4 +1,4 @@
-import { Box, Button, Divider, Input, styled, Typography } from "@mui/material";
+import { Box, Button, Divider, styled, Typography } from "@mui/material";
 import EditorBox from "./EditorBox";
 import { useAppDispatch } from "../../store/hooks";
 import DefineRulesViewState from "../../state/view/define_rules";
@@ -30,8 +30,6 @@ export default function GeneratorProgramEdit(props: {
               errors={generatorProgramValidation?.format?.errors} />
           <InitProgramItem viewState={viewState}
               errors={generatorProgramValidation?.initProgram?.errors} />
-          <IterationsItem viewState={viewState}
-              errors={generatorProgramValidation?.iterations} />
           <PairwiseProgramItem viewState={viewState}
               errors={generatorProgramValidation?.pairwiseProgram?.errors} />
           <MergeProgramItem viewState={viewState}
@@ -51,11 +49,6 @@ export default function GeneratorProgramEdit(props: {
               selection: DefineRulesGeneratorProgramSection.INIT_PROGRAM,
               label: "Init Program",
               node: <InitProgramEntry viewState={generatorProgramViewState} />,
-            },
-            DefineRulesetGeneratorProgramIterations: {
-              selection: DefineRulesGeneratorProgramSection.ITERATIONS,
-              label: "Iterations",
-              node: <IterationsEntry viewState={generatorProgramViewState} />,
             },
             DefineRulesetGeneratorProgramPairwiseProgram: {
               selection: DefineRulesGeneratorProgramSection.PAIRWISE_PROGRAM,
@@ -108,24 +101,6 @@ function InitProgramItem(props: {
         entrySelection={DefineRulesGeneratorProgramSection.INIT_PROGRAM}
         elementId={"DefineRulesetGeneratorProgramInitProgram"}
         errors={errors} />
-  );
-}
-
-function IterationsItem(props: {
-  viewState: DefineRulesViewState,
-  errors: string[] | undefined,
-}) {
-  const { viewState, errors } = props;
-  const defRulesDispatch = useAppDispatch.view.connected.defRules();
-  const ITERATIONS = DefineRulesGeneratorProgramSection.ITERATIONS;
-  const onClick = () => {
-    defRulesDispatch(DefineRulesViewState.action.setEntrySelection(ITERATIONS));
-    location.hash = "#DefineRulesetGeneratorProgramIterations";
-  };
-  const isSelected = viewState.entrySelection === ITERATIONS;
-  return (
-    <Item name="Iterations" onClick={onClick}
-        isSelected={isSelected} errors={errors} />
   );
 }
 
@@ -484,44 +459,6 @@ function InitProgramEntry(props: { viewState: GeneratorProgramViewState }) {
     <Box display="flex" flexDirection="row" margin="0 1rem" padding="0">
       <ShasmProgramInput programText={programText} onChange={onChange} />
       <ShasmProgramErrors />
-    </Box>
-  );
-}
-
-function IterationsEntry(props: { viewState: GeneratorProgramViewState }) {
-  const { viewState } = props;
-  const iterations = viewState.iterations;
-  const dispatchGeneratorProgram = useGeneratorProgramDispatch();
-  const onChange = (iterations: string) => {
-    console.log("IterationsEntry.onChange", iterations);
-    dispatchGeneratorProgram(
-      GeneratorProgramViewState.action.setIterations(iterations)
-    );
-  };
-  return (
-    <Box display="flex" flexDirection="row" margin="0 1rem" padding="0">
-      <Input value={iterations} onChange={e => onChange(e.target.value)}
-          sx={{
-            backgroundColor: "#cb8",
-            borderRadius: "0.5rem",
-            height: "2rem",
-            width: "10rem",
-            fontSize: "1.5rem",
-            padding: "0 0.5rem",
-            margin: 0,
-          }} />
-      <Button size="small" variant="contained" sx={{
-        margin: "0 0.25rem 0 0.5rem", height: "2rem",
-        fontSize: "1.5rem", fontWeight: 700,
-      }}>
-        -
-      </Button>
-      <Button size="small" variant="contained" sx={{
-        margin: "0 0.25rem 0 0", height: "2rem",
-        fontSize: "1.5rem", fontWeight: 700,
-      }}>
-        +
-      </Button>
     </Box>
   );
 }

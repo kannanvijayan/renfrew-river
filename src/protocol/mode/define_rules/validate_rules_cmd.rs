@@ -89,7 +89,6 @@ impl Command for ValidateRulesCmd {
               ],
             },
             init_program: "mov r0, r1, r2\nadd r1, r3, 33\n".to_string(),
-            iterations: "100".to_string(),
             pairwise_program: "add r0, r1, 33\n".to_string(),
             merge_program: "add r0, r1, 33\n".to_string(),
             final_program: "add r0, r1, 33\n".to_string(),
@@ -177,7 +176,6 @@ impl Command for ValidateRulesCmd {
                 }
               ],
             }),
-            iterations: vec!["error_17".to_string()],
             pairwise_program: Some(ShasmProgramValidation {
               errors: vec![
                 ShasmParseError {

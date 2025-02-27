@@ -81,9 +81,6 @@ pub(crate) struct TerrainGenStageRules {
   #[serde(rename = "initProgram")]
   pub(crate) init_program: ShasmProgram,
 
-  // Number of iterations to run pairwise/merge programs.
-  pub(crate) iterations: u32,
-
   // The pairwise tile processing program.
   #[serde(rename = "pairwiseProgram")]
   pub(crate) pairwise_program: ShasmProgram,
@@ -107,8 +104,6 @@ pub(crate) struct TerrainGenStageInput {
   #[serde(rename = "initProgram")]
   pub(crate) init_program: String,
 
-  pub(crate) iterations: String,
-
   #[serde(rename = "pairwiseProgram")]
   pub(crate) pairwise_program: String,
 
@@ -123,7 +118,6 @@ impl TerrainGenStageInput {
     TerrainGenStageInput {
       format: FormatInput::new(),
       init_program: "".to_string(),
-      iterations: "".to_string(),
       pairwise_program: "".to_string(),
       merge_program: "".to_string(),
       final_program: "".to_string(),
@@ -133,23 +127,18 @@ impl TerrainGenStageInput {
   pub(crate) fn to_validated(&self) -> Result<TerrainGenStageRules, TerrainGenStageValidation> {
     let maybe_format = self.format.to_validated();
     let maybe_init_program = ShasmProgram::to_validated(&self.init_program);
-    let maybe_iterations = self.iterations.parse::<u32>();
     let maybe_pairwise_program = ShasmProgram::to_validated(&self.pairwise_program);
     let maybe_merge_program = ShasmProgram::to_validated(&self.merge_program);
     let maybe_final_program = ShasmProgram::to_validated(&self.final_program);
 
     if maybe_format.is_err() ||
        maybe_init_program.is_err() ||
-        maybe_iterations.is_err() ||
         maybe_pairwise_program.is_err() ||
         maybe_merge_program.is_err() ||
         maybe_final_program.is_err() {
       let mut validation = TerrainGenStageValidation::new();
       validation.format = maybe_format.err();
       validation.init_program = maybe_init_program.err();
-      if let Err(_) = maybe_iterations {
-        validation.iterations.push("The iterations must be a positive number.".to_string());
-      }
       validation.pairwise_program = maybe_pairwise_program.err();
       validation.merge_program = maybe_merge_program.err();
       validation.final_program = maybe_final_program.err();
@@ -158,7 +147,6 @@ impl TerrainGenStageInput {
       Ok(TerrainGenStageRules {
         format: maybe_format.unwrap(),
         init_program: maybe_init_program.unwrap(),
-        iterations: maybe_iterations.unwrap(),
         pairwise_program: maybe_pairwise_program.unwrap(),
         merge_program: maybe_merge_program.unwrap(),
         final_program: maybe_final_program.unwrap(),
@@ -180,9 +168,6 @@ pub(crate) struct TerrainGenStageValidation {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub(crate) init_program: Option<ShasmProgramValidation>,
 
-  #[serde(skip_serializing_if = "Vec::is_empty")]
-  pub(crate) iterations: Vec<String>,
-
   #[serde(rename = "pairwiseProgram")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub(crate) pairwise_program: Option<ShasmProgramValidation>,
@@ -201,7 +186,6 @@ impl TerrainGenStageValidation {
       errors: Vec::new(),
       format: None,
       init_program: None,
-      iterations: Vec::new(),
       pairwise_program: None,
       merge_program: None,
       final_program: None,
