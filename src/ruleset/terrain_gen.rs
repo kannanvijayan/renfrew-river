@@ -29,24 +29,17 @@ impl TerrainGenInput {
   pub(crate) fn to_validated(&self) -> Result<TerrainGenRules, TerrainGenValidation> {
     let perlin = self.perlin.to_validated();
     let stage = self.stage.to_validated();
-    match (perlin, stage) {
-      (Ok(perlin), Ok(stage)) => Ok(TerrainGenRules { perlin, stage }),
-      (Err(perlin_validation), Err(stage_validation)) => {
-        let mut validation = TerrainGenValidation::new();
-        validation.perlin = Some(perlin_validation);
-        validation.stage = Some(stage_validation);
-        Err(validation)
-      },
-      (Err(perlin_validation), _) => {
-        let mut validation = TerrainGenValidation::new();
-        validation.perlin = Some(perlin_validation);
-        Err(validation)
-      },
-      (_, Err(stage_validation)) => {
-        let mut validation = TerrainGenValidation::new();
-        validation.stage = Some(stage_validation);
-        Err(validation)
-      },
+    if perlin.is_ok() && stage.is_ok() {
+      Ok(TerrainGenRules {
+        perlin: perlin.unwrap(),
+        stage: stage.unwrap()
+      })
+    } else {
+      Err(TerrainGenValidation {
+        errors: vec!["The terrain generator is invalid.".to_string()],
+        perlin: perlin.err(),
+        stage: stage.err(),
+      })
     }
   }
 }

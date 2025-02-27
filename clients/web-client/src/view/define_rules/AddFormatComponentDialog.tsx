@@ -40,7 +40,7 @@ export default function AddFormatComponentDialog(props: {
         GeneratorProgramViewState.action.setAddFormatComponentDialog({
           ...dialogState,
           ...dialogUpdate,
-      }));
+        }));
     };
   const onNameChange = (value: string) => {
     console.log("onNameChange", value);
@@ -91,39 +91,39 @@ export default function AddFormatComponentDialog(props: {
   const numBitsInput = dialogState.numBits;
   return (
     <StyledDialog open={visible}
-        slotProps={{
-          backdrop: {
+      slotProps={{
+        backdrop: {
+        },
+        paper: {
+          "sx": {
+            backgroundColor: "secondary.dark",
+            color: "#ecc",
+            borderRadius: "3rem",
+            border: "0.5em solid #ccaa66",
+            padding: 0,
+            width: "30%",
+            maxWidth: "90%",
           },
-          paper: {
-            "sx": {
-              backgroundColor: "secondary.dark",
-              color: "#ecc",
-              borderRadius: "3rem",
-              border: "0.5em solid #ccaa66",
-              padding: 0,
-              width: "30%",
-              maxWidth: "90%",
-            },
-          },
-        }}>
+        },
+      }}>
       <AddComponentDialogBox sx={{ backgroundColor: "primary.dark" }}>
         <AddComponentDialogTitle viewState={viewState} wordIndex={wordIndex} />
         <Box display="flex" flexDirection="column"
-            margin="0" padding="1rem 0 0 0" width="100%"
-            sx={{ backgroundColor: "secondary.dark" }}>
+          margin="0" padding="1rem 0 0 0" width="100%"
+          sx={{ backgroundColor: "secondary.dark" }}>
           <AddComponentDialogInput name="Name" value={nameInput}
-              onChange={onNameChange} />
+            onChange={onNameChange} />
           <AddComponentDialogInput name="Start Bit" value={startBitInput}
-              onChange={onStartBitChange} />
+            onChange={onStartBitChange} />
           <AddComponentDialogInput name="Num Bits" value={numBitsInput}
-              onChange={onNumBitsChange} />
+            onChange={onNumBitsChange} />
           <Button variant="contained" size="large"
-              onClick={onAddClicked}
-              sx={{
-                margin: "2rem auto 2rem auto",
-                width: "50%",
-                fontSize: "1.5rem",
-              }}>
+            onClick={onAddClicked}
+            sx={{
+              margin: "2rem auto 2rem auto",
+              width: "50%",
+              fontSize: "1.5rem",
+            }}>
             Add
           </Button>
         </Box>
@@ -182,11 +182,11 @@ function AddComponentDialogTitle(props: {
       </CloseButton>
       <Box display="flex" flexDirection="column" margin="auto" padding="0">
         <Typography variant="h2" color={"primary.contrastText"} fontSize={"3rem"}
-            sx={{ margin: "1rem auto 0 auto", width: "100%" }}>
+          sx={{ margin: "1rem auto 0 auto", width: "100%" }}>
           Add Component
         </Typography>
         <Typography variant="h3" color={"primary.contrastText"} fontSize={"2rem"}
-            sx={{ margin: "1rem auto", textAlign: "center", width: "100%" }}>
+          sx={{ margin: "1rem auto", textAlign: "center", width: "100%" }}>
           <span style={{ fontWeight: 700 }}>{wordInfo.name}</span>
         </Typography>
       </Box>
@@ -212,15 +212,15 @@ function AddComponentDialogInput(props: {
         {name}
       </Typography>
       <Input onChange={(e) => onChange(e.target.value)}
-          value={value}
-          sx={{
-            backgroundColor: "secondary.light",
-            borderRadius: "0.5rem",
-            height: "2rem",
-            fontSize: "1.5rem",
-            padding: "0 0.5rem",
-            margin: 0,
-          }} />
+        value={value}
+        sx={{
+          backgroundColor: "secondary.light",
+          borderRadius: "0.5rem",
+          height: "2rem",
+          fontSize: "1.5rem",
+          padding: "0 0.5rem",
+          margin: 0,
+        }} />
     </Box>
   );
 }

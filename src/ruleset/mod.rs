@@ -26,6 +26,8 @@ pub(crate) use self::{
   },
 };
 
+use crate::data_store::DataStore;
+
 /**
  * The entry in a directory of rulesets.
  */
@@ -77,37 +79,49 @@ pub(crate) struct RulesetInput {
   pub(crate) terrain_gen: TerrainGenInput,
 }
 impl RulesetInput {
-  pub(crate) fn to_validated(&self) -> Result<Ruleset, RulesetValidation> {
-    let mut errors = Vec::new();
+  const MAX_DESCRIPTION_LENGTH: usize = 100;
+
+  pub(crate) fn to_validated(&self, store: &DataStore)
+    -> Result<Ruleset, RulesetValidation>
+  {
+    let errors = Vec::new();
     let mut name_errors = Vec::new();
     let mut description_errors = Vec::new();
 
     self.validate_name(&mut name_errors);
     self.validate_description(&mut description_errors);
 
+    if store.rulesets().list().iter().any(|entry| entry.name == self.name) {
+      name_errors.push("A ruleset with this name already exists.".to_string());
+    }
+
     let maybe_terrain_gen = self.terrain_gen.to_validated();
-    match maybe_terrain_gen {
-      Ok(terrain_gen) => Ok(Ruleset {
+    if name_errors.is_empty() && description_errors.is_empty() && maybe_terrain_gen.is_ok() {
+      Ok(Ruleset {
         name: self.name.clone(),
         description: self.description.clone(),
-        terrain_gen,
-      }),
-      Err(terrain_gen_validation) => Err(RulesetValidation {
+        terrain_gen: maybe_terrain_gen.unwrap(),
+      })
+    } else {
+      Err(RulesetValidation {
         errors,
         name: name_errors,
         description: description_errors,
-        terrain_gen: Some(terrain_gen_validation),
-      }),
+        terrain_gen: maybe_terrain_gen.err(),
+      })
     }
   }
 
-  fn validate_name(&self, errors: &mut Vec<String>) {
+  fn validate_name(&self, name_errors: &mut Vec<String>) {
     if self.name.is_empty() {
-      errors.push("The name is required.".to_string());
+      name_errors.push("The name is required.".to_string());
     }
   }
 
-  fn validate_description(&self, _errors: &mut Vec<String>) {
+  fn validate_description(&self, descr_errors: &mut Vec<String>) {
+    if self.description.len() > Self::MAX_DESCRIPTION_LENGTH {
+      descr_errors.push("The description is too long.".to_string());
+    }
   }
 }
 

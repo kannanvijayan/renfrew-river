@@ -265,19 +265,21 @@ export class GameClientDefineRules
     : Promise<true|RulesetValidation>
   {
     const result = await this.sendSubcmd("ValidateRules", { rulesetInput });
-    if ("Validation" in result) {
-      if (result.Validation.isValid) {
-        return true;
-      } else {
-        if (!result.Validation.validation) {
-          throw new Error("Validation failed but no validation object");
-        }
-        return result.Validation.validation;
-      }
+    if (result.Validation.isValid) {
+      return true;
     } else {
-      throw new Error(
-        "ValidateRules: unexpected response: " + result.Error.messages.join(", ")
-      );
+      if (!result.Validation.validation) {
+        throw new Error("Validation failed but no validation object");
+      }
+      return result.Validation.validation;
     }
+  }
+
+  public async saveRules(): Promise<true> {
+    const result = await this.sendSubcmd("SaveRules", {});
+    if ("Ok" in result) {
+      return true;
+    }
+    throw new Error("SaveRules: unexpected response: " + result.Failed.join(", "));
   }
 }

@@ -24,8 +24,7 @@ export type ProtocolSubcmdResponse<
   T extends ProtocolSubcmdName<S>
 > =
   | _CoaleseResponse<S, T, keyof S[T]["response"]>
-  | ProtocolSubcmdError<S, T>
-  | { Error: { messages: string[] } };
+  | ProtocolSubcmdError<S, T>;
 
 export type ProtocolSubcmdError<
   S extends ProtocolSubcmdSpec,
