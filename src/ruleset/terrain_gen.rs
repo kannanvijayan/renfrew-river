@@ -11,6 +11,30 @@ pub(crate) struct TerrainGenRules {
   // The definition of each terrain generator pass.
   pub(crate) stage: TerrainGenStageRules,
 }
+impl TerrainGenRules {
+  pub(crate) fn to_input(&self) -> TerrainGenInput {
+    TerrainGenInput {
+      perlin: self.perlin.to_input(),
+      stage: self.stage.to_input(),
+    }
+  }
+}
+impl TerrainGenRules {
+  pub(crate) fn new_example() -> Self {
+    TerrainGenRules {
+      perlin: TerrainGenPerlinRules {
+        register: ShadyRegister::new(92),
+      },
+      stage: TerrainGenStageRules {
+        format: FormatRules::new_example(),
+        init_program: ShasmProgram::new_example(),
+        pairwise_program: ShasmProgram::new_example(),
+        merge_program: ShasmProgram::new_example(),
+        final_program: ShasmProgram::new_example(),
+      },
+    }
+  }
+}
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -94,6 +118,17 @@ pub(crate) struct TerrainGenStageRules {
   // next stage's format.
   #[serde(rename = "finalProgram")]
   pub(crate) final_program: ShasmProgram,
+}
+impl TerrainGenStageRules {
+  pub(crate) fn to_input(&self) -> TerrainGenStageInput {
+    TerrainGenStageInput {
+      format: self.format.to_input(),
+      init_program: self.init_program.program_text.clone(),
+      pairwise_program: self.pairwise_program.program_text.clone(),
+      merge_program: self.merge_program.program_text.to_string(),
+      final_program: self.final_program.program_text.to_string(),
+    }
+  }
 }
 
 #[derive(Debug, Clone)]
@@ -207,6 +242,12 @@ impl TerrainGenStageValidation {
 pub(crate) struct TerrainGenPerlinRules {
   // The register to store the result in.
   pub(crate) register: ShadyRegister,
+}
+impl TerrainGenPerlinRules {
+  pub(crate) fn to_input(&self) -> TerrainGenPerlinInput {
+    let register = format!("{}", self.register.to_u8());
+    TerrainGenPerlinInput { register }
+  }
 }
 
 #[derive(Debug, Clone)]

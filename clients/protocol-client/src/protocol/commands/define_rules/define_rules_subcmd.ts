@@ -1,19 +1,34 @@
-import ValidateRulesCmd, { ValidateRulesRsp }
-  from "./validate_rules_cmd";
-
+import UpdateRulesCmd from "./update_rules_cmd";
 import SaveRulesCmd from "./save_rules_cmd";
+import LoadRulesCmd from "./load_rules_cmd";
+import CurrentRulesCmd, { CurrentRulesRsp } from "./current_rules_cmd";
+import Ruleset, { RulesetValidation } from "../../../types/ruleset/ruleset";
 
 type DefineRulesSubcmd = {
-  ValidateRules: {
-    params: ValidateRulesCmd,
+  UpdateRules: {
+    params: UpdateRulesCmd,
     response: {
-      Validation: ValidateRulesRsp,
+      Ok: {},
+      InvalidRuleset: RulesetValidation
+    },
+  },
+  CurrentRules: {
+    params: CurrentRulesCmd,
+    response: {
+      CurrentRules: CurrentRulesRsp,
     },
   },
   SaveRules: {
     params: SaveRulesCmd,
     response: {
-      RulesSaved: {},
+      Ok: {},
+      Failed: string[],
+    },
+  },
+  LoadRules: {
+    params: LoadRulesCmd,
+    response: {
+      LoadedRuleset: Ruleset,
       Failed: string[],
     },
   },

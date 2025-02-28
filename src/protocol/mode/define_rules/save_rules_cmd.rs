@@ -31,8 +31,9 @@ impl Command for SaveRulesCmd {
   }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     let subcmd_response = match response {
-      SaveRulesRsp::Ok => DefineRulesSubcmdResponse::RulesSaved {},
-      SaveRulesRsp::Failed(messages) => DefineRulesSubcmdResponse::Failed(messages)
+      SaveRulesRsp::Ok => DefineRulesSubcmdResponse::Ok {},
+      SaveRulesRsp::Failed(messages) =>
+        DefineRulesSubcmdResponse::Failed(messages)
     };
     ResponseEnvelope::DefineRulesSubcmd(subcmd_response)
   }

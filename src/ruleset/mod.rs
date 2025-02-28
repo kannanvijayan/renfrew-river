@@ -58,10 +58,26 @@ pub(crate) struct Ruleset {
   pub(crate) terrain_gen: TerrainGenRules,
 }
 impl Ruleset {
+  pub(crate) fn new_example() -> Self {
+    Ruleset {
+      name: "Example Ruleset".to_string(),
+      description: "An example ruleset.".to_string(),
+      terrain_gen: TerrainGenRules::new_example(),
+    }
+  }
+
   pub(crate) fn entry(&self) -> RulesetEntry {
     RulesetEntry {
       name: self.name.clone(),
       description: self.description.clone(),
+    }
+  }
+
+  pub(crate) fn to_input(&self) -> RulesetInput {
+    RulesetInput {
+      name: self.name.clone(),
+      description: self.description.clone(),
+      terrain_gen: self.terrain_gen.to_input(),
     }
   }
 }
@@ -80,6 +96,14 @@ pub(crate) struct RulesetInput {
 }
 impl RulesetInput {
   const MAX_DESCRIPTION_LENGTH: usize = 100;
+
+  pub(crate) fn new() -> Self {
+    RulesetInput {
+      name: String::new(),
+      description: String::new(),
+      terrain_gen: TerrainGenInput::new(),
+    }
+  }
 
   pub(crate) fn to_validated(&self, store: &DataStore)
     -> Result<Ruleset, RulesetValidation>
@@ -152,6 +176,15 @@ impl RulesetValidation {
       name: Vec::new(),
       description: Vec::new(),
       terrain_gen: None,
+    }
+  }
+
+  pub(crate) fn new_example() -> Self {
+    RulesetValidation {
+      errors: Vec::new(),
+      name: vec!["Name is already used.".to_string()],
+      description: Vec::new(),
+      terrain_gen: Some(TerrainGenValidation::new()),
     }
   }
 

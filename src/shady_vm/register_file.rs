@@ -7,6 +7,10 @@ impl ShadyRegister {
   pub(crate) fn new(val: u8) -> Self {
     ShadyRegister(val)
   }
+
+  pub(crate) fn to_u8(&self) -> u8 {
+    self.0
+  }
 }
 impl From<u8> for ShadyRegister {
   fn from(reg: u8) -> Self { Self(reg) }

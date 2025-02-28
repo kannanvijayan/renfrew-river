@@ -10,10 +10,10 @@ export default class DefineRulesSender {
     this.gameClient_ = gameClient;
   }
 
-  public async validateRules(rulesetInput: RulesetInput)
+  public async updateRules(rulesetInput: RulesetInput)
     : Promise<true | RulesetValidation>
   {
-    return this.gameClient_.defineRules.validateRules(rulesetInput);
+    return this.gameClient_.defineRules.updateRules(rulesetInput);
   }
 
   public async saveRules(): Promise<true> {

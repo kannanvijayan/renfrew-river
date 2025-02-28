@@ -51,6 +51,9 @@ const DefineRulesViewState = {
     {
       return { type: "set_entry_selection" as const, entrySelection };
     },
+    setRuleset(ruleset: RulesetInput): SetRulesetAction {
+      return { type: "set_ruleset" as const, ruleset };
+    },
     setName(name: string): SetNameAction {
       return { type: "set_name" as const, name };
     },
@@ -73,39 +76,88 @@ const DefineRulesViewState = {
     set_category(state: DefineRulesViewState, action: SetCategoryAction)
       : DefineRulesViewState
     {
-      return { ...state, category: action.category };
+      const { category } = action;
+      if (state.category === category) {
+        return state;
+      }
+      return { ...state, category };
     },
     set_entry_selection(
       state: DefineRulesViewState,
       action: SetEntrySelectionAction
     ): DefineRulesViewState {
-      return { ...state, entrySelection: action.entrySelection }
+      const { entrySelection } = action;
+      if (state.entrySelection === entrySelection) {
+        return state;
+      }
+      return { ...state, entrySelection };
+    },
+    set_ruleset(state: DefineRulesViewState, action: SetRulesetAction)
+      : DefineRulesViewState
+    {
+      const { ruleset } = action;
+      const { name, description, terrainGen } = ruleset;
+      const { perlin, stage } = terrainGen;
+      return {
+        ...state,
+        name,
+        description,
+        terrainGeneration: {
+          perlinFields: perlin,
+          generatorProgram: {
+            ...stage,
+            addFormatComponentDialog: {
+              visible: false,
+              name: "",
+              startBit: "",
+              numBits: "",
+            },
+            addFormatWordDialog: {
+              visible: false,
+              name: "",
+            },
+          },
+        }
+      };
     },
     set_name(state: DefineRulesViewState, action: SetNameAction)
       : DefineRulesViewState
     {
-      return { ...state, name: action.name };
+      const { name } = action;
+      if (state.name === name) {
+        return state;
+      }
+      return { ...state, name };
     },
     set_description(state: DefineRulesViewState, action: SetDescriptionAction)
       : DefineRulesViewState
     {
-      return { ...state, description: action.description };
+      const { description } = action;
+      if (state.description === description) {
+        return state;
+      }
+      return { ...state, description };
     },
     set_validation(state: DefineRulesViewState, action: SetValidationAction)
       : DefineRulesViewState
     {
-      return { ...state, validation: action.validation };
+      const { validation } = action;
+      if (state.validation === validation) {
+        return state;
+      }
+      return { ...state, validation };
     },
     terrain_generation(
       state: DefineRulesViewState,
       action: TerrainGenerationDispatchAction
     ): DefineRulesViewState {
-      return {
-        ...state,
-        terrainGeneration: TerrainGenerationViewState.reducer(
-          state.terrainGeneration, action.action
-        ),
-      };
+      const terrainGeneration = TerrainGenerationViewState.reducer(
+        state.terrainGeneration, action.action
+      );
+      if (terrainGeneration === state.terrainGeneration) {
+        return state;
+      }
+      return { ...state, terrainGeneration };
     },
   },
 
@@ -135,6 +187,11 @@ type SetCategoryAction = {
 type SetEntrySelectionAction = {
   type: "set_entry_selection",
   entrySelection: DefineRulesEntrySelection | null,
+};
+
+type SetRulesetAction = {
+  type: "set_ruleset",
+  ruleset: RulesetInput,
 };
 
 type SetNameAction = {
@@ -169,6 +226,7 @@ type DefineRulesDispatchTargets =
 type DefineRulesAction =
   | SetCategoryAction
   | SetEntrySelectionAction
+  | SetRulesetAction
   | SetNameAction
   | SetDescriptionAction
   | SetValidationAction
@@ -179,6 +237,7 @@ export type {
   DefineRulesAction,
   SetCategoryAction,
   SetEntrySelectionAction,
+  SetRulesetAction,
   SetNameAction,
   SetDescriptionAction,
   SetValidationAction,

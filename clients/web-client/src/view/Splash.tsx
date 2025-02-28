@@ -41,7 +41,7 @@ export default function Splash(props: {
         DefineRulesViewState.initialState
       ));
       if (viewMode === ConnectedViewMode.DEFINE_RULES) {
-        session.defRules.view.bumpValidationTimeout();
+        session.defineRules.view.bumpValidationTimeout();
       }
     } catch (err) {
       console.error("Failed to connect to server", err);

@@ -31,19 +31,21 @@ const SessionState = {
 
   reducers: {
     set_ws_url(state: SessionState, action: SetWsUrlAction): SessionState {
-      return {
-        ...state,
-        wsUrl: action.wsUrl,
-      };
+      const { wsUrl } = action;
+      if (state.wsUrl === wsUrl) {
+        return state;
+      }
+      return { ...state, wsUrl };
     },
     set_ruleset_list(
       state: SessionState,
       action: SetRulesetListAction
     ): SessionState {
-      return {
-        ...state,
-        rulesetList: action.rulesetList,
-      };
+      const { rulesetList } = action;
+      if (state.rulesetList === rulesetList) {
+        return state;
+      }
+      return { ...state, rulesetList };
     },
   },
 

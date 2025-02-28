@@ -31,6 +31,9 @@ const TerrainGenerationViewState = {
     {
       const perlinFields =
         PerlinFieldsViewState.reducer(state.perlinFields, action.action);
+      if (state.perlinFields === perlinFields) {
+        return state;
+      }
       return { ...state, perlinFields };
     },
 
@@ -38,11 +41,12 @@ const TerrainGenerationViewState = {
       state: TerrainGenerationViewState,
       action: GeneratorProgramDispatchAction
     ): TerrainGenerationViewState {
-      return {
-        ...state,
-        generatorProgram:
-          GeneratorProgramViewState.reducer(state.generatorProgram, action.action),
-      };
+      const generatorProgram =
+        GeneratorProgramViewState.reducer(state.generatorProgram, action.action);
+      if (state.generatorProgram === generatorProgram) {
+        return state;
+      }
+      return { ...state, generatorProgram };
     },
   },
 

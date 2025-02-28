@@ -17,14 +17,14 @@ export default function DefineRules(props: {
     if (newDefRules?.terrainGeneration !== oldDefRules?.terrainGeneration) {
       console.log("DefineRulesetMain: new rules");
       const session = Session.getInstance();
-      session.defRules.view.bumpValidationTimeout();
+      session.defineRules.view.bumpValidationTimeout();
     }
   });
 
   const dispatchConnected = useAppDispatch.view.connected();
   const onBackClicked = async () => {
     const session = Session.getInstance();
-    await session.defRules.leave();
+    await session.defineRules.leave();
     dispatchConnected(ConnectedViewState.action.setViewMode(
       ConnectedViewMode.MAIN_MENU
     ));

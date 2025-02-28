@@ -37,13 +37,13 @@ function NameAndDescription(props: {
   const onNameChange = (value: string) => {
     const session = Session.getInstance();
     dispatchDefineRules(DefineRulesViewState.action.setName(value));
-    session.defRules.view.bumpValidationTimeout();
+    session.defineRules.view.bumpValidationTimeout();
   };
 
   const onDescriptionChange = (value: string) => {
     const session = Session.getInstance();
     dispatchDefineRules(DefineRulesViewState.action.setDescription(value));
-    session.defRules.view.bumpValidationTimeout();
+    session.defineRules.view.bumpValidationTimeout();
   }
 
   return (
@@ -292,14 +292,14 @@ function CreateButton(props: {
     const session = Session.getInstance();
     try {
       await session.send.defineRules.saveRules();
-      await session.updateRulesetList();
+      await session.retrieveRulesetList();
     } catch (e) {
       console.error("Failed to save rules", e);
       return;
     }
 
     try {
-      await session.defRules.leave();
+      await session.defineRules.leave();
     } catch (e) {
       console.error("Failed to leave define_rules mode.", e);
       return;

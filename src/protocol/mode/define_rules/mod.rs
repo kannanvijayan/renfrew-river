@@ -1,15 +1,19 @@
-mod command;
+mod subcommand;
 mod response;
 mod documentation;
-mod validate_rules_cmd;
+mod update_rules_cmd;
 mod save_rules_cmd;
+mod load_rules_cmd;
+mod current_rules_cmd;
 
 pub(crate) use self::{
-  command::DefineRulesSubcmdEnvelope,
+  subcommand::DefineRulesSubcmdEnvelope,
   response::DefineRulesSubcmdResponse,
   documentation::get_category_docs,
-  validate_rules_cmd::{ ValidateRulesCmd, ValidateRulesRsp },
-  save_rules_cmd::{ SaveRulesCmd, SaveRulesRsp },
+  update_rules_cmd::UpdateRulesCmd,
+  save_rules_cmd::SaveRulesCmd,
+  load_rules_cmd::LoadRulesCmd,
+  current_rules_cmd::{ CurrentRulesCmd, CurrentRulesRsp },
 };
 
 #[derive(Debug, Clone)]

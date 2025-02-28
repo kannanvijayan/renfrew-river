@@ -58,7 +58,8 @@ function DefineRulesetButton() {
   const dispatchConnected = useAppDispatch.view.connected();
   const onClick = async () => {
     const session = Session.getInstance();
-    await session.defRules.enter();
+    await session.defineRules.enter();
+    session.defineRules.view.bumpValidationTimeout();
     dispatchConnected(ConnectedViewState.action.setViewMode(
       ConnectedViewMode.DEFINE_RULES
     ));
@@ -79,7 +80,7 @@ function EditRulesetButton(props: {
   const dispatchConnected = useAppDispatch.view.connected();
   const onClick = async () => {
     dispatchConnected(ConnectedViewState.action.setViewMode(
-      ConnectedViewMode.EDIT_RULESET
+      ConnectedViewMode.PICK_RULESET_TO_EDIT
     ));
   };
   const disabled = rulesets.length === 0;

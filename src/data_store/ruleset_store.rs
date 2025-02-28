@@ -48,17 +48,29 @@ impl RulesetStore {
     self.entries.clone()
   }
 
+  fn find_entry(&self, name: &str) -> Option<&RulesetStoreEntry> {
+    self.entries.iter().find(|entry| entry.name == name)
+  }
+
   pub(crate) fn read(&self, name: &str) -> Ruleset {
-    let ruleset_str = self.subtree.read(name)
-      .expect(format!("Failed to read ruleset file: {}", name).as_str());
+    let entry = self.find_entry(name)
+      .expect(format!("Failed to find ruleset entry: {}", name).as_str());
+    let ruleset_str = self.subtree.read(&entry.filename)
+      .expect(format!("Failed to read ruleset file: {}", &entry.filename).as_str());
     serde_json::from_str(&ruleset_str)
       .expect(format!("Failed to parse ruleset JSON: {}", name).as_str())
   }
 
   pub(crate) fn write(&mut self, name: &str, ruleset: &Ruleset) {
+    let entry = self.find_entry(name);
+    let filename = if let Some(entry) = entry {
+      entry.filename.clone()
+    } else {
+      format!("rls{}_{}.json", self.entries.len(), name)
+    };
+
     let ruleset_str = serde_json::to_string(ruleset)
       .expect("Failed to serialize ruleset to JSON");
-    let filename = format!("rls{}_{}.json", self.entries.len(), name);
     self.subtree.write(&filename, &ruleset_str)
       .expect(format!("Failed to write ruleset file: {}", &filename).as_str());
 

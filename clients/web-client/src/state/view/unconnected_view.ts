@@ -22,10 +22,11 @@ const UnconnectedViewState = {
     set_ws_url_input(state: UnconnectedViewState, action: SetWsUrlInputAction)
       : UnconnectedViewState
     {
-      return {
-        ...state,
-        wsUrlInput: action.wsUrlInput,
-      };
+      const { wsUrlInput } = action;
+      if (state.wsUrlInput === wsUrlInput) {
+        return state;
+      }
+      return { ...state, wsUrlInput };
     },
   },
 

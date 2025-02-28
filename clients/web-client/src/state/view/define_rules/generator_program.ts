@@ -18,7 +18,6 @@ type GeneratorProgramViewState = {
   addFormatWordDialog: AddFormatWordDialogState,
   addFormatComponentDialog: AddFormatWordComponentDialogState,
   initProgram: string,
-  iterations: string,
   pairwiseProgram: string,
   mergeProgram: string,
   finalProgram: string,
@@ -38,7 +37,6 @@ const GeneratorProgramViewState = {
       numBits: "",
     },
     initProgram: "",
-    iterations: "",
     pairwiseProgram: "",
     mergeProgram: "",
     finalProgram: "",
@@ -73,12 +71,6 @@ const GeneratorProgramViewState = {
         initProgramInput: initProgram,
       };
     },
-    setIterations(iterations: string): SetIterationsAction {
-      return {
-        type: "set_iterations" as const,
-        iterationsInput: iterations,
-      };
-    },
     setPairwiseProgram(pairwiseProgram: string): SetPairwiseProgramAction {
       return {
         type: "set_pairwise_program" as const,
@@ -103,44 +95,68 @@ const GeneratorProgramViewState = {
     set_format(state: GeneratorProgramViewState, action: SetFormatAction)
       : GeneratorProgramViewState
     {
-      return { ...state, format: action.formatInput };
+      const { formatInput: format } = action;
+      if (state.format === format) {
+        return state;
+      }
+      return { ...state, format };
     },
     set_add_format_word_dialog(
       state: GeneratorProgramViewState,
       action: SetAddFormatWordDialogAction
     ): GeneratorProgramViewState {
-      return { ...state, addFormatWordDialog: action.dialog };
+      const { dialog: addFormatWordDialog } = action;
+      if (state.addFormatWordDialog === addFormatWordDialog) {
+        return state;
+      }
+      return { ...state, addFormatWordDialog };
     },
     set_add_format_word_component_dialog(
       state: GeneratorProgramViewState,
       action: SetAddFormatWordComponentDialogAction
     ): GeneratorProgramViewState {
-      return { ...state, addFormatComponentDialog: action.dialog };
+      const { dialog: addFormatComponentDialog } = action;
+      if (state.addFormatComponentDialog === addFormatComponentDialog) {
+        return state;
+      }
+      return { ...state, addFormatComponentDialog };
     },
-    set_init_program(state: GeneratorProgramViewState, action: SetInitProgramAction)
-      : GeneratorProgramViewState
-    {
-      return { ...state, initProgram: action.initProgramInput };
-    },
-    set_iterations(state: GeneratorProgramViewState, action: SetIterationsAction)
-      : GeneratorProgramViewState
-    {
-      return { ...state, iterations: action.iterationsInput };
+    set_init_program(
+      state: GeneratorProgramViewState,
+      action: SetInitProgramAction
+    ): GeneratorProgramViewState {
+      const { initProgramInput: initProgram } = action;
+      if (state.initProgram === initProgram) {
+        return state;
+      }
+      return { ...state, initProgram };
     },
     set_pairwise_program(state: GeneratorProgramViewState, action: SetPairwiseProgramAction)
       : GeneratorProgramViewState
     {
-      return { ...state, pairwiseProgram: action.pairwiseProgramInput };
+      const { pairwiseProgramInput: pairwiseProgram } = action;
+      if (state.pairwiseProgram === pairwiseProgram) {
+        return state;
+      }
+      return { ...state, pairwiseProgram };
     },
     set_merge_program(state: GeneratorProgramViewState, action: SetMergeProgramAction)
       : GeneratorProgramViewState
     {
-      return { ...state, mergeProgram: action.mergeProgramInput };
+      const { mergeProgramInput: mergeProgram } = action;
+      if (state.mergeProgram === mergeProgram) {
+        return state;
+      }
+      return { ...state, mergeProgram };
     },
     set_final_program(state: GeneratorProgramViewState, action: SetFinalProgramAction)
       : GeneratorProgramViewState
     {
-      return { ...state, finalProgram: action.finalProgramInput };
+      const { finalProgramInput: finalProgram } = action;
+      if (state.finalProgram === finalProgram) {
+        return state;
+      }
+      return { ...state, finalProgram };
     },
   },
 
@@ -177,11 +193,6 @@ type SetInitProgramAction = {
   initProgramInput: string,
 };
 
-type SetIterationsAction = {
-  type: "set_iterations",
-  iterationsInput: string,
-};
-
 type SetPairwiseProgramAction = {
   type: "set_pairwise_program",
   pairwiseProgramInput: string,
@@ -204,7 +215,6 @@ type GeneratorProgramAction =
   | SetAddFormatWordDialogAction
   | SetAddFormatWordComponentDialogAction
   | SetInitProgramAction
-  | SetIterationsAction
   | SetPairwiseProgramAction
   | SetMergeProgramAction
   | SetFinalProgramAction;
@@ -218,7 +228,6 @@ export type {
   SetAddFormatWordDialogAction,
   SetAddFormatWordComponentDialogAction,
   SetInitProgramAction,
-  SetIterationsAction,
   SetPairwiseProgramAction,
   SetMergeProgramAction,
   SetFinalProgramAction,

@@ -10,6 +10,34 @@ pub(crate) struct FormatRules {
   #[serde(rename = "wordFormats")]
   pub(crate) word_formats: Vec<FormatWordRules>,
 }
+impl FormatRules {
+  pub(crate) fn new_example() -> Self {
+    let word_formats = vec![
+      FormatWordRules {
+        name: "ExampleWord".to_string(),
+        components: vec![
+          FormatComponentRules {
+            name: "Component1".to_string(),
+            offset: 0,
+            bits: 8,
+          },
+          FormatComponentRules {
+            name: "Component2".to_string(),
+            offset: 8,
+            bits: 8,
+          },
+        ],
+      },
+    ];
+    Self { word_formats }
+  }
+
+  pub(crate) fn to_input(&self) -> FormatInput {
+    let word_formats = self.word_formats.iter()
+      .map(|wf| wf.to_input()).collect();
+    FormatInput { word_formats }
+  }
+}
 
 /**
  * The input for a format.
@@ -86,6 +114,15 @@ pub(crate) struct FormatWordRules {
 
   // The bitfields in the word.
   pub(crate) components: Vec<FormatComponentRules>,
+}
+impl FormatWordRules {
+  pub(crate) fn to_input(&self) -> FormatWordInput {
+    let components = self.components.iter().map(|fc| fc.to_input()).collect();
+    FormatWordInput {
+      name: self.name.clone(),
+      components,
+    }
+  }
 }
 
 /**
@@ -166,6 +203,15 @@ pub(crate) struct FormatComponentRules {
 
   // The number of bits in the component.
   pub(crate) bits: u8,
+}
+impl FormatComponentRules {
+  pub(crate) fn to_input(&self) -> FormatComponentInput {
+    FormatComponentInput {
+      name: self.name.clone(),
+      offset: self.offset.to_string(),
+      bits: self.bits.to_string(),
+    }
+  }
 }
 
 /**

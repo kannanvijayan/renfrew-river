@@ -27,43 +27,45 @@ use super::DefineRulesSubcmdEnvelope;
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct ValidateRulesCmd {
+pub(crate) struct UpdateRulesCmd {
   #[serde(rename = "rulesetInput")]
   pub(crate) ruleset_input: RulesetInput,
 }
-impl ValidateRulesCmd {
+impl UpdateRulesCmd {
 }
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct ValidateRulesRsp {
-  #[serde(rename = "isValid")]
-  pub(crate) is_valid: bool,
-
-  #[serde(skip_serializing_if = "RulesetValidation::is_valid")]
-  pub(crate) validation: RulesetValidation,
+pub(crate) enum UpdateRulesRsp {
+  Ok {},
+  Invalid(RulesetValidation),
 }
-impl Command for ValidateRulesCmd {
-  type Response = ValidateRulesRsp;
+impl Command for UpdateRulesCmd {
+  type Response = UpdateRulesRsp;
   fn name() -> &'static str {
-    "ValidateRules"
+    "UpdateRules"
   }
   fn description() -> &'static str {
-    "Validate the given ruleset."
+    "Update the current ruleset."
   }
   fn to_queue_command(&self) -> CommandEnvelope {
     CommandEnvelope::DefineRulesSubcmd(
-      DefineRulesSubcmdEnvelope::ValidateRules(self.clone())
+      DefineRulesSubcmdEnvelope::UpdateRules(self.clone())
     )
   }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
-    ResponseEnvelope::DefineRulesSubcmd(
-      DefineRulesSubcmdResponse::Validation(response)
-    )
+    match response {
+      UpdateRulesRsp::Ok {} =>
+        ResponseEnvelope::DefineRulesSubcmd(DefineRulesSubcmdResponse::Ok {}),
+      UpdateRulesRsp::Invalid(validation) =>
+        ResponseEnvelope::DefineRulesSubcmd(
+          DefineRulesSubcmdResponse::InvalidRuleset(validation)
+        ),
+    }
   }
 
   fn protocol_examples() -> (Vec<Self>, Vec<Self::Response>) {
-    let validate_example = ValidateRulesCmd {
+    let validate_example = UpdateRulesCmd {
       ruleset_input: RulesetInput {
         name: "Example Ruleset".to_string(),
         description: "Example ruleset description".to_string(),
@@ -100,18 +102,9 @@ impl Command for ValidateRulesCmd {
       }
     };
 
-    let validate_ok_response_example = ValidateRulesRsp {
-      is_valid: true,
-      validation: RulesetValidation {
-        errors: vec![],
-        name: vec![],
-        description: vec![],
-        terrain_gen: None,
-      },
-    };
-    let validate_failed_response_example = ValidateRulesRsp {
-      is_valid: false,
-      validation: RulesetValidation { 
+    let validate_ok_response_example = UpdateRulesRsp::Ok {};
+    let validate_failed_response_example = UpdateRulesRsp::Invalid(
+      RulesetValidation {
         errors: vec![
           "error_1".to_string(),
           "error_2".to_string(),
@@ -214,7 +207,8 @@ impl Command for ValidateRulesCmd {
           }),
         })
       }
-    };
+    );
+
     (
       vec![validate_example],
       vec![

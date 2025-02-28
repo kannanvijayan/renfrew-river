@@ -52,6 +52,9 @@ const ViewState = {
     {
       const unconnected =
         UnconnectedViewState.reducer(state.unconnected, action.action);
+      if (state.unconnected === unconnected) {
+        return state;
+      }
       return { ...state, unconnected };
     },
     connected(state: ViewState, action: TargetedViewAction<"connected">)
@@ -59,12 +62,19 @@ const ViewState = {
     {
       const connected =
         ConnectedViewState.reducer(state.connected, action.action);
+      if (state.connected === connected) {
+        return state;
+      }
       return { ...state, connected };
     },
     set_mode(state: ViewState, action: { type: "set_mode", mode: ViewMode })
       : ViewState
     {
-      return { ...state, mode: action.mode };
+      const { mode } = action;
+      if (state.mode === mode) {
+        return state;
+      }
+      return { ...state, mode };
     },
   },
 

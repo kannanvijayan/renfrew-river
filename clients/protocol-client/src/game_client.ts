@@ -1,4 +1,4 @@
-import {
+import Ruleset, {
   RulesetEntry,
   RulesetInput,
   RulesetValidation,
@@ -9,7 +9,8 @@ import {
   ProtocolSubcmdResponse,
   ProtocolSubcmdSpec,
 } from "./protocol/subcommand";
-import DefineRulesSubcmd from "./protocol/commands/define_rules/define_rules_subcmd";
+import DefineRulesSubcmd
+  from "./protocol/commands/define_rules/define_rules_subcmd";
 import {
   ProtocolCommandName,
   ProtocolCommandParams,
@@ -277,26 +278,46 @@ export class GameClientDefineRules
     return this.sender_.enterMainMenuMode();
   }
 
-  public async validateRules(rulesetInput: RulesetInput)
+  public async updateRules(rulesetInput: RulesetInput)
     : Promise<true|RulesetValidation>
   {
-    const result = await this.sendSubcmd("ValidateRules", { rulesetInput });
-    if (result.Validation.isValid) {
+    const result = await this.sendSubcmd("UpdateRules", { rulesetInput });
+    if ("Ok" in result) {
       return true;
     } else {
-      if (!result.Validation.validation) {
-        throw new Error("Validation failed but no validation object");
-      }
-      return result.Validation.validation;
+      return result.InvalidRuleset;
     }
+  }
+
+  public async currentRules(): Promise<{
+    ruleset: RulesetInput,
+    validation?: RulesetValidation,
+  }> {
+    const result = await this.sendSubcmd("CurrentRules", {});
+    if ("CurrentRules" in result) {
+      return result.CurrentRules;
+    }
+    throw new Error("CurrentRules: unexpected response");
   }
 
   public async saveRules(): Promise<true> {
     const result = await this.sendSubcmd("SaveRules", {});
     console.log("SaveRules result:", result);
-    if ("RulesSaved" in result) {
+    if ("Ok" in result) {
       return true;
     }
-    throw new Error("SaveRules: unexpected response: " + result.Failed.join(", "));
+    throw new Error(
+      "SaveRules: unexpected response: " + result.Failed.join(", ")
+    );
+  }
+
+  public async loadRules(rulesetName: string): Promise<Ruleset> {
+    const result = await this.sendSubcmd("LoadRules", { rulesetName });
+    if ("LoadedRuleset" in result) {
+      return result.LoadedRuleset;
+    }
+    throw new Error(
+      "LoadRules failed " + result.Failed.join(", ")
+    );
   }
 }

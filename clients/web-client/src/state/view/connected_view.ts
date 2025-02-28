@@ -4,12 +4,12 @@ import DefineRulesViewState, { DefineRulesAction } from "./define_rules";
 type ConnectedViewMode =
   | "main_menu"
   | "define_rules"
-  | "edit_ruleset";
+  | "pick_ruleset_to_edit";
 
 const ConnectedViewMode = {
   MAIN_MENU: "main_menu" as const,
   DEFINE_RULES: "define_rules" as const,
-  EDIT_RULESET: "edit_ruleset" as const,
+  PICK_RULESET_TO_EDIT: "pick_ruleset_to_edit" as const,
 }
 
 type ConnectedViewDispatchTargets =
@@ -44,8 +44,8 @@ const ConnectedViewState = {
     setViewMode(viewMode: ConnectedViewMode): SetViewModeAction {
       return { type: "set_view_mode" as const, viewMode };
     },
-    setDefineRules(defRules: DefineRulesViewState): SetDefineRulesAction {
-      return { type: "set_define_rules" as const, defRules };
+    setDefineRules(defineRules: DefineRulesViewState): SetDefineRulesAction {
+      return { type: "set_define_rules" as const, defineRules };
     },
     defineRules(action: DefineRulesAction): DefineRulesDispatchAction {
       return { type: "dispatch" as const, target: "define_rules", action };
@@ -56,17 +56,29 @@ const ConnectedViewState = {
     set_ws_url(state: ConnectedViewState, action: SetWsUrlAction)
       : ConnectedViewState
     {
-      return { ...state, wsUrl: action.wsUrl };
+      const { wsUrl } = action;
+      if (state.wsUrl === wsUrl) {
+        return state;
+      }
+      return { ...state, wsUrl };
     },
     set_view_mode(state: ConnectedViewState, action: SetViewModeAction)
       : ConnectedViewState
     {
-      return { ...state, viewMode: action.viewMode };
+      const { viewMode } = action;
+      if (state.viewMode === viewMode) {
+        return state;
+      }
+      return { ...state, viewMode };
     },
     set_define_rules(state: ConnectedViewState, action: SetDefineRulesAction)
       : ConnectedViewState
     {
-      return { ...state, defineRules: action.defRules };
+      const { defineRules } = action;
+      if (state.defineRules === defineRules) {
+        return state;
+      }
+      return { ...state, defineRules };
     },
     define_rules(
       state: ConnectedViewState,
@@ -116,7 +128,7 @@ type SetViewModeAction = {
 
 type SetDefineRulesAction = {
   type: "set_define_rules",
-  defRules: DefineRulesViewState,
+  defineRules: DefineRulesViewState,
 };
 
 type TargetedConnectedViewAction<T extends ConnectedViewDispatchTargets> = {

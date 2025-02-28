@@ -22,7 +22,7 @@ export default class Session {
   public readonly client: GameClient;
 
   public readonly send: SessionSender;
-  public readonly defRules: DefineRulesModule;
+  public readonly defineRules: DefineRulesModule;
 
   public static async connectToServer(serverAddr: string): Promise<Session> {
     const currentSession = Session.maybeGetInstance();
@@ -91,7 +91,7 @@ export default class Session {
     return this.client.getModeInfo()
   }
 
-  public async updateRulesetList() {
+  public async retrieveRulesetList() {
     const rulesets = await this.client.listRulesets();
     store.dispatch(RootState.action.session(
       SessionState.action.setRulesetList(rulesets)
@@ -105,7 +105,7 @@ export default class Session {
     this.serverAddr = args.serverAddr;
     this.client = args.client;
     this.send = new SessionSender(args.client);
-    this.defRules = new DefineRulesModule(this);
+    this.defineRules = new DefineRulesModule(this);
   }
 
   private static createInstance(args: {
@@ -117,7 +117,7 @@ export default class Session {
       throw new Error("Session already initialized");
     }
     Session.instance = new Session({ serverAddr, client });
-    Session.instance.updateRulesetList();
+    Session.instance.retrieveRulesetList();
     return Session.instance;
   }
 
@@ -145,7 +145,18 @@ export class DefineRulesModule {
 
   public async enter(): Promise<true> {
     await this.session.client.defineRules.enter();
-    this.view.bumpValidationTimeout(10);
+    return true;
+  }
+
+  public async loadRules(rulesetName: string): Promise<true> {
+    await this.session.client.defineRules.loadRules(rulesetName);
+    store.dispatch(RootState.action.view(
+      ViewState.action.connected(
+        ConnectedViewState.action.defineRules(
+          DefineRulesViewState.action.setValidation(null)
+        )
+      )
+    ));
     return true;
   }
 
@@ -172,7 +183,7 @@ export class DefineRulesViewController {
     if (timeout) {
       timeout.bump(interval);
     } else {
-      timeout = new BumpTimeout(interval, () => this.validateInput());
+      timeout = new BumpTimeout(interval, () => this.syncSendRulesetInput());
       this.validationTimeout_ = timeout;
     }
   }
@@ -181,7 +192,7 @@ export class DefineRulesViewController {
     return this.module_.session.client;
   }
 
-  private async validateInput() {
+  private async syncSendRulesetInput() {
     console.log("DefineRulesViewController.validateInput");
     const state = store.getState();
     const defRulesViewState = state.view.connected.defineRules;
@@ -189,7 +200,7 @@ export class DefineRulesViewController {
       return;
     }
     const input = DefineRulesViewState.createRulesetInput(defRulesViewState);
-    const result = await this.gameClient.defineRules.validateRules(input);
+    const result = await this.gameClient.defineRules.updateRules(input);
     const validation = result === true ? null : result;
     console.log("DefineRulesViewController.validateInput", validation);
     store.dispatch(RootState.action.view(
@@ -200,5 +211,24 @@ export class DefineRulesViewController {
       )
     ));
     this.validationTimeout_ = null;
+  }
+
+  public async syncRecvRulesetInput() {
+    const { ruleset, validation } =
+      await this.gameClient.defineRules.currentRules();
+    store.dispatch(RootState.action.view(
+      ViewState.action.connected(
+        ConnectedViewState.action.defineRules(
+          DefineRulesViewState.action.setRuleset(ruleset)
+        )
+      )
+    ));
+    store.dispatch(RootState.action.view(
+      ViewState.action.connected(
+        ConnectedViewState.action.defineRules(
+          DefineRulesViewState.action.setValidation(validation || null)
+        )
+      )
+    ));
   }
 }

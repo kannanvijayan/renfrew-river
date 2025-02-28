@@ -30,16 +30,18 @@ const RootState = {
 
   reducers: {
     view(state: RootState, action: TargetedRootAction<"view">): RootState {
-      return {
-        ...state,
-        view: ViewState.reducer(state.view, action.action),
-      };
+      const view = ViewState.reducer(state.view, action.action);
+      if (view === state.view) {
+        return state;
+      }
+      return { ...state, view };
     },
     session(state: RootState, action: TargetedRootAction<"session">): RootState {
-      return {
-        ...state,
-        session: SessionState.reducer(state.session, action.action),
-      };
+      const session = SessionState.reducer(state.session, action.action);
+      if (session === state.session) {
+        return state;
+      }
+      return { ...state, session };
     },
   },
 
