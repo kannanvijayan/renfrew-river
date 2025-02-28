@@ -17,7 +17,7 @@ export default function MainMenu(props:{
       <MainMenuTitle />
       <Separator />
       <DefineRulesetButton />
-      <LoadRulesetButton rulesets={sessionState.rulesetList || []} />
+      <EditRulesetButton rulesets={sessionState.rulesetList || []} />
       <Separator />
       <CreateWorldButton />
       <LoadWorldButton />
@@ -72,13 +72,19 @@ function DefineRulesetButton() {
   );
 }
 
-function LoadRulesetButton(props: {
+function EditRulesetButton(props: {
   rulesets: RulesetEntry[],
 }) {
   const { rulesets } = props;
+  const dispatchConnected = useAppDispatch.view.connected();
+  const onClick = async () => {
+    dispatchConnected(ConnectedViewState.action.setViewMode(
+      ConnectedViewMode.EDIT_RULESET
+    ));
+  };
   const disabled = rulesets.length === 0;
   return (
-    <MainMenuButton label="Load Ruleset" onClick={() => {}} disabled={disabled} />
+    <MainMenuButton label="Edit Ruleset" onClick={onClick} disabled={disabled} />
   );
 }
 

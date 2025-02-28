@@ -3,11 +3,13 @@ import DefineRulesViewState, { DefineRulesAction } from "./define_rules";
 
 type ConnectedViewMode =
   | "main_menu"
-  | "define_rules";
+  | "define_rules"
+  | "edit_ruleset";
 
 const ConnectedViewMode = {
   MAIN_MENU: "main_menu" as const,
   DEFINE_RULES: "define_rules" as const,
+  EDIT_RULESET: "edit_ruleset" as const,
 }
 
 type ConnectedViewDispatchTargets =
