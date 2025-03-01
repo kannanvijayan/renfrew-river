@@ -1,26 +1,38 @@
 import { Reducer } from "@reduxjs/toolkit";
-import { WorldDescriptorInput } from "renfrew-river-protocol-client";
+import {
+  WorldDescriptorInput,
+  WorldDescriptorValidation,
+} from "renfrew-river-protocol-client";
 
-type CreateWorldViewState = {
+type CreateWorldViewState =
+  | { SpecifyDescriptor: SpecifyDescriptorViewState }
+  | { GeneratingWorld: GeneratingWorldViewState };
+
+type SpecifyDescriptorViewState = {
   descriptor: WorldDescriptorInput | null,
+  validation: WorldDescriptorValidation | null,
 };
 
-const CreateWorldViewState = {
-  createWorldDescriptorInput(state: CreateWorldViewState): WorldDescriptorInput {
-    const descriptor = state.descriptor;
-    if (!descriptor) {
-      throw new Error("CreateWorldViewState.createWorldDescriptorInput: descriptor is null");
-    }
-    return descriptor;
-  },
+type GeneratingWorldViewState = null;
 
+const CreateWorldViewState = {
   initialState: {
-    descriptor: null,
+    SpecifyDescriptor: {
+      descriptor: null,
+      validation: null,
+    },
   } as CreateWorldViewState,
 
   action: {
-    setDescriptor(descriptor: WorldDescriptorInput): SetDescriptorAction {
+    setDescriptor(descriptor: WorldDescriptorInput | null)
+      : SetDescriptorAction
+    {
       return { type: "set_descriptor", descriptor };
+    },
+    setValidation(validation: WorldDescriptorValidation | null)
+      : SetValidationAction
+    {
+      return { type: "set_validation", validation };
     }
   },
 
@@ -29,11 +41,26 @@ const CreateWorldViewState = {
       : CreateWorldViewState
     {
       const { descriptor } = action;
-      if (state.descriptor === descriptor) {
+      if (!("SpecifyDescriptor" in state)) {
         return state;
       }
-      return { ...state, descriptor };
-    }
+      if (state.SpecifyDescriptor.descriptor === descriptor) {
+        return state;
+      }
+      return { SpecifyDescriptor: { ...state.SpecifyDescriptor, descriptor } };
+    },
+    set_validation(state: CreateWorldViewState, action: SetValidationAction)
+      : CreateWorldViewState
+    {
+      const { validation } = action;
+      if (!("SpecifyDescriptor" in state)) {
+        return state;
+      }
+      if (state.SpecifyDescriptor.validation === validation) {
+        return state;
+      }
+      return { SpecifyDescriptor: { ...state.SpecifyDescriptor, validation } };
+    },
   },
 
   reducer(state: CreateWorldViewState, action: CreateWorldAction): CreateWorldViewState {
@@ -48,14 +75,23 @@ const CreateWorldViewState = {
 
 type SetDescriptorAction = {
   type: "set_descriptor",
-  descriptor: WorldDescriptorInput,
+  descriptor: WorldDescriptorInput | null,
+};
+
+type SetValidationAction = {
+  type: "set_validation",
+  validation: WorldDescriptorValidation | null,
 };
 
 type CreateWorldAction =
-  | SetDescriptorAction;
+  | SetDescriptorAction
+  | SetValidationAction;
 
 export default CreateWorldViewState;
 export type {
+  SpecifyDescriptorViewState,
+  GeneratingWorldViewState,
+
   CreateWorldAction,
   SetDescriptorAction,
 };

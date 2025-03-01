@@ -34,11 +34,20 @@ function MainContent(props: {
       return (<CreateWorld viewState={viewState.createWorld!} />);
     case ConnectedViewMode.PICK_RULESET_TO_EDIT:
       return (<PickRulesetToEdit rulesetList={sessionState.rulesetList!} />);
-    case ConnectedViewMode.PICK_RULESET_FOR_CREATE_WORLD:
-      return (
-        <PickRulesetForNewWorld rulesetList={sessionState.rulesetList!}
-            createWorldState={viewState.createWorld!} />
-      );
+    case ConnectedViewMode.PICK_RULESET_FOR_CREATE_WORLD: {
+      if (
+        viewState.createWorld &&
+        ("SpecifyDescriptor" in viewState.createWorld!)
+      ) {
+        return (
+          <PickRulesetForNewWorld rulesetList={sessionState.rulesetList!}
+              specifyDescriptorState={viewState.createWorld!.SpecifyDescriptor} />
+        );
+      } else {
+        console.error("Unexpected state for PICK_RULESET_FOR_CREATE_WORLD");
+        return (<></>);
+      }
+    }
     default:
       console.error("Unknown view mode: " + viewState.viewMode);
       return (<></>);

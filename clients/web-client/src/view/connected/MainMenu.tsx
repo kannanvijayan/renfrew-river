@@ -98,16 +98,14 @@ function CreateWorldButton(props: {
   const dispatchConnected = useAppDispatch.view.connected();
   const dispatchCreateWorld = useAppDispatch.view.connected.createWorld();
   const onClick = async () => {
+    const session = Session.getInstance();
+    await session.createWorld.enter();
+    session.createWorld.view.bumpValidationTimeout();
+    const worldDescriptor = await session.createWorld.currentDescriptorInput();
     dispatchConnected(ConnectedViewState.action.setCreateWorld(
       CreateWorldViewState.initialState
     ));
-    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor({
-      name: "",
-      description: "",
-      seed: "",
-      dims: { columns: "", rows: "" },
-      rulesetName: "",
-    }));
+    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor(worldDescriptor));
     dispatchConnected(ConnectedViewState.action.setViewMode(
       ConnectedViewMode.CREATE_WORLD
     ));

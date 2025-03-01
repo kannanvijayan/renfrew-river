@@ -1,14 +1,15 @@
-import GameClient from "renfrew-river-protocol-client";
-import WsTransport from "./ws_transport";
-import DefineRulesSender from "./define_rules_sender";
-import { BumpTimeout } from "../util/bump_timeout";
-import DefineRulesViewState from "../state/view/define_rules/define_rules";
+import GameClient, { GameModeInfo } from "renfrew-river-protocol-client";
+
 import { store } from "../store/root";
 import RootState from "../state/root";
-import ViewState, { ViewMode } from "../state/view";
-import ConnectedViewState from "../state/view/connected_view";
-import { GameModeInfo } from "renfrew-river-protocol-client";
 import SessionState from "../state/session";
+import ViewState, { ViewMode } from "../state/view";
+
+import WsTransport from "./ws_transport";
+import { DefineRulesModule } from "./define_rules";
+import { CreateWorldModule } from "./create_world";
+import { dispatchApp } from "../store/dispatch";
+import ConnectedViewState, { ConnectedViewMode } from "../state/view/connected_view";
 
 /**
  * The behavioural logic for maintaining a client connection (session)
@@ -21,8 +22,8 @@ export default class Session {
   public readonly serverAddr: string;
   public readonly client: GameClient;
 
-  public readonly send: SessionSender;
   public readonly defineRules: DefineRulesModule;
+  public readonly createWorld: CreateWorldModule;
 
   public static async connectToServer(serverAddr: string): Promise<Session> {
     const currentSession = Session.maybeGetInstance();
@@ -62,7 +63,9 @@ export default class Session {
           },
         });
       });
-      return Session.createInstance({ serverAddr, client });
+      const inst = await Session.createInstance({ serverAddr, client });
+      await inst.postConnectInitialize();
+      return inst;
     })();
 
     return Session.instancePromise;
@@ -98,14 +101,40 @@ export default class Session {
     ));
   }
 
+  public async postConnectInitialize() {
+    // Get the session, and check the current mode.
+    const modeInfo = await this.gameModeInfo();
+
+    dispatchApp.view(ViewState.action.setMode(ViewMode.CONNECTED));
+    dispatchApp.view.connected(
+      ConnectedViewState.action.setWsUrl(this.serverAddr)
+    );
+
+    // Update view.
+    if (modeInfo == null) {
+      dispatchApp.view.connected(
+        ConnectedViewState.action.setViewMode(ConnectedViewMode.MAIN_MENU)
+      );
+      return;
+    }
+
+    if ("DefineRules" in modeInfo) {
+      await this.defineRules.postConnectInit();
+    } else if ("CreateWorld" in modeInfo) {
+      await this.createWorld.postConnectInit();
+    } else {
+      console.error("Unknown game mode info", modeInfo);
+    }
+  }
+
   private constructor(args: {
     serverAddr: string,
     client: GameClient,
   }) {
     this.serverAddr = args.serverAddr;
     this.client = args.client;
-    this.send = new SessionSender(args.client);
-    this.defineRules = new DefineRulesModule(this);
+    this.defineRules = new DefineRulesModule(this.client);
+    this.createWorld = new CreateWorldModule(this.client);
   }
 
   private static createInstance(args: {
@@ -123,119 +152,5 @@ export default class Session {
 
   private shutdown() {
     this.client.disconnect();
-  }
-}
-
-export class SessionSender {
-  public readonly defineRules: DefineRulesSender;
-
-  constructor(gameClient: GameClient) {
-    this.defineRules = new DefineRulesSender(gameClient);
-  }
-}
-
-export class DefineRulesModule {
-  public readonly session: Session;
-  public readonly view: DefineRulesViewController;
-
-  constructor(session: Session) {
-    this.session = session;
-    this.view = new DefineRulesViewController(this);
-  }
-
-  public async enter(): Promise<true> {
-    await this.session.client.defineRules.enter();
-    return true;
-  }
-
-  public async loadRules(rulesetName: string): Promise<true> {
-    await this.session.client.defineRules.loadRules(rulesetName);
-    store.dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.defineRules(
-          DefineRulesViewState.action.setValidation(null)
-        )
-      )
-    ));
-    store.dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.defineRules(
-          DefineRulesViewState.action.setUpdateExisting(rulesetName)
-        )
-      )
-    ));
-    return true;
-  }
-
-  public async leave(): Promise<true> {
-    await this.session.client.defineRules.leave();
-    return true;
-  }
-}
-
-export class DefineRulesViewController {
-  private static readonly DEFAULT_BUMP_INTERVAL = 50;
-  private readonly module_: DefineRulesModule;
-  private validationTimeout_: BumpTimeout | null;
-
-  constructor(module: DefineRulesModule) {
-    this.module_ = module;
-    this.validationTimeout_ = null;
-  }
-
-
-  public bumpValidationTimeout(interval?: number) {
-    let timeout = this.validationTimeout_;
-    interval = interval ?? DefineRulesViewController.DEFAULT_BUMP_INTERVAL;
-    if (timeout) {
-      timeout.bump(interval);
-    } else {
-      timeout = new BumpTimeout(interval, () => this.syncSendRulesetInput());
-      this.validationTimeout_ = timeout;
-    }
-  }
-
-  private get gameClient() {
-    return this.module_.session.client;
-  }
-
-  private async syncSendRulesetInput() {
-    console.log("DefineRulesViewController.validateInput");
-    const state = store.getState();
-    const defRulesViewState = state.view.connected.defineRules;
-    if (!defRulesViewState) {
-      return;
-    }
-    const input = DefineRulesViewState.createRulesetInput(defRulesViewState);
-    const result = await this.gameClient.defineRules.updateRules(input);
-    const validation = result === true ? null : result;
-    console.log("DefineRulesViewController.validateInput", validation);
-    store.dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.defineRules(
-          DefineRulesViewState.action.setValidation(validation)
-        )
-      )
-    ));
-    this.validationTimeout_ = null;
-  }
-
-  public async syncRecvRulesetInput() {
-    const { ruleset, validation } =
-      await this.gameClient.defineRules.currentRules();
-    store.dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.defineRules(
-          DefineRulesViewState.action.setRuleset(ruleset)
-        )
-      )
-    ));
-    store.dispatch(RootState.action.view(
-      ViewState.action.connected(
-        ConnectedViewState.action.defineRules(
-          DefineRulesViewState.action.setValidation(validation || null)
-        )
-      )
-    ));
   }
 }

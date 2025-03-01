@@ -1,14 +1,23 @@
 import { RulesetEntry } from "renfrew-river-protocol-client";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
-import { useAppDispatch } from "../../store/hooks";
+import { useAppDispatch, useAppListener } from "../../store/hooks";
 import RulesetPicker from "../common/RulesetPicker";
-import CreateWorldViewState from "../../state/view/create_world/create_world";
+import CreateWorldViewState, { SpecifyDescriptorViewState } from "../../state/view/create_world/create_world";
 
 export default function PickRulesetForNewWorld(props: {
-  createWorldState: CreateWorldViewState,
+  specifyDescriptorState: SpecifyDescriptorViewState,
   rulesetList: RulesetEntry[],
 }) {
-  const { createWorldState, rulesetList } = props;
+  const { specifyDescriptorState, rulesetList } = props;
+  const { descriptor } = specifyDescriptorState;
+
+  if (!descriptor) {
+    console.error("PickRulesetForNewWorld: descriptor is null");
+    return <></>;
+  }
+
+  useAppListener.view.connected.createWorld.watchDescriptorChange();
+
   const dispatchConnected = useAppDispatch.view.connected();
   const dispatchCreateWorld = useAppDispatch.view.connected.createWorld();
   const onBackClicked = () => {
@@ -22,7 +31,7 @@ export default function PickRulesetForNewWorld(props: {
       ConnectedViewMode.CREATE_WORLD
     ));
     dispatchCreateWorld(CreateWorldViewState.action.setDescriptor({
-      ...createWorldState.descriptor!,
+      ...descriptor,
       rulesetName: name,
     }));
   };

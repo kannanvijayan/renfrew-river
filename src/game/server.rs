@@ -27,7 +27,7 @@ use crate::{
     ResponseEnvelope,
   },
 };
-use super::GameServerConfig;
+use super::{ GameServerConfig, defaults };
 
 /**
  * A server that fronts the game engine running on another thread.
@@ -174,7 +174,9 @@ impl GameServerInner {
             "Cannot enter mode: already in a mode".to_string()
           ));
         }
-        let create_world_mode = CreateWorldMode::new();
+        let create_world_mode = CreateWorldMode::new_specify(
+          defaults::world_descriptor_input(),
+        );
         self.mode = Some(GameMode::CreateWorld(create_world_mode));
         ResponseEnvelope::Ok {}
       },

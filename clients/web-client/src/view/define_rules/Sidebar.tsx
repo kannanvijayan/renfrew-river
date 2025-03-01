@@ -5,7 +5,7 @@ import {
 } from "renfrew-river-protocol-client";
 import { useAppDispatch } from "../../store/hooks";
 import DefineRulesViewState from "../../state/view/define_rules/define_rules";
-import ValidationErrors from "./ValidationErrors";
+import ValidationErrors from "../common/ValidationErrors";
 import Session from "../../session/session";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 
@@ -294,7 +294,7 @@ function CreateButton(props: {
   const onClick = async () => {
     const session = Session.getInstance();
     try {
-      await session.send.defineRules.saveRules();
+      await session.defineRules.saveRules();
       await session.retrieveRulesetList();
     } catch (e) {
       console.error("Failed to save rules", e);

@@ -20,6 +20,38 @@ type DefineRulesViewState = {
 };
 
 const DefineRulesViewState = {
+  fromRulesetInputAndValidation(
+    ruleset: RulesetInput,
+    validation: RulesetValidation | null
+  ): DefineRulesViewState {
+    const { name, description, terrainGen } = ruleset;
+    const { perlin, stage } = terrainGen;
+    return {
+      category: null,
+      entrySelection: null,
+      updateExisting: null,
+      name,
+      description,
+      terrainGeneration: {
+        perlinFields: perlin,
+        generatorProgram: {
+          ...stage,
+          addFormatComponentDialog: {
+            visible: false,
+            name: "",
+            startBit: "",
+            numBits: "",
+          },
+          addFormatWordDialog: {
+            visible: false,
+            name: "",
+          },
+        },
+      },
+      validation,
+    };
+  },
+
   createRulesetInput(state: DefineRulesViewState): RulesetInput {
     const { name, description, terrainGeneration } = state;
     return {

@@ -2,8 +2,7 @@ import Ruleset, {
   RulesetInput,
   RulesetValidation,
 } from "../types/ruleset/ruleset";
-import DefineRulesSubcmd
-  from "../protocol/commands/define_rules/define_rules_subcmd";
+import DefineRulesSubcmd from "../protocol/commands/define_rules_subcmd";
 import GameClientModule from "./module";
 import SubcmdSender from "./subcmd_sender";
 

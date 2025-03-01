@@ -6,7 +6,12 @@ mod world_descriptor;
 
 pub(crate) use self::{
   cell_coord::CellCoord,
-  world_descriptor::WorldDescriptor,
-  world_dims::{ WorldDims, WorldDimsInput },
+  world_descriptor::{
+    WorldDescriptor,
+    WorldDescriptorInput,
+    WorldDescriptorLimits,
+    WorldDescriptorValidation,
+  },
+  world_dims::{ WorldDims, WorldDimsInput, WorldDimsValidation },
   vec_map::VecMap,
 };

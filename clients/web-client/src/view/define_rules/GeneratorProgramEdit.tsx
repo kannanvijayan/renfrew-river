@@ -8,7 +8,7 @@ import AddFormatWordDialog from "./AddFormatWordDialog";
 import ShasmProgramInput from "../common/ShasmProgramInput";
 import ShasmProgramErrors from "../common/ShasmProgramErrors";
 import AddFormatComponentDialog from "./AddFormatComponentDialog";
-import ValidationErrors from "./ValidationErrors";
+import ValidationErrors from "../common/ValidationErrors";
 import { ShasmParseError } from "renfrew-river-protocol-client";
 
 const useGeneratorProgramDispatch =

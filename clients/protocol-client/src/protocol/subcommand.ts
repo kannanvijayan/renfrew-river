@@ -1,5 +1,5 @@
 
-import DefineRulesSubcmd from "./commands/define_rules/define_rules_subcmd";
+import DefineRulesSubcmd from "./commands/define_rules_subcmd";
 
 /**
  * Protocol commands.

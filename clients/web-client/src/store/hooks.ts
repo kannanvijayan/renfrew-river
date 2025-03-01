@@ -1,18 +1,33 @@
+import { useEffect } from "react";
 import { useDispatch, useSelector, useStore } from "react-redux";
+
+import { functionObject } from "../util/function_object";
 
 import RootState from "../state/root";
 import ViewState, { ViewAction } from "../state/view";
-import UnconnectedViewState, { UnconnectedViewAction } from "../state/view/unconnected_view";
-import ConnectedViewState, { ConnectedViewAction } from "../state/view/connected_view";
-import { PerlinFieldsAction } from "../state/view/define_rules/perlin_fields";
-import { GeneratorProgramAction } from "../state/view/define_rules/generator_program";
+import UnconnectedViewState, { UnconnectedViewAction }
+  from "../state/view/unconnected_view";
 
-import { RootDispatch, RootStore, StateChangeListener, subscribeToChange } from "./root";
-import { functionObject } from "../util/function_object";
-import DefineRulesViewState, { DefineRulesAction } from "../state/view/define_rules/define_rules";
-import { useEffect } from "react";
-import TerrainGenerationViewState, { TerrainGenerationAction } from "../state/view/define_rules/terrain_generation";
-import { CreateWorldAction } from "../state/view/create_world/create_world";
+import ConnectedViewState, { ConnectedViewAction }
+  from "../state/view/connected_view";
+
+import CreateWorldViewState, { CreateWorldAction }
+  from "../state/view/create_world/create_world";
+
+import DefineRulesViewState, { DefineRulesAction }
+  from "../state/view/define_rules/define_rules";
+
+import { GeneratorProgramAction }
+  from "../state/view/define_rules/generator_program";
+
+import { PerlinFieldsAction } from "../state/view/define_rules/perlin_fields";
+
+import TerrainGenerationViewState, { TerrainGenerationAction }
+  from "../state/view/define_rules/terrain_generation";
+
+import { RootDispatch, RootStore } from "./root";
+import { StateChangeListener, subscribeToChange } from "./subscribe";
+import Session from "../session/session";
 
 export const useRootDispatch = useDispatch.withTypes<RootDispatch>();
 export const useRootSelector = useSelector.withTypes<RootState>();
@@ -26,20 +41,16 @@ function useViewDispatch() {
 }
 
 function useUnconnectedViewDispatch() {
-  const dispatch = useRootDispatch();
+  const dispatch = useViewDispatch();
   return (unconnectedViewAction: UnconnectedViewAction) => {
-    dispatch(RootState.action.view(
-      ViewState.action.unconnected(unconnectedViewAction)
-    ));
+    dispatch(ViewState.action.unconnected(unconnectedViewAction));
   }
 }
 
 function useConnectedViewDispatch() {
-  const dispatch = useRootDispatch();
+  const dispatch = useViewDispatch();
   return (connectedViewAction: ConnectedViewAction) => {
-    dispatch(RootState.action.view(
-      ViewState.action.connected(connectedViewAction)
-    ));
+    dispatch(ViewState.action.connected(connectedViewAction));
   }
 }
 
@@ -155,10 +166,40 @@ function useDefineRulesViewListener(
   });
 }
 
+function useCreateWorldViewListener(
+  onCreateWorldViewStateChange: StateChangeListener<CreateWorldViewState|null>,
+) {
+  useConnectedViewListener((newValue, oldValue) => {
+    if (newValue.createWorld !== oldValue.createWorld) {
+      return onCreateWorldViewStateChange(newValue.createWorld, oldValue.createWorld);
+    }
+  });
+}
+
+function createWorldWatchDescriptorChange() {
+  useAppListener.view.connected.createWorld((newCreateWorld, oldCreateWorld) => {
+    if (newCreateWorld === null || !("SpecifyDescriptor" in newCreateWorld)) {
+      return;
+    }
+    const newDescriptor = newCreateWorld.SpecifyDescriptor.descriptor;
+    if (
+      oldCreateWorld == null ||
+      !("SpecifyDescriptor" in oldCreateWorld) ||
+      newDescriptor !== oldCreateWorld.SpecifyDescriptor.descriptor
+    ) {
+      const session = Session.getInstance();
+      session.createWorld.view.bumpValidationTimeout();
+    }
+  });
+}
+
 export const useAppListener = functionObject(useRootListener, {
   view: functionObject(useViewListener, {
     connected: functionObject(useConnectedViewListener, {
       defineRules: useDefineRulesViewListener,
+      createWorld: functionObject(useCreateWorldViewListener, {
+        watchDescriptorChange: createWorldWatchDescriptorChange,
+      }),
     }),
     unconnected: useUnconnectedViewListener,
   }),

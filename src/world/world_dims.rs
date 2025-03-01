@@ -18,6 +18,13 @@ impl WorldDims {
     }
   }
 
+  pub(crate) fn to_input(&self) -> WorldDimsInput {
+    WorldDimsInput {
+      columns: self.columns.to_string(),
+      rows: self.rows.to_string(),
+    }
+  }
+
   pub(crate) const fn area(&self) -> u32 {
     (self.columns as u32) * (self.rows as u32)
   }
@@ -59,4 +66,86 @@ impl WorldDims {
 pub(crate) struct WorldDimsInput {
   pub(crate) columns: String,
   pub(crate) rows: String,
+}
+impl WorldDimsInput {
+  pub(crate) fn to_world_dims(&self, min: WorldDims, max: WorldDims)
+    -> Result<WorldDims, WorldDimsValidation>
+  {
+    let mut errors = Vec::new();
+    let mut column_errors = Vec::new();
+    let mut row_errors = Vec::new();
+
+    let columns = if self.columns.len() > 0 {
+      match self.columns.parse::<u16>() {
+        Ok(value) => {
+          if value < min.columns {
+            column_errors.push(format!("Columns must be at least {}.", min.columns));
+            column_errors.push(self.columns.clone());
+          } else if value > max.columns {
+            column_errors.push(format!("Columns must be at most {}.", max.columns));
+            column_errors.push(self.columns.clone());
+          }
+          value
+        },
+        Err(_) => {
+          column_errors.push("Columns must be a number.".to_string());
+          column_errors.push(self.columns.clone());
+          0
+        }
+      }
+    } else {
+      errors.push("Columns is empty.".to_string());
+      0
+    };
+
+    let rows = if self.rows.len() > 0 {
+      match self.rows.parse::<u16>() {
+        Ok(value) => {
+          if value < min.rows {
+            row_errors.push(format!("Rows must be at least {}.", min.rows));
+            row_errors.push(self.rows.clone());
+          } else if value > max.rows {
+            row_errors.push(format!("Rows must be at most {}.", max.rows));
+            row_errors.push(self.rows.clone());
+          }
+          value
+        }
+        Err(_) => {
+          row_errors.push("Rows must be a number.".to_string());
+          row_errors.push(self.rows.clone());
+          0
+        }
+      }
+    } else {
+      errors.push("Rows is empty.".to_string());
+      0
+    };
+
+    if errors.is_empty() && column_errors.is_empty() && row_errors.is_empty() {
+      Ok(WorldDims::new(columns, rows))
+    } else {
+      Err(WorldDimsValidation { errors, columns: column_errors, rows: row_errors })
+    }
+  }
+}
+
+#[derive(Clone, Debug)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct WorldDimsValidation {
+  pub(crate) errors: Vec<String>,
+  pub(crate) columns: Vec<String>,
+  pub(crate) rows: Vec<String>,
+}
+impl WorldDimsValidation {
+  pub(crate) fn new_valid() -> Self {
+    WorldDimsValidation {
+      errors: Vec::new(),
+      columns: Vec::new(),
+      rows: Vec::new(),
+    }
+  }
+
+  pub(crate) fn is_valid(&self) -> bool {
+    self.errors.is_empty() && self.columns.is_empty() && self.rows.is_empty()
+  }
 }
