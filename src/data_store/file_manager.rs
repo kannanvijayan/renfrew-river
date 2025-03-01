@@ -61,4 +61,10 @@ impl FileManagerSubtree {
     file.write_all(contents.as_bytes())?;
     Ok(())
   }
+
+  pub(crate) fn delete(&self, name: &str) -> io::Result<()> {
+    let mut path = self.subtree_dir.clone();
+    path.push(name);
+    fs::remove_file(path)
+  }
 }

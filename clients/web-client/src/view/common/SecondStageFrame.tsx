@@ -14,13 +14,14 @@ const SecondStageFrameBox = styled(Box)({
 });
 
 export default function SecondStageFrame(props: {
-  title: string,
+  title: ReactNode,
   onBackClicked: () => void,
   children: ReactNode,
+  frameSx?: Parameters<typeof SecondStageFrameBox>[0]["sx"],
 }) {
-  const { title, children, onBackClicked } = props;
+  const { title, children, onBackClicked, frameSx } = props;
   return (
-    <SecondStageFrameBox sx={{ backgroundColor: "primary.dark" }}>
+    <SecondStageFrameBox sx={{ ...frameSx, backgroundColor: "primary.dark" }}>
       <Title title={title} onBackClicked={onBackClicked} />
       <Divider sx={{
         backgroundColor: "secondary.main",
@@ -34,7 +35,7 @@ export default function SecondStageFrame(props: {
 }
 
 function Title(props: {
-  title: string,
+  title: ReactNode,
   onBackClicked: () => void,
 }) {
   const { title, onBackClicked } = props

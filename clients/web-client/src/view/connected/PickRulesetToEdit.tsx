@@ -7,13 +7,23 @@ import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connecte
 import { useAppDispatch } from "../../store/hooks";
 import Session from "../../session/session";
 
+type PickReason = 
+  | "edit"
+  | "create";
+const PickReason = {
+  EDIT: "edit" as PickReason,
+  CREATE: "create" as PickReason,
+};
+
+export { PickReason };
+
 export default function PickRulesetToEdit(props: {
   sessionState: SessionState,
+  reason: PickReason,
 }) {
   const { sessionState } = props;
 
   const dispatchConnected = useAppDispatch.view.connected();
-
   const onBackClicked = () => {
     dispatchConnected(ConnectedViewState.action.setViewMode(
       ConnectedViewMode.MAIN_MENU
@@ -21,17 +31,27 @@ export default function PickRulesetToEdit(props: {
   };
 
   const onRulesetClicked = async (name: string) => {
-    const session = Session.getInstance();
-    await session.defineRules.enter();
-    await session.defineRules.loadRules(name);
-    await session.defineRules.view.syncRecvRulesetInput();
-    dispatchConnected(ConnectedViewState.action.setViewMode(
-      ConnectedViewMode.DEFINE_RULES
-    ));
+    if (props.reason === PickReason.EDIT) {
+      const session = Session.getInstance();
+      await session.defineRules.enter();
+      await session.defineRules.loadRules(name);
+      await session.defineRules.view.syncRecvRulesetInput();
+      dispatchConnected(ConnectedViewState.action.setViewMode(
+        ConnectedViewMode.DEFINE_RULES
+      ));
+    } else {
+      dispatchConnected(ConnectedViewState.action.setViewMode(
+        ConnectedViewMode.CREATE_WORLD
+      ));
+    }
   };
 
+  const title = props.reason === PickReason.EDIT
+    ? "Edit Ruleset"
+    : "Pick Ruleset";
+
   return (
-    <SecondStageFrame title="Edit Ruleset" onBackClicked={onBackClicked}>
+    <SecondStageFrame title={title} onBackClicked={onBackClicked}>
       <Box display="flex" flexDirection="column" overflow="scroll"
         width="100%" height="100%" margin="0" paddingBottom="1rem" sx={{
           backgroundColor: "secondary.dark",
@@ -57,12 +77,18 @@ function Entry(props: {
   return (
     <Box key={index} display="flex" flexDirection="column" margin="1rem"
         onClick={() => onClick(ruleset.name)}
-        sx={{ "&:hover": {
-          textShadow: "0 0 0.5rem #db7",
-          cursor: "pointer",
-        } }}>
+        sx={{
+          borderBottom: "0.2rem dotted #ca6",
+          "&:last-child": {
+            borderBottom: "0.2rem solid #ca6",
+          },
+          "&:hover": {
+            textShadow: "0 0 0.5rem #db7",
+            cursor: "pointer",
+          },
+        }}>
       <Typography key={index} variant="h3" color={"secondary.contrastText"}
-          textAlign={"left"}>
+          textAlign={"left"} sx={{ paddingBottom: "0.5rem" }}>
         {ruleset.name}
       </Typography>
       {

@@ -19,7 +19,7 @@ export default function MainMenu(props:{
       <DefineRulesetButton />
       <EditRulesetButton rulesets={sessionState.rulesetList || []} />
       <Separator />
-      <CreateWorldButton />
+      <CreateWorldButton rulesets={sessionState.rulesetList || []} />
       <LoadWorldButton />
       <Separator />
       <NewGameButton />
@@ -89,9 +89,19 @@ function EditRulesetButton(props: {
   );
 }
 
-function CreateWorldButton() {
+function CreateWorldButton(props: {
+  rulesets: RulesetEntry[],
+}) {
+  const { rulesets } = props;
+  const disabled = rulesets.length === 0;
+  const dispatchConnected = useAppDispatch.view.connected();
+  const onClick = async () => {
+    dispatchConnected(ConnectedViewState.action.setViewMode(
+      ConnectedViewMode.PICK_RULESET_FOR_CREATE_WORLD
+    ));
+  };
   return (
-    <MainMenuButton label="Create World" onClick={() => {}} disabled />
+    <MainMenuButton label="Create World" onClick={onClick} disabled={disabled} />
   );
 }
 

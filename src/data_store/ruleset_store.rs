@@ -62,8 +62,8 @@ impl RulesetStore {
   }
 
   pub(crate) fn write(&mut self, name: &str, ruleset: &Ruleset) {
-    let entry = self.find_entry(name);
-    let filename = if let Some(entry) = entry {
+    let existing_entry = self.find_entry(name);
+    let filename = if let Some(entry) = existing_entry {
       entry.filename.clone()
     } else {
       format!("rls{}_{}.json", self.entries.len(), name)
@@ -74,12 +74,26 @@ impl RulesetStore {
     self.subtree.write(&filename, &ruleset_str)
       .expect(format!("Failed to write ruleset file: {}", &filename).as_str());
 
-    let entry = RulesetStoreEntry {
-      name: ruleset.name.clone(),
-      description: ruleset.description.clone(),
-      filename,
-    };
-    self.entries.push(entry);
+    if existing_entry.is_none() {
+      self.entries.push(RulesetStoreEntry {
+        name: ruleset.name.clone(),
+        description: ruleset.description.clone(),
+        filename,
+      });
+    }
+
+    let index_str = serde_json::to_string(&self.entries)
+      .expect("Failed to serialize ruleset index to JSON");
+    self.subtree.write(Self::INDEX_FILENAME, &index_str)
+      .expect("Failed to write ruleset index file");
+  }
+
+  pub(crate) fn delete(&mut self, name: &str) {
+    let entry = self.find_entry(name)
+      .expect(format!("Failed to find ruleset entry: {}", name).as_str());
+    self.subtree.delete(&entry.filename)
+      .expect(format!("Failed to delete ruleset file: {}", &entry.filename).as_str());
+    self.entries.retain(|entry| entry.name != name);
 
     let index_str = serde_json::to_string(&self.entries)
       .expect("Failed to serialize ruleset index to JSON");

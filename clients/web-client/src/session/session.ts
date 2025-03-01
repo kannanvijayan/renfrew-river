@@ -157,6 +157,13 @@ export class DefineRulesModule {
         )
       )
     ));
+    store.dispatch(RootState.action.view(
+      ViewState.action.connected(
+        ConnectedViewState.action.defineRules(
+          DefineRulesViewState.action.setUpdateExisting(rulesetName)
+        )
+      )
+    ));
     return true;
   }
 

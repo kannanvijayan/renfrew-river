@@ -13,13 +13,16 @@ export default function Sidebar(props: {
   viewState: DefineRulesViewState,
 }) {
   const { viewState } = props;
+  console.log("KVKV VIEWSTATE", viewState);
+  const updateExisting = viewState.updateExisting;
   return (
     <Box display="flex" flexDirection="column"
         width="40rem" textAlign="left" margin={0} padding={0}
         sx={{ borderRadius: "0 0 0 3rem", border: 0 }}>
       <NameAndDescription viewState={viewState} />
       <TerrainGen viewState={viewState} />
-      <SidebarValidation validation={viewState.validation} />
+      <SidebarValidation validation={viewState.validation}
+        updateExisting={updateExisting}/>
     </Box>
   )
 }
@@ -48,35 +51,34 @@ function NameAndDescription(props: {
 
   return (
     <Box display="flex" flexDirection="column" margin="0 1rem 1rem 0" padding="0">
-      <Box display="flex" flexDirection="row" margin="0" padding="0">
-        <Typography variant="h3" color={"primary.dark"} sx={{
-          margin: "0 1rem 0 0",
-          fontSize: "1.5rem",
-          fontWeight: 700,
-          padding: "1rem",
-          width: "20rem",
-          position: "relative",
-        }}>
-          Name
-          <NameDescrExclaim errors={nameErrors} />
-        </Typography>
-        <Input value={name} sx={{ width: "100%", fontSize: "1.5rem" }}
-          onChange={(e) => onNameChange(e.target.value)} />
-      </Box>
-      <Box display="flex" flexDirection="row" margin="0" padding="0">
-        <Typography variant="h3" color={"primary.dark"} sx={{
-          margin: "0 1rem 0 0",
-          fontSize: "1.5rem",
-          fontWeight: 700,
-          padding: "1rem",
-          width: "20rem",
-        }}>
-          Description
-          <NameDescrExclaim errors={descriptionErrors} />
-        </Typography>
-        <Input value={description} sx={{ width: "100%", fontSize: "1.5rem" }}
-          onChange={(e) => onDescriptionChange(e.target.value)} />
-      </Box>
+      <NameOrDescrInput label="Name" value={name}
+          onChange={onNameChange} errors={nameErrors} />
+      <NameOrDescrInput label="Description" value={description}
+          onChange={onDescriptionChange} errors={descriptionErrors} />
+    </Box>
+  );
+}
+
+function NameOrDescrInput(props: {
+  label: string,
+  value: string,
+  onChange: (value: string) => void,
+  errors: string[],
+}) {
+  const { label, value, onChange, errors } = props;
+  return (
+    <Box display="flex" flexDirection="column" margin="2rem 1rem 1rem 2rem"
+        padding="0 1rem 0 0" width="95%" textAlign={"left"}>
+      <Typography variant="h5" color={"primary.dark"} sx={{
+        margin: "0 1rem 0 0",
+        fontSize: "2.5rem",
+        padding: "0",
+      }}>
+        {label}
+        <NameDescrExclaim errors={errors} />
+      </Typography>
+      <Input value={value} sx={{ width: "100%", fontSize: "1.5rem" }}
+        onChange={(e) => onChange(e.target.value)} />
     </Box>
   );
 }
@@ -128,16 +130,14 @@ function Category(props: {
       margin="0" width="auto">
       <Container
           sx={{
-            margin:0,
+            margin:"0 0 1rem 0",
             padding:"0 1rem 0 0",
             backgroundColor: "secondary.main",
             alignContent: "begin",
           }}>
         <Typography variant="h3" color={"secondary.contrastText"} sx={{
-          margin: "0 auto 0 0",
           fontSize: "2.5rem",
           padding: "1rem",
-          width: "auto",
         }}>
           <span style={{float: "left"}}>
             {categoryName}
@@ -252,9 +252,10 @@ function EntryValidation(props: {
 }
 
 function SidebarValidation(props: {
+  updateExisting: string | null,
   validation: RulesetValidation | null,
 }) {
-  const { validation } = props;
+  const { validation, updateExisting } = props;
   const enabled = !validation;
   const errors = validation ? validation.errors : [];
   const exclaimSx = {
@@ -275,16 +276,18 @@ function SidebarValidation(props: {
             <ValidationErrors errors={errors} exclaimSx={exclaimSx} />
           : undefined
         }
-        <CreateButton enabled={enabled} />
+        <CreateButton updateExisting={updateExisting} enabled={enabled} />
       </Box>
     </Box>
   );
 }
 
 function CreateButton(props: {
+  updateExisting: string | null,
   enabled: boolean,
 }) {
-  const { enabled } = props;
+  const { enabled, updateExisting } = props;
+  const text = updateExisting ? "Update" : "Create";
 
   const dispatchConnected = useAppDispatch.view.connected();
 
@@ -319,7 +322,7 @@ function CreateButton(props: {
       }}
       onClick={onClick}
       disabled={!enabled}>
-      Create
+      {text}
     </Button>
   );
 }
@@ -329,7 +332,7 @@ function NameDescrExclaim(props: {
 }) {
   const { errors } = props;
   const enabled = errors.length > 0;
-  const exclaimSx = { fontSize: "1.1rem" };
+  const exclaimSx = { fontSize: "1.5rem" };
   return enabled
     ? (
       <span style={{ float: "right", position: "absolute" }}>

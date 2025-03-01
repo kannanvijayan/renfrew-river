@@ -105,9 +105,10 @@ impl RulesetInput {
     }
   }
 
-  pub(crate) fn to_validated(&self, store: &DataStore)
-    -> Result<Ruleset, RulesetValidation>
-  {
+  pub(crate) fn to_validated(&self,
+    store: &DataStore,
+    update_existing: Option<&str>,
+  ) -> Result<Ruleset, RulesetValidation> {
     let errors = Vec::new();
     let mut name_errors = Vec::new();
     let mut description_errors = Vec::new();
@@ -115,7 +116,16 @@ impl RulesetInput {
     self.validate_name(&mut name_errors);
     self.validate_description(&mut description_errors);
 
-    if store.rulesets().list().iter().any(|entry| entry.name == self.name) {
+    // Check for name conflicts unless we're updating an existing ruleset.
+    let check_for_name_conflict =
+      if let Some(existing_name) = update_existing {
+        self.name != existing_name
+      } else {
+        true
+      };
+    if check_for_name_conflict &&
+       store.rulesets().list().iter().any(|entry| entry.name == self.name)
+    {
       name_errors.push("A ruleset with this name already exists.".to_string());
     }
 

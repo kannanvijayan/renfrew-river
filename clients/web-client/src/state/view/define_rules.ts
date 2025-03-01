@@ -12,6 +12,7 @@ import TerrainGenerationViewState, { TerrainGenerationAction }
 type DefineRulesViewState = {
   category: DefineRulesEntryCategory | null,
   entrySelection: DefineRulesEntrySelection | null,
+  updateExisting: string | null,
   name: string,
   description: string,
   terrainGeneration: TerrainGenerationViewState,
@@ -36,6 +37,7 @@ const DefineRulesViewState = {
     entrySelection: null,
     name: "",
     description: "",
+    updateExisting: null,
     terrainGeneration: TerrainGenerationViewState.initialState,
     validation: null,
   } as DefineRulesViewState,
@@ -59,6 +61,9 @@ const DefineRulesViewState = {
     },
     setDescription(description: string): SetDescriptionAction {
       return { type: "set_description" as const, description };
+    },
+    setUpdateExisting(updateExisting: string | null): SetUpdateExistingAction {
+      return { type: "set_update_existing" as const, updateExisting };
     },
     setValidation(validation: RulesetValidation | null)
       : SetValidationAction
@@ -138,6 +143,16 @@ const DefineRulesViewState = {
       }
       return { ...state, description };
     },
+    set_update_existing(
+      state: DefineRulesViewState,
+      action: SetUpdateExistingAction
+    ): DefineRulesViewState {
+      const { updateExisting } = action;
+      if (state.updateExisting === updateExisting) {
+        return state;
+      }
+      return { ...state, updateExisting };
+    },
     set_validation(state: DefineRulesViewState, action: SetValidationAction)
       : DefineRulesViewState
     {
@@ -204,6 +219,11 @@ type SetDescriptionAction = {
   description: string,
 };
 
+type SetUpdateExistingAction = {
+  type: "set_update_existing",
+  updateExisting: string | null,
+};
+
 type SetValidationAction = {
   type: "set_validation",
   validation: RulesetValidation | null,
@@ -229,6 +249,7 @@ type DefineRulesAction =
   | SetRulesetAction
   | SetNameAction
   | SetDescriptionAction
+  | SetUpdateExistingAction
   | SetValidationAction
   | TerrainGenerationDispatchAction
 
@@ -240,6 +261,7 @@ export type {
   SetRulesetAction,
   SetNameAction,
   SetDescriptionAction,
+  SetUpdateExistingAction,
   SetValidationAction,
   TerrainGenerationDispatchAction,
 };

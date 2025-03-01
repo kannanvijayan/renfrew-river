@@ -7,11 +7,22 @@ import { useAppDispatch, useAppListener } from "../../store/hooks";
 import Session from "../../session/session";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import SecondStageFrame from "../common/SecondStageFrame";
+import { ReactNode } from "react";
 
 export default function DefineRules(props: {
   viewState: DefineRulesViewState | null,
 }) {
   const { viewState } = props;
+
+  const updateExisting = viewState?.updateExisting;
+  const title: ReactNode = updateExisting
+    ? (<>
+      Edit Rules
+      <span style={{ display: "block", color: "#a84", fontSize: "4rem"}}>
+        {updateExisting}
+      </span>
+    </>)
+    : "Define Rules";
 
   useAppListener.view.connected.defineRules((newDefRules, oldDefRules) => {
     if (newDefRules?.terrainGeneration !== oldDefRules?.terrainGeneration) {
@@ -36,7 +47,7 @@ export default function DefineRules(props: {
   }
 
   return (
-    <SecondStageFrame title="Define Rules" onBackClicked={onBackClicked}>
+    <SecondStageFrame title={title} onBackClicked={onBackClicked}>
       <Contents viewState={viewState} />
     </SecondStageFrame>
   )

@@ -4,12 +4,16 @@ import DefineRulesViewState, { DefineRulesAction } from "./define_rules";
 type ConnectedViewMode =
   | "main_menu"
   | "define_rules"
-  | "pick_ruleset_to_edit";
+  | "create_world"
+  | "pick_ruleset_to_edit"
+  | "pick_ruleset_for_create_world";
 
 const ConnectedViewMode = {
   MAIN_MENU: "main_menu" as const,
   DEFINE_RULES: "define_rules" as const,
+  CREATE_WORLD: "create_world" as const,
   PICK_RULESET_TO_EDIT: "pick_ruleset_to_edit" as const,
+  PICK_RULESET_FOR_CREATE_WORLD: "pick_ruleset_for_create_world" as const,
 }
 
 type ConnectedViewDispatchTargets =
