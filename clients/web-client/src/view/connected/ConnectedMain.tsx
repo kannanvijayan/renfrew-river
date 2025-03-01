@@ -2,9 +2,10 @@ import SessionState from "../../state/session";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import DefineRules from "../define_rules/DefineRules";
 import TopBar from "../TopBar";
-import PickRulesetToEdit, { PickReason } from "./PickRulesetToEdit";
+import PickRulesetToEdit from "./PickRulesetToEdit";
 import MainMenu from "./MainMenu";
 import CreateWorld from "../create_world/CreateWorld";
+import PickRulesetForNewWorld from "../create_world/PickRulesetForNewWorld";
 
 export default function ConnectedMain(props: {
   viewState: ConnectedViewState,
@@ -29,14 +30,15 @@ function MainContent(props: {
       return (<MainMenu sessionState={sessionState} />);
     case ConnectedViewMode.DEFINE_RULES:
       return (<DefineRules viewState={viewState.defineRules} />);
-    case ConnectedViewMode.PICK_RULESET_TO_EDIT:
-      return (<PickRulesetToEdit sessionState={sessionState}
-                 reason={PickReason.EDIT} />);
-    case ConnectedViewMode.PICK_RULESET_FOR_CREATE_WORLD:
-      return (<PickRulesetToEdit sessionState={sessionState}
-                 reason={PickReason.CREATE} />);
     case ConnectedViewMode.CREATE_WORLD:
-      return (<CreateWorld />);
+      return (<CreateWorld viewState={viewState.createWorld!} />);
+    case ConnectedViewMode.PICK_RULESET_TO_EDIT:
+      return (<PickRulesetToEdit rulesetList={sessionState.rulesetList!} />);
+    case ConnectedViewMode.PICK_RULESET_FOR_CREATE_WORLD:
+      return (
+        <PickRulesetForNewWorld rulesetList={sessionState.rulesetList!}
+            createWorldState={viewState.createWorld!} />
+      );
     default:
       console.error("Unknown view mode: " + viewState.viewMode);
       return (<></>);

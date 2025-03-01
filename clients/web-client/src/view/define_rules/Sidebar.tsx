@@ -4,7 +4,7 @@ import {
   TerrainGenValidation,
 } from "renfrew-river-protocol-client";
 import { useAppDispatch } from "../../store/hooks";
-import DefineRulesViewState from "../../state/view/define_rules";
+import DefineRulesViewState from "../../state/view/define_rules/define_rules";
 import ValidationErrors from "./ValidationErrors";
 import Session from "../../session/session";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";

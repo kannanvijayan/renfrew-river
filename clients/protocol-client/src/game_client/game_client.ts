@@ -1,40 +1,27 @@
-import Ruleset, {
-  RulesetEntry,
-  RulesetInput,
-  RulesetValidation,
-} from "./types/ruleset/ruleset";
+import { RulesetEntry } from "../types/ruleset/ruleset";
 import {
   ProtocolSubcmdParams,
   ProtocolSubcmdName,
   ProtocolSubcmdResponse,
   ProtocolSubcmdSpec,
-} from "./protocol/subcommand";
-import DefineRulesSubcmd
-  from "./protocol/commands/define_rules/define_rules_subcmd";
+} from "../protocol/subcommand";
 import {
   ProtocolCommandName,
   ProtocolCommandParams,
   ProtocolCommandResponse,
-} from "./protocol/command";
-import GameModeInfo from "./types/game_mode_info";
+} from "../protocol/command";
+import GameModeInfo from "../types/game_mode_info";
+import GameClientTransport from "./transport";
+import GameClientTransportListeners from "./transport_listeners";
+import { GameClientDefineRulesModule } from "./define_rules_module";
+import { GameClientCreateWorldModule } from "./create_world_module";
+import SubcmdSender from "./subcmd_sender";
 
-export type GameClientTransportListeners = {
-  open: () => void;
-  close: () => void;
-  error: (err: unknown) => void;
-  message: (msg: string) => void;
+export {
+  GameClientTransport,
+  GameClientTransportListeners,
+  GameClientDefineRulesModule,
 };
-
-/** The transport used by the game client to talk to the game server. */
-export interface GameClientTransport {
-  addEventListener(type: "open", listener: () => void): void;
-  addEventListener(type: "close", listener: () => void): void;
-  addEventListener(type: "error", listener: (error?: unknown) => void): void;
-  addEventListener(type: "message", listener: (message: string) => void): void;
-
-  close(): void;
-  send(data: string): void;
-}
 
 export type GameClientArgs = {
   transport: GameClientTransport;
@@ -69,8 +56,8 @@ export default class GameClient {
   // Current command response awaiter.
   private responseAwaiters_: ResponseAwaiter[];
 
-  // The define-rules subcommand sender.
-  public readonly defineRules: GameClientDefineRules;
+  public readonly defineRules: GameClientDefineRulesModule;
+  public readonly createWorld: GameClientCreateWorldModule;
 
   public constructor(args: GameClientArgs) {
     const { transport, callbacks } = args;
@@ -82,11 +69,14 @@ export default class GameClient {
     this.transport_.addEventListener("error", this.handleError.bind(this));
     this.transport_.addEventListener("message", this.handleMessage.bind(this));
 
-    this.defineRules = new GameClientDefineRules({
+    let subcmdSender = {
       send: this.sendSubcmd.bind(this),
       enterMode: this.enterMode.bind(this),
       enterMainMenuMode: this.enterMainMenuMode.bind(this),
-    });
+    };
+
+    this.defineRules = new GameClientDefineRulesModule(subcmdSender);
+    this.createWorld = new GameClientCreateWorldModule(subcmdSender);
   }
 
   public disconnect(): void {
@@ -229,95 +219,5 @@ export default class GameClient {
       throw new Error("GameClient.onMessage: no awaiter");
     }
     awaiter.resolve(data);
-  }
-}
-
-interface SubcmdSender {
-  send<
-    S extends ProtocolSubcmdSpec,
-    T extends ProtocolSubcmdName<S>
-  >(
-    category: string,
-    subcmd: T,
-    params: ProtocolSubcmdParams<S, T>,
-  ): Promise<ProtocolSubcmdResponse<S, T>>;
-
-  enterMode(mode: GameModeInfo): Promise<true>;
-  enterMainMenuMode(): Promise<true>;
-}
-
-class GameClientSendSubcommand<S extends ProtocolSubcmdSpec> {
-  protected readonly sender_: SubcmdSender;
-  private readonly category_: string;
-
-  public constructor(sender: SubcmdSender, category: string) {
-    this.sender_ = sender;
-    this.category_ = category;
-  }
-
-  protected async sendSubcmd<T extends ProtocolSubcmdName<S>>(
-    subcmd: T,
-    params: ProtocolSubcmdParams<S, T>,
-  ): Promise<ProtocolSubcmdResponse<S, T>> {
-    return this.sender_.send(this.category_, subcmd, params);
-  }
-}
-
-export class GameClientDefineRules
-  extends GameClientSendSubcommand<DefineRulesSubcmd>
-{
-  public constructor(sender: SubcmdSender) {
-    super(sender, "DefineRules");
-  }
-
-  public async enter(): Promise<true> {
-    return this.sender_.enterMode({ DefineRules: {}});
-  }
-
-  public async leave(): Promise<true> {
-    return this.sender_.enterMainMenuMode();
-  }
-
-  public async updateRules(rulesetInput: RulesetInput)
-    : Promise<true|RulesetValidation>
-  {
-    const result = await this.sendSubcmd("UpdateRules", { rulesetInput });
-    if ("Ok" in result) {
-      return true;
-    } else {
-      return result.InvalidRuleset;
-    }
-  }
-
-  public async currentRules(): Promise<{
-    ruleset: RulesetInput,
-    validation?: RulesetValidation,
-  }> {
-    const result = await this.sendSubcmd("CurrentRules", {});
-    if ("CurrentRules" in result) {
-      return result.CurrentRules;
-    }
-    throw new Error("CurrentRules: unexpected response");
-  }
-
-  public async saveRules(): Promise<true> {
-    const result = await this.sendSubcmd("SaveRules", {});
-    console.log("SaveRules result:", result);
-    if ("Ok" in result) {
-      return true;
-    }
-    throw new Error(
-      "SaveRules: unexpected response: " + result.Failed.join(", ")
-    );
-  }
-
-  public async loadRules(rulesetName: string): Promise<Ruleset> {
-    const result = await this.sendSubcmd("LoadRules", { rulesetName });
-    if ("LoadedRuleset" in result) {
-      return result.LoadedRuleset;
-    }
-    throw new Error(
-      "LoadRules failed " + result.Failed.join(", ")
-    );
   }
 }

@@ -1,5 +1,6 @@
 import { Reducer } from "@reduxjs/toolkit";
-import DefineRulesViewState, { DefineRulesAction } from "./define_rules";
+import DefineRulesViewState, { DefineRulesAction } from "./define_rules/define_rules";
+import CreateWorldViewState, { CreateWorldAction } from "./create_world/create_world";
 
 type ConnectedViewMode =
   | "main_menu"
@@ -17,18 +18,22 @@ const ConnectedViewMode = {
 }
 
 type ConnectedViewDispatchTargets =
-  | "define_rules";
+  | "define_rules"
+  | "create_world";
 
 type ConnectedViewAction =
   | SetWsUrlAction
   | SetViewModeAction
   | SetDefineRulesAction
+  | SetCreateWorldAction
   | DefineRulesDispatchAction
+  | CreateWorldDispatchAction
 
 type ConnectedViewState = {
   wsUrl: string,
   viewMode: ConnectedViewMode,
   defineRules: DefineRulesViewState | null,
+  createWorld: CreateWorldViewState | null,
 };
 
 const ConnectedViewState = {
@@ -36,6 +41,7 @@ const ConnectedViewState = {
     wsUrl: "",
     viewMode: "main_menu",
     defineRules: null,
+    createWorld: null,
   } as ConnectedViewState,
 
   action: {
@@ -51,9 +57,15 @@ const ConnectedViewState = {
     setDefineRules(defineRules: DefineRulesViewState): SetDefineRulesAction {
       return { type: "set_define_rules" as const, defineRules };
     },
+    setCreateWorld(createWorld: CreateWorldViewState): SetCreateWorldAction {
+      return { type: "set_create_world" as const, createWorld };
+    },
     defineRules(action: DefineRulesAction): DefineRulesDispatchAction {
       return { type: "dispatch" as const, target: "define_rules", action };
     },
+    createWorld(action: CreateWorldAction): CreateWorldDispatchAction {
+      return { type: "dispatch" as const, target: "create_world", action };
+    }
   },
 
   reducers: {
@@ -84,6 +96,15 @@ const ConnectedViewState = {
       }
       return { ...state, defineRules };
     },
+    set_create_world(state: ConnectedViewState, action: SetCreateWorldAction)
+      : ConnectedViewState
+    {
+      const { createWorld } = action;
+      if (state.createWorld === createWorld) {
+        return state;
+      }
+      return { ...state, createWorld };
+    },
     define_rules(
       state: ConnectedViewState,
       action: DefineRulesDispatchAction,
@@ -96,6 +117,20 @@ const ConnectedViewState = {
       return {
         ...state,
         defineRules: DefineRulesViewState.reducer(defRules, action.action),
+      };
+    },
+    create_world(
+      state: ConnectedViewState,
+      action: CreateWorldDispatchAction,
+    ): ConnectedViewState {
+      const createWorld = state.createWorld;
+      if (!createWorld) {
+        console.warn("ConnectedViewState.reducer: createWorld is null");
+        return state;
+      }
+      return {
+        ...state,
+        createWorld: CreateWorldViewState.reducer(createWorld, action.action),
       };
     },
   },
@@ -135,14 +170,22 @@ type SetDefineRulesAction = {
   defineRules: DefineRulesViewState,
 };
 
+type SetCreateWorldAction = {
+  type: "set_create_world",
+  createWorld: CreateWorldViewState,
+};
+
 type TargetedConnectedViewAction<T extends ConnectedViewDispatchTargets> = {
   type: "dispatch",
   target: T,
-  action: ({ "define_rules": DefineRulesAction })[T],
+  action: ({
+    "define_rules": DefineRulesAction,
+    "create_world": CreateWorldAction,
+  })[T],
 }
 
-type DefineRulesDispatchAction =
-  TargetedConnectedViewAction<"define_rules">;
+type DefineRulesDispatchAction = TargetedConnectedViewAction<"define_rules">;
+type CreateWorldDispatchAction = TargetedConnectedViewAction<"create_world">;
 
 export default ConnectedViewState;
 export type {
@@ -150,6 +193,7 @@ export type {
   SetWsUrlAction,
   SetViewModeAction,
   SetDefineRulesAction,
+  SetCreateWorldAction,
   DefineRulesDispatchAction,
 };
 export {

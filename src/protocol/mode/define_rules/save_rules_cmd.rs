@@ -1,7 +1,7 @@
 use serde;
 use crate::protocol::{
   command::{ Command, CommandEnvelope },
-  mode::define_rules::response::DefineRulesSubcmdResponse,
+  mode::define_rules::DefineRulesSubcmdResponse,
   response::ResponseEnvelope,
 };
 use super::DefineRulesSubcmdEnvelope;

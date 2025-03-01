@@ -3,7 +3,7 @@ import EditorBox from "./EditorBox";
 import { useAppDispatch } from "../../store/hooks";
 import { DefineRulesPerlinField } from "../../state/view/define_rules/ruleset";
 import PerlinFieldsViewState from "../../state/view/define_rules/perlin_fields";
-import DefineRulesViewState from "../../state/view/define_rules";
+import DefineRulesViewState from "../../state/view/define_rules/define_rules";
 import ValidationErrors from "./ValidationErrors";
 
 const useDefineRulesDispatch = useAppDispatch.view.connected.defRules;

@@ -18,13 +18,6 @@ impl WorldDims {
     }
   }
 
-  pub(crate) const fn default() -> WorldDims {
-    WorldDims {
-      columns: 8000,
-      rows: 8000,
-    }
-  }
-
   pub(crate) const fn area(&self) -> u32 {
     (self.columns as u32) * (self.rows as u32)
   }
@@ -59,4 +52,11 @@ impl WorldDims {
       top_left.row + self.rows - 1
     )
   }
+}
+
+#[derive(Clone, Debug)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct WorldDimsInput {
+  pub(crate) columns: String,
+  pub(crate) rows: String,
 }

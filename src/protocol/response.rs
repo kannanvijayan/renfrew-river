@@ -3,6 +3,7 @@ use serde;
 use crate::ruleset::RulesetEntry;
 use super::mode::{
   define_rules::DefineRulesSubcmdResponse,
+  create_world::CreateWorldSubcmdResponse,
   GameModeInfo
 };
 
@@ -15,6 +16,7 @@ pub(crate) enum ResponseEnvelope {
   InMainMenuMode {},
   RulesetList(Vec<RulesetEntry>),
   DefineRulesSubcmd(DefineRulesSubcmdResponse),
+  CreateWorldSubcmd(CreateWorldSubcmdResponse),
 }
 
 #[derive(Debug, Clone)]

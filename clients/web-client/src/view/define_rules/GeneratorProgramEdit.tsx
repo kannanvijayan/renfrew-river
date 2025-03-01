@@ -1,7 +1,7 @@
 import { Box, Button, Divider, styled, Typography } from "@mui/material";
 import EditorBox from "./EditorBox";
 import { useAppDispatch } from "../../store/hooks";
-import DefineRulesViewState from "../../state/view/define_rules";
+import DefineRulesViewState from "../../state/view/define_rules/define_rules";
 import { DefineRulesEntrySelection, DefineRulesGeneratorProgramSection } from "../../state/view/define_rules/ruleset";
 import GeneratorProgramViewState from "../../state/view/define_rules/generator_program";
 import AddFormatWordDialog from "./AddFormatWordDialog";

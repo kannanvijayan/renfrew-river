@@ -4,10 +4,10 @@ import { RulesetValidation, RulesetInput } from "renfrew-river-protocol-client";
 import {
   DefineRulesEntryCategory,
   DefineRulesEntrySelection,
-} from "./define_rules/ruleset";
+} from "./ruleset";
 
 import TerrainGenerationViewState, { TerrainGenerationAction }
-  from "./define_rules/terrain_generation";
+  from "./terrain_generation";
 
 type DefineRulesViewState = {
   category: DefineRulesEntryCategory | null,

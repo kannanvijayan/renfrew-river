@@ -4,15 +4,19 @@ use std::{
 use log;
 use crate::{
   data_store::DataStore,
-  game::mode::{ DefineRulesMode, GameMode },
+  game::mode::{ CreateWorldMode, DefineRulesMode, GameMode },
   protocol::{
     mode::{
+      create_world::{
+        CreateWorldModeInfo,
+        CreateWorldSubcmdEnvelope,
+        CreateWorldSubcmdResponse
+      },
       define_rules::{
         DefineRulesModeInfo,
         DefineRulesSubcmdEnvelope,
         DefineRulesSubcmdResponse,
-      },
-      GameModeInfo,
+      }, GameModeInfo
     },
     CommandEnvelope,
     EnterMainMenuModeCmd,
@@ -135,6 +139,10 @@ impl GameServerInner {
         let envelope = self.handle_define_rules_subcmd(define_rules_subcmd);
         return ResponseEnvelope::DefineRulesSubcmd(envelope);
       },
+      CommandEnvelope::CreateWorldSubcmd(create_world_subcmd) => {
+        let envelope = self.handle_create_world_subcmd(create_world_subcmd);
+        return ResponseEnvelope::CreateWorldSubcmd(envelope);
+      }
     };
   }
 
@@ -157,6 +165,19 @@ impl GameServerInner {
         self.mode = Some(GameMode::DefineRules(DefineRulesMode::new()));
         ResponseEnvelope::Ok {}
       },
+      GameModeInfo::CreateWorld(_) => {
+        if ! self.mode.is_none() {
+          log::warn!(
+            "GameServerInner::handle_enter_mode_cmd: Already in a mode"
+          );
+          return ResponseEnvelope::Failed(FailedResponse::new(
+            "Cannot enter mode: already in a mode".to_string()
+          ));
+        }
+        let create_world_mode = CreateWorldMode::new();
+        self.mode = Some(GameMode::CreateWorld(create_world_mode));
+        ResponseEnvelope::Ok {}
+      },
     }
   }
 
@@ -176,6 +197,10 @@ impl GameServerInner {
       Some(GameMode::DefineRules(_)) =>
         ResponseEnvelope::InMode(
           GameModeInfo::DefineRules(DefineRulesModeInfo {})
+        ),
+      Some(GameMode::CreateWorld(_)) =>
+        ResponseEnvelope::InMode(
+          GameModeInfo::CreateWorld(CreateWorldModeInfo {})
         ),
       None => ResponseEnvelope::InMainMenuMode {},
     }
@@ -201,6 +226,20 @@ impl GameServerInner {
       log::warn!("GameServerInner::handle_define_rules_subcommand: Bad game mode");
       DefineRulesSubcmdResponse::Failed(
         vec!["No game mode to define rules".to_string()]
+      )
+    }
+  }
+
+  fn handle_create_world_subcmd(&mut self, subcmd: CreateWorldSubcmdEnvelope)
+    -> CreateWorldSubcmdResponse
+  {
+    log::debug!("GameServerInner::handle_create_world_subcommand");
+    if let Some(GameMode::CreateWorld(ref mut create_world_mode)) = self.mode {
+      create_world_mode.handle_subcommand(subcmd, &mut self.data_store)
+    } else {
+      log::warn!("GameServerInner::handle_create_world_subcommand: Bad game mode");
+      CreateWorldSubcmdResponse::Failed(
+        vec!["No game mode to create world".to_string()]
       )
     }
   }

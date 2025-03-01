@@ -3,7 +3,10 @@ use serde_json;
 use super::{
   response::ResponseEnvelope,
   documentation::ProtocolCommandDocumentation,
-  mode::define_rules::DefineRulesSubcmdEnvelope,
+  mode::{
+    define_rules::DefineRulesSubcmdEnvelope,
+    create_world::CreateWorldSubcmdEnvelope,
+  },
   enter_mode_cmd::EnterModeCmd,
   enter_main_menu_mode_cmd::EnterMainMenuModeCmd,
   get_mode_info_cmd::GetModeInfoCmd,
@@ -59,4 +62,5 @@ pub(crate) enum CommandEnvelope {
   GetModeInfo(GetModeInfoCmd),
   ListRulesets(ListRulesetsCmd),
   DefineRulesSubcmd(DefineRulesSubcmdEnvelope),
+  CreateWorldSubcmd(CreateWorldSubcmdEnvelope),
 }

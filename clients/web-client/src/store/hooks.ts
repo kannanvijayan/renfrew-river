@@ -9,9 +9,10 @@ import { GeneratorProgramAction } from "../state/view/define_rules/generator_pro
 
 import { RootDispatch, RootStore, StateChangeListener, subscribeToChange } from "./root";
 import { functionObject } from "../util/function_object";
-import DefineRulesViewState, { DefineRulesAction } from "../state/view/define_rules";
+import DefineRulesViewState, { DefineRulesAction } from "../state/view/define_rules/define_rules";
 import { useEffect } from "react";
 import TerrainGenerationViewState, { TerrainGenerationAction } from "../state/view/define_rules/terrain_generation";
+import { CreateWorldAction } from "../state/view/create_world/create_world";
 
 export const useRootDispatch = useDispatch.withTypes<RootDispatch>();
 export const useRootSelector = useSelector.withTypes<RootState>();
@@ -47,6 +48,15 @@ function useDefineRulesViewDispatch() {
   return (defRulesAction: DefineRulesAction) => {
     connectedViewDispatch(
       ConnectedViewState.action.defineRules(defRulesAction)
+    );
+  }
+}
+
+function useCreateWorldViewDispatch() {
+  const connectedViewDispatch = useConnectedViewDispatch();
+  return (createWorldAction: CreateWorldAction) => {
+    connectedViewDispatch(
+      ConnectedViewState.action.createWorld(createWorldAction)
     );
   }
 }
@@ -88,6 +98,7 @@ export const useAppDispatch = functionObject(useRootDispatch, {
           generatorProgram: useDefineRulesGeneratorProgramDispatch,
         }),
       }),
+      createWorld: useCreateWorldViewDispatch,
     }),
   }),
 });

@@ -10,7 +10,7 @@ pub(crate) use self::{
   subcommand::DefineRulesSubcmdEnvelope,
   response::DefineRulesSubcmdResponse,
   documentation::get_category_docs,
-  update_rules_cmd::UpdateRulesCmd,
+  update_rules_cmd::{ UpdateRulesCmd, UpdateRulesRsp },
   save_rules_cmd::SaveRulesCmd,
   load_rules_cmd::LoadRulesCmd,
   current_rules_cmd::{ CurrentRulesCmd, CurrentRulesRsp },

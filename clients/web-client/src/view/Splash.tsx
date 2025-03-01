@@ -10,7 +10,7 @@ import ViewState, { ViewMode } from "../state/view";
 import Session from "../session/session";
 
 import "./Splash.css";
-import DefineRulesViewState from "../state/view/define_rules";
+import DefineRulesViewState from "../state/view/define_rules/define_rules";
 
 export default function Splash(props: {
   viewState: UnconnectedViewState,

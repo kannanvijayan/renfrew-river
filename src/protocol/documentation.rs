@@ -1,7 +1,7 @@
 use serde_json;
 use super::{
   command::Command,
-  mode::define_rules,
+  mode::{ define_rules, create_world },
   enter_main_menu_mode_cmd::EnterMainMenuModeCmd,
   enter_mode_cmd::EnterModeCmd,
   get_mode_info_cmd::GetModeInfoCmd,
@@ -27,6 +27,7 @@ pub struct ProtocolCategoryDocumentation {
  */
 pub fn get_protocol_docs() -> Vec<ProtocolCategoryDocumentation> {
   let mut result = Vec::new();
+  result.push(create_world::get_category_docs());
   result.push(define_rules::get_category_docs());
   result.push(main_category_docs());
   return result;

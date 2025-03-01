@@ -2,7 +2,7 @@ import GameClient from "renfrew-river-protocol-client";
 import WsTransport from "./ws_transport";
 import DefineRulesSender from "./define_rules_sender";
 import { BumpTimeout } from "../util/bump_timeout";
-import DefineRulesViewState from "../state/view/define_rules";
+import DefineRulesViewState from "../state/view/define_rules/define_rules";
 import { store } from "../store/root";
 import RootState from "../state/root";
 import ViewState, { ViewMode } from "../state/view";

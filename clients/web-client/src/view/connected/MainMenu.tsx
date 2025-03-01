@@ -3,10 +3,11 @@ import { Button, Container, Divider, styled, Typography } from "@mui/material";
 import "./MainMenu.css";
 import { useAppDispatch } from "../../store/hooks";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
-import DefineRulesViewState from "../../state/view/define_rules";
+import DefineRulesViewState from "../../state/view/define_rules/define_rules";
 import Session from "../../session/session";
 import SessionState from "../../state/session";
 import { RulesetEntry } from "renfrew-river-protocol-client";
+import CreateWorldViewState from "../../state/view/create_world/create_world";
 
 export default function MainMenu(props:{
   sessionState: SessionState,
@@ -95,9 +96,20 @@ function CreateWorldButton(props: {
   const { rulesets } = props;
   const disabled = rulesets.length === 0;
   const dispatchConnected = useAppDispatch.view.connected();
+  const dispatchCreateWorld = useAppDispatch.view.connected.createWorld();
   const onClick = async () => {
+    dispatchConnected(ConnectedViewState.action.setCreateWorld(
+      CreateWorldViewState.initialState
+    ));
+    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor({
+      name: "",
+      description: "",
+      seed: "",
+      dims: { columns: "", rows: "" },
+      rulesetName: "",
+    }));
     dispatchConnected(ConnectedViewState.action.setViewMode(
-      ConnectedViewMode.PICK_RULESET_FOR_CREATE_WORLD
+      ConnectedViewMode.CREATE_WORLD
     ));
   };
   return (

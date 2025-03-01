@@ -27,9 +27,8 @@ impl DefineRulesMode {
 
   pub(crate) fn handle_subcommand(&mut self,
     subcmd: DefineRulesSubcmdEnvelope,
-    data_store: &mut DataStore)
-    -> DefineRulesSubcmdResponse
-  {
+    data_store: &mut DataStore
+  ) -> DefineRulesSubcmdResponse {
     match subcmd {
       DefineRulesSubcmdEnvelope::UpdateRules(update_rules_cmd) =>
         self.handle_update_rules_cmd(update_rules_cmd, data_store),
