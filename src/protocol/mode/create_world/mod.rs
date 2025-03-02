@@ -5,6 +5,7 @@ mod documentation;
 mod update_descriptor_input_cmd;
 mod current_descriptor_input_cmd;
 mod begin_generation_cmd;
+mod take_generation_step_cmd;
 
 pub(crate) use self::{
   subcommand::CreateWorldSubcmdEnvelope,
@@ -22,6 +23,10 @@ pub(crate) use self::{
   begin_generation_cmd::{
     BeginGenerationCmd,
     BeginGenerationRsp,
+  },
+  take_generation_step_cmd::{
+    TakeGenerationStepCmd,
+    TakeGenerationStepRsp,
   },
 };
 

@@ -1,4 +1,8 @@
-import { WorldDescriptorInput, WorldDescriptorValidation } from "../../lib";
+import {
+  GenerationStepKind,
+  WorldDescriptorInput,
+  WorldDescriptorValidation,
+} from "../../lib";
 
 type CreateWorldSubcmd = {
   CurrentDescriptorInput: {
@@ -25,7 +29,16 @@ type CreateWorldSubcmd = {
       Ok: {},
       Failed: string[],
     },
-  }
+  },
+  TakeGenerationStep: {
+    params: {
+      kind: GenerationStepKind,
+    },
+    response: {
+      Ok: {},
+      Failed: string[],
+    },
+  },
 }
 
 export default CreateWorldSubcmd;

@@ -12,3 +12,5 @@ export * from "./world_dims";
 
 export { default as Ruleset } from "./ruleset/ruleset";
 export * from "./ruleset/ruleset";
+
+export *from "./generation_step";

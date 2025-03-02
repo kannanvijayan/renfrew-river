@@ -1,6 +1,10 @@
 use crate::{
   cog::CogDevice,
-  gpu::{CellDataBuffer, ProgramBuffer},
+  gpu::{ CellDataBuffer, ProgramBuffer },
+  protocol::mode::create_world::{
+    CreateWorldSubcmdResponse,
+    TakeGenerationStepCmd,
+  },
   ruleset::Ruleset,
   shady_vm::ShadyProgramIndex,
   world::WorldDescriptor,
@@ -12,14 +16,6 @@ pub(crate) enum GenerationPhasePoint {
   CellInitialized,
   PreMerge,
   Finalized
-}
-
-pub(crate) enum GenerationPhase {
-  RandGen,         // NewlyCreated -> PreInitialize
-  InitializeCell,  // PreInitialize -> CellInitialized
-  PairwiseStep,    // CellInitialized -> PreMerge
-  PairwiseMerge,   // PreMerge -> CellInitialized
-  Finalize,        // CellInitialized -> Finalized
 }
 
 pub(crate) struct GeneratingWorldState {
@@ -44,6 +40,14 @@ impl GeneratingWorldState {
       cell_data_buffer,
       programs,
     }
+  }
+
+  pub(crate) fn handle_take_generation_step_cmd(&mut self,
+    _cmd: TakeGenerationStepCmd,
+  ) -> CreateWorldSubcmdResponse {
+    return CreateWorldSubcmdResponse::Failed(vec![
+      "TODO: Implement GeneratingWorldState::handle_take_generation_step_cmd".to_string()
+    ]);
   }
 }
 

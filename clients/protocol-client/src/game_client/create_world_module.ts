@@ -2,6 +2,7 @@ import GameClientModule from "./module";
 import SubcmdSender from "./subcmd_sender";
 import CreateWorldSubcmd from "../protocol/commands/create_world_subcmd";
 import WorldDescriptor, { WorldDescriptorInput, WorldDescriptorValidation } from "../types/world_descriptor";
+import { GenerationStepKind } from "../lib";
 
 export class GameClientCreateWorldModule
   extends GameClientModule<CreateWorldSubcmd>
@@ -35,6 +36,14 @@ export class GameClientCreateWorldModule
     } else {
       return result.InvalidWorldDescriptor;
     }
+  }
+
+  public async takeGenerationStep(kind: GenerationStepKind): Promise<true> {
+    const result = await this.sendSubcmd("TakeGenerationStep", { kind });
+    if ("Ok" in result) {
+      return true;
+    }
+    throw new Error(`Failed to take generation step: ${result.Failed.join(", ")}`);
   }
 
   public async beginGeneration(): Promise<true> {

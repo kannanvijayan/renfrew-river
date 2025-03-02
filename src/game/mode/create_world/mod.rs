@@ -4,13 +4,14 @@ mod generating_world_state;
 use crate::{
   data_store::DataStore,
   protocol::mode::create_world::{
+    BeginGenerationCmd,
     CreateWorldSubcmdEnvelope,
     CreateWorldSubcmdResponse,
     CurrentDescriptorInputCmd,
+    TakeGenerationStepCmd,
     UpdateDescriptorInputCmd,
-    BeginGenerationCmd,
   },
-  world::{WorldDescriptor, WorldDescriptorInput}
+  world::{ WorldDescriptor, WorldDescriptorInput }
 };
 use self::{
   specify_new_world_state::SpecifyNewWorldState,
@@ -48,6 +49,8 @@ impl CreateWorldMode {
         self.handle_update_descriptor_input_cmd(cmd, data_store),
       CreateWorldSubcmdEnvelope::BeginGeneration(cmd) =>
         self.handle_begin_generation_cmd(cmd, data_store),
+      CreateWorldSubcmdEnvelope::TakeGenerationStep(cmd) =>
+        self.handle_take_generation_step_cmd(cmd, data_store),
     }
   }
 
@@ -118,6 +121,25 @@ impl CreateWorldMode {
     };
     *self = CreateWorldMode::new_generate(descriptor, data_store);
     CreateWorldSubcmdResponse::Ok {}
+  }
+
+  fn handle_take_generation_step_cmd(&mut self,
+    cmd: TakeGenerationStepCmd,
+    data_store: &DataStore,
+  ) -> CreateWorldSubcmdResponse {
+    match &mut self.state {
+      CreateWorldState::GeneratingWorld(ref mut generating_world_state) => {
+        generating_world_state.handle_take_generation_step_cmd(cmd)
+      },
+      _ => {
+        CreateWorldSubcmdResponse::Failed(
+          vec![
+            "Must be in GeneratingWorld state to take a generation step"
+              .to_string(),
+          ]
+        )
+      }
+    }
   }
 }
 
