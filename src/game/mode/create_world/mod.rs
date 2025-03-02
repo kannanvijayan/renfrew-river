@@ -1,16 +1,20 @@
+mod specify_new_world_state;
+mod generating_world_state;
 
 use crate::{
   data_store::DataStore,
-  game::defaults,
   protocol::mode::create_world::{
     CreateWorldSubcmdEnvelope,
     CreateWorldSubcmdResponse,
     CurrentDescriptorInputCmd,
-    CurrentDescriptorInputRsp,
     UpdateDescriptorInputCmd,
     BeginGenerationCmd,
   },
-  world::{WorldDescriptor, WorldDescriptorInput, WorldDescriptorValidation}
+  world::{WorldDescriptor, WorldDescriptorInput}
+};
+use self::{
+  specify_new_world_state::SpecifyNewWorldState,
+  generating_world_state::GeneratingWorldState,
 };
 
 pub(crate) struct CreateWorldMode {
@@ -18,10 +22,15 @@ pub(crate) struct CreateWorldMode {
 }
 impl CreateWorldMode {
   pub(crate) fn new_specify(descriptor_input: WorldDescriptorInput) -> Self {
-    let specify_new_world_state = SpecifyNewWorldState {
-      descriptor_input,
-    };
+    let specify_new_world_state = SpecifyNewWorldState::new(descriptor_input);
     let state = CreateWorldState::SpecifyNewWorld(specify_new_world_state);
+    CreateWorldMode { state }
+  }
+
+  pub(crate) fn new_generate(descriptor: WorldDescriptor) -> Self {
+    let state = CreateWorldState::GeneratingWorld(
+      GeneratingWorldState::new(descriptor)
+    );
     CreateWorldMode { state }
   }
 
@@ -104,13 +113,7 @@ impl CreateWorldMode {
         );
       }
     };
-
-    self.state = CreateWorldState::GeneratingWorld(
-      GeneratingWorldState {
-        descriptor,
-      }
-    );
-
+    *self = CreateWorldMode::new_generate(descriptor);
     CreateWorldSubcmdResponse::Ok {}
   }
 }
@@ -118,47 +121,4 @@ impl CreateWorldMode {
 enum CreateWorldState {
   SpecifyNewWorld(SpecifyNewWorldState),
   GeneratingWorld(GeneratingWorldState)
-}
-
-struct SpecifyNewWorldState {
-  descriptor_input: WorldDescriptorInput,
-}
-impl SpecifyNewWorldState {
-  fn handle_current_descriptor_input_cmd(&mut self,
-    _current_descriptor_input_cmd: CurrentDescriptorInputCmd,
-    data_store: &DataStore,
-  ) -> CreateWorldSubcmdResponse {
-    let validation = self.validate_current(data_store).err();
-    let rsp = CurrentDescriptorInputRsp {
-      descriptor: self.descriptor_input.clone(),
-      validation,
-    };
-    CreateWorldSubcmdResponse::CurrentDescriptorInput(rsp)
-  }
-
-  fn handle_update_descriptor_input_cmd(&mut self,
-    update_descriptor_input_cmd: UpdateDescriptorInputCmd,
-    data_store: &DataStore,
-  ) -> CreateWorldSubcmdResponse {
-    self.descriptor_input = update_descriptor_input_cmd.descriptor;
-    match self.validate_current(data_store) {
-      Ok(_) => CreateWorldSubcmdResponse::Ok {},
-      Err(validation) =>
-        CreateWorldSubcmdResponse::InvalidWorldDescriptor(validation)
-    }
-  }
-
-  fn validate_current(&self, data_store: &DataStore)
-    -> Result<WorldDescriptor, WorldDescriptorValidation>
-  {
-    let ruleset_entries = data_store.rulesets().list().iter().map(
-      |entry| entry.clone().into_ruleset_entry()
-    ).collect::<Vec<_>>();
-    let limits = defaults::world_descriptor_limits();
-    self.descriptor_input.to_world_descriptor(limits, &ruleset_entries)
-  }
-}
-
-struct GeneratingWorldState {
-  descriptor: WorldDescriptor,
 }

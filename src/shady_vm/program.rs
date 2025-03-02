@@ -19,7 +19,6 @@ impl ShadyProgram {
   }
 
   pub(crate) fn write_to_buffer(&self,
-    device: &CogDevice,
     offset: usize,
     buffer: &ShadyProgramGpuBuffer,
   ) {

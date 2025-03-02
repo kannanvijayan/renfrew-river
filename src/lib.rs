@@ -1,6 +1,7 @@
 
 mod cog;
 mod game;
+mod gpu;
 mod network;
 //mod gpu;
 mod protocol;

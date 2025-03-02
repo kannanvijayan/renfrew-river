@@ -11,7 +11,7 @@ mod invoke;
 mod wgsl;
 
 pub(crate) use self::{
-  buffer::{ CogBufferType, CogSeqBuffer },
+  buffer::{ CogBufferType, CogSeqBuffer, CogMapBuffer },
   device::CogDevice,
   invoke::CogInvoke,
   task::CogTask,
