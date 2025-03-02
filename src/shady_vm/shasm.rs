@@ -25,19 +25,22 @@ pub(crate) struct ShasmProgram {
   pub(crate) program_text: String,
 }
 impl ShasmProgram {
-  pub(crate) fn new(program_text: String) -> ShasmProgram {
-    ShasmProgram { program_text }
-  }
-
   pub(crate) fn new_example() -> ShasmProgram {
-    ShasmProgram::new(r#"add r0, r1, r2"#.to_string())
+    ShasmProgram::to_validated(r#"add r0, r1, r2"#)
+      .expect("Failed to parse example program.")
   }
 
   pub(crate) fn to_validated(text: &str) -> Result<ShasmProgram, ShasmProgramValidation> {
     match shasm_program_parser(text) {
-      Ok(_program) => Ok(ShasmProgram::new(text.to_string())),
+      Ok(_program) => Ok(ShasmProgram { program_text: text.to_string() }),
       Err(errors) => Err(ShasmProgramValidation { errors }),
     }
+  }
+
+  pub(crate) fn parse_shady_program(&self)
+    -> Result<ShadyProgram, Vec<ShasmParseError>>
+  {
+    shasm_program_parser(&self.program_text)
   }
 }
 

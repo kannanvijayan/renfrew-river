@@ -27,10 +27,13 @@ impl CreateWorldMode {
     CreateWorldMode { state }
   }
 
-  pub(crate) fn new_generate(descriptor: WorldDescriptor) -> Self {
-    let state = CreateWorldState::GeneratingWorld(
-      GeneratingWorldState::new(descriptor)
-    );
+  pub(crate) fn new_generate(
+    descriptor: WorldDescriptor,
+    data_store: &DataStore
+  ) -> Self {
+    let ruleset = data_store.rulesets().read(&descriptor.ruleset_name);
+    let generating_world_state = GeneratingWorldState::new(descriptor, ruleset);
+    let state = CreateWorldState::GeneratingWorld(generating_world_state);
     CreateWorldMode { state }
   }
 
@@ -113,7 +116,7 @@ impl CreateWorldMode {
         );
       }
     };
-    *self = CreateWorldMode::new_generate(descriptor);
+    *self = CreateWorldMode::new_generate(descriptor, data_store);
     CreateWorldSubcmdResponse::Ok {}
   }
 }

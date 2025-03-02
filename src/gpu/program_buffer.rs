@@ -48,8 +48,12 @@ impl ProgramBuffer {
     ShadyProgramIndex::from_u32(index as u32)
   }
 
-  pub(crate) fn add_program(&mut self, name: String, program: ShadyProgram) -> ShadyProgramIndex {
+  pub(crate) fn add_program<Nm>(&mut self, name: Nm, program: ShadyProgram)
+    -> ShadyProgramIndex
+    where Nm: Into<String>
+  {
     let index = self.next_program_index();
+    let name = name.into();
     self.programs.push(ShadyProgramInfo { name: name.clone(), index, program });
     self.name_to_position.insert(name, index);
     index
@@ -59,7 +63,7 @@ impl ProgramBuffer {
     self.name_to_position.get(name).copied()
   }
 
-  pub(crate) async fn sync_gpu_buffer(&self, device: &CogDevice) {
+  pub(crate) fn sync_gpu_buffer(&self) {
     // TODO: resize buffer if too small.
     for info in self.programs.iter() {
       let index = info.index.to_u32() as usize;
