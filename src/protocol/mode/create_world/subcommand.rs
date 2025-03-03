@@ -3,6 +3,7 @@ use super::{
   current_descriptor_input_cmd::CurrentDescriptorInputCmd,
   begin_generation_cmd::BeginGenerationCmd,
   take_generation_step_cmd::TakeGenerationStepCmd,
+  current_generation_phase_cmd::CurrentGenerationPhaseCmd,
 };
 
 #[derive(Debug)]
@@ -12,4 +13,5 @@ pub(crate) enum CreateWorldSubcmdEnvelope {
   UpdateDescriptorInput(UpdateDescriptorInputCmd),
   BeginGeneration(BeginGenerationCmd),
   TakeGenerationStep(TakeGenerationStepCmd),
+  CurrentGenerationPhase(CurrentGenerationPhaseCmd),
 }

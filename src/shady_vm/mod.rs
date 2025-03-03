@@ -8,7 +8,7 @@ pub(crate) mod bytecode;
 pub(crate) mod bitcode;
 
 pub(crate) use self::{
-  register_file::{ ShadyRegisterFile, ShadyRegister },
+  register_file::{ ShadyRegisterFile, ShadyRegister, SHADY_REG_COUNT },
   assembler::ShadyAssembler,
   program::{ ShadyProgram, ShadyProgramGpuBuffer, ShadyProgramIndex },
   shasm::{

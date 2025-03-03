@@ -1,4 +1,5 @@
 import {
+  GenerationPhase,
   GenerationStepKind,
   WorldDescriptorInput,
   WorldDescriptorValidation,
@@ -37,6 +38,14 @@ type CreateWorldSubcmd = {
     response: {
       Ok: {},
       Failed: string[],
+    },
+  },
+  CurrentGenerationPhase: {
+    params: {},
+    response: {
+      CurrentGenerationPhase: {
+        phase: GenerationPhase,
+      }
     },
   },
 }

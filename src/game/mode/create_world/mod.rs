@@ -10,6 +10,7 @@ use crate::{
     CurrentDescriptorInputCmd,
     TakeGenerationStepCmd,
     UpdateDescriptorInputCmd,
+    CurrentGenerationPhaseCmd,
   },
   world::{ WorldDescriptor, WorldDescriptorInput }
 };
@@ -51,6 +52,8 @@ impl CreateWorldMode {
         self.handle_begin_generation_cmd(cmd, data_store),
       CreateWorldSubcmdEnvelope::TakeGenerationStep(cmd) =>
         self.handle_take_generation_step_cmd(cmd, data_store),
+      CreateWorldSubcmdEnvelope::CurrentGenerationPhase(cmd) =>
+        self.handle_current_generation_phase_cmd(cmd),
     }
   }
 
@@ -135,6 +138,25 @@ impl CreateWorldMode {
         CreateWorldSubcmdResponse::Failed(
           vec![
             "Must be in GeneratingWorld state to take a generation step"
+              .to_string(),
+          ]
+        )
+      }
+    }
+  }
+
+  fn handle_current_generation_phase_cmd(
+    &mut self,
+    cmd: CurrentGenerationPhaseCmd,
+  ) -> CreateWorldSubcmdResponse {
+    match &mut self.state {
+      CreateWorldState::GeneratingWorld(ref mut generating_world_state) => {
+        generating_world_state.handle_current_generation_phase_cmd(cmd)
+      },
+      _ => {
+        CreateWorldSubcmdResponse::Failed(
+          vec![
+            "Must be in GeneratingWorld state to get current generation phase"
               .to_string(),
           ]
         )

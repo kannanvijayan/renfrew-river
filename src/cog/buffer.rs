@@ -1,18 +1,33 @@
-use std::{ marker::PhantomData, mem };
+use std::{ marker::PhantomData, mem, rc::Rc };
 use bytemuck::Pod;
 use futures;
 use crate::world::{ CellCoord, WorldDims };
 
 use super::CogDevice;
 
-pub(crate) trait CogBufferType: Clone + Into<Self::GpuType> + From<Self::GpuType> {
+pub(crate) trait CogBufferType
+  : Clone
+  + Into<Self::GpuType>
+  + From<Self::GpuType>
+{
   type GpuType: Pod;
 }
 
-pub(crate) struct CogSeqBuffer<T: CogBufferType> {
+#[derive(Clone)]
+struct CogBufferBase {
   device: CogDevice,
+  buffer: Rc<wgpu::Buffer>,
+}
+impl CogBufferBase {
+  fn new(device: &CogDevice, buffer: wgpu::Buffer) -> CogBufferBase {
+    let buffer = Rc::new(buffer);
+    CogBufferBase { device: device.clone(), buffer }
+  }
+}
+
+pub(crate) struct CogSeqBuffer<T: CogBufferType> {
+  base: CogBufferBase,
   len: usize,
-  buffer: wgpu::Buffer,
   _phantom: PhantomData<T>,
 }
 impl<T: CogBufferType> CogSeqBuffer<T> {
@@ -35,7 +50,8 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
       mapped_at_creation: false,
     });
     let device: CogDevice = device.clone();
-    CogSeqBuffer { device, len, buffer, _phantom: PhantomData }
+    let base = CogBufferBase::new(&device, buffer);
+    CogSeqBuffer { base, len, _phantom: PhantomData }
   }
 
   pub(crate) async fn new_from_slice(
@@ -54,7 +70,7 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
   }
 
   pub(crate) fn wgpu_buffer(&self) -> &wgpu::Buffer {
-    &self.buffer
+    &self.base.buffer
   }
 
   /**
@@ -70,7 +86,7 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
     assert!(offset + len <= self.len);
     let byte_offset = (offset * Self::ELEM_SIZE) as u64;
     let byte_size = (len * Self::ELEM_SIZE) as u64;
-    let new_buffer = self.device.wgpu_device().create_buffer(
+    let new_buffer = self.base.device.wgpu_device().create_buffer(
       &wgpu::BufferDescriptor {
         label: Some("ReadMappableCopyBuffer"),
         size: byte_size,
@@ -78,7 +94,7 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
         mapped_at_creation: false,
       }
     );
-    self.device.run_encoder("ReadMappableCopyEncoder", |encoder| {
+    self.base.device.run_encoder("ReadMappableCopyEncoder", |encoder| {
       encoder.copy_buffer_to_buffer(
         self.wgpu_buffer(),
         byte_offset,
@@ -119,7 +135,7 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
     assert!(offset + vals.len() <= self.len);
     let byte_offset = (offset * Self::ELEM_SIZE) as u64;
     let byte_size = (vals.len() * Self::ELEM_SIZE) as u64;
-    let new_buffer = self.device.wgpu_device().create_buffer(
+    let new_buffer = self.base.device.wgpu_device().create_buffer(
       &wgpu::BufferDescriptor {
         label: Some("WriteBuffer"),
         size: byte_size,
@@ -136,7 +152,7 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
       }
     }
     new_buffer.unmap();
-    self.device.run_encoder("WriteSeqBuffer", |encoder| {
+    self.base.device.run_encoder("WriteSeqBuffer", |encoder| {
       encoder.copy_buffer_to_buffer(
         &new_buffer,
         0,
@@ -148,11 +164,20 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
   }
 }
 
+impl<T: CogBufferType> Clone for CogSeqBuffer<T> {
+  fn clone(&self) -> Self {
+    CogSeqBuffer {
+      base: self.base.clone(),
+      len: self.len,
+      _phantom: PhantomData,
+    }
+  }
+}
+
 
 pub(crate) struct CogMapBuffer<T: CogBufferType> {
-  device: CogDevice,
+  base: CogBufferBase,
   dims: WorldDims,
-  buffer: wgpu::Buffer,
   _phantom: PhantomData<T>,
 }
 impl<T: CogBufferType> CogMapBuffer<T> {
@@ -175,7 +200,8 @@ impl<T: CogBufferType> CogMapBuffer<T> {
       mapped_at_creation: false,
     });
     let device: CogDevice = device.clone();
-    CogMapBuffer { device, dims, buffer, _phantom: PhantomData }
+    let base = CogBufferBase::new(&device, buffer);
+    CogMapBuffer { base, dims, _phantom: PhantomData }
   }
 
   pub(crate) async fn new_from_slice(
@@ -195,7 +221,7 @@ impl<T: CogBufferType> CogMapBuffer<T> {
   }
 
   pub(crate) fn wgpu_buffer(&self) -> &wgpu::Buffer {
-    &self.buffer
+    &self.base.buffer
   }
 
   /**
@@ -209,7 +235,7 @@ impl<T: CogBufferType> CogMapBuffer<T> {
 
   fn read_mappable_copy_buffer(&self) -> wgpu::Buffer {
     let byte_size = (self.dims.area() as usize * Self::ELEM_SIZE) as u64;
-    let new_buffer = self.device.wgpu_device().create_buffer(
+    let new_buffer = self.base.device.wgpu_device().create_buffer(
       &wgpu::BufferDescriptor {
         label: Some("ReadMappableCopyBuffer"),
         size: byte_size,
@@ -217,7 +243,7 @@ impl<T: CogBufferType> CogMapBuffer<T> {
         mapped_at_creation: false,
       }
     );
-    self.device.run_encoder("ReadMappableCopyEncoder", |encoder| {
+    self.base.device.run_encoder("ReadMappableCopyEncoder", |encoder| {
       encoder.copy_buffer_to_buffer(
         self.wgpu_buffer(),
         0,
@@ -272,7 +298,7 @@ impl<T: CogBufferType> CogMapBuffer<T> {
     assert!(self.dims.contains_coord(coord));
     assert!(self.dims.contains_or_bounded_by_coord(coord.extend(dims)));
     let byte_size = self.dims.area() as usize * Self::ELEM_SIZE;
-    let new_buffer = self.device.wgpu_device().create_buffer(
+    let new_buffer = self.base.device.wgpu_device().create_buffer(
       &wgpu::BufferDescriptor {
         label: Some("WriteBuffer"),
         size: byte_size as u64,
@@ -300,7 +326,7 @@ impl<T: CogBufferType> CogMapBuffer<T> {
       }
     }
     new_buffer.unmap();
-    self.device.run_encoder("WriteSeqBuffer", |encoder| {
+    self.base.device.run_encoder("WriteSeqBuffer", |encoder| {
       encoder.copy_buffer_to_buffer(
         &new_buffer,
         0,
@@ -309,5 +335,15 @@ impl<T: CogBufferType> CogMapBuffer<T> {
         byte_size as u64,
       );
     });
+  }
+}
+
+impl<T: CogBufferType> Clone for CogMapBuffer<T> {
+  fn clone(&self) -> Self {
+    CogMapBuffer {
+      base: self.base.clone(),
+      dims: self.dims,
+      _phantom: PhantomData,
+    }
   }
 }

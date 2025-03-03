@@ -1,7 +1,7 @@
 
 mod cell_coord;
 mod cell_data;
-mod generation_step;
+mod generation;
 mod vec_map;
 mod world_descriptor;
 mod world_dims;
@@ -9,7 +9,7 @@ mod world_dims;
 pub(crate) use self::{
   cell_coord::CellCoord,
   cell_data::CellData,
-  generation_step::GenerationStepKind,
+  generation::{ GenerationStepKind, GenerationPhase },
   world_descriptor::{
     WorldDescriptor,
     WorldDescriptorInput,

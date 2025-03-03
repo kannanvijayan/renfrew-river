@@ -3,6 +3,7 @@ use crate::{
   world::{ CellData, WorldDims },
 };
 
+#[derive(Clone)]
 pub(crate) struct CellDataBuffer {
   buffer: CogMapBuffer<CellData>
 }

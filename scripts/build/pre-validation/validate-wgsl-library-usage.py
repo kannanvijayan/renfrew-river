@@ -49,35 +49,37 @@ def validate_wgsl_file(filepath, subpath):
   print("  * {:s}".format(subpath))
   filedata = open(filepath).readlines()
 
-  cur_library = None
+  lib_stack = []
   cur_library_lines = None
   num_failed = 0
   for line in filedata:
     (libline_type, libname) = parse_library_line(line)
     if libline_type == "none":
-      if cur_library:
+      if len(lib_stack) > 0:
         cur_library_lines.append(line)
     if libline_type == "start":
-      if cur_library:
-        raise Exception("Library {:s} started before {:s} ended".format(
-          libname, cur_library
-        ))
-      cur_library = libname
-      cur_library_lines = []
+      if len(lib_stack) == 0:
+        cur_library_lines = []
+      else:
+        cur_library_lines.append(line)
+      lib_stack.append(libname)
     elif libline_type == "end":
-      if not cur_library:
+      if not len(lib_stack):
         raise Exception("Library {:s} ended before it started".format(
           libname
         ))
-      if cur_library != libname:
+      if lib_stack[-1] != libname:
         raise Exception("Library {:s} ended before {:s} ended".format(
-          libname, cur_library
+          libname, lib_stack[-1]
         ))
-      # Validate the library
-      if not validate_library(cur_library, cur_library_lines):
-        num_failed += 1
-      cur_library = None
-      cur_library_lines = None
+      lib_stack.pop()
+      if len(lib_stack) == 0:
+        # Validate the library
+        if not validate_library(libname, cur_library_lines):
+          num_failed += 1
+        cur_library_lines = None
+      else:
+        cur_library_lines.append(line)
   return num_failed == 0
 
 def validate_library(libname, used_lines):
@@ -88,6 +90,10 @@ def validate_library(libname, used_lines):
     print("    - Library ok: {:s}".format(libname))
   else:
     print("    - Library FAILED: {:s}".format(libname))
+    print("ORIGINAL:")
+    print("".join(orig_lines))
+    print("USED:")
+    print("".join(used_lines))
   return matched
 
 

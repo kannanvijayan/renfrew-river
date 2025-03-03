@@ -1,3 +1,4 @@
+use bytemuck::{NoUninit, Pod};
 use log;
 use wgpu::{
   util::DeviceExt,
@@ -14,6 +15,7 @@ use std::{
 use super::{
   constants::GPU_MIN_BUFFER_SIZE,
   CogInvoke,
+  CogShaderRegistry,
 };
 
 
@@ -97,8 +99,12 @@ impl CogDevice {
     result
   }
 
-  pub(crate) fn perform_invoke(&self, invoke: &CogInvoke, label: &'static str) {
-    self.run_encoder(label, |enc| invoke.execute(enc));
+  pub(crate) fn perform_invoke(&self,
+    shader_registry: &CogShaderRegistry,
+    invoke: &CogInvoke,
+    label: &'static str
+  ) {
+    self.run_encoder(label, |enc| invoke.execute(shader_registry, enc));
   }
 
   /**
@@ -117,6 +123,18 @@ impl CogDevice {
       contents: data,
       usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
     })
+  }
+
+  /**
+   * Creates a uniform buffer from a POD data type.
+   */
+  pub(crate) fn create_uniforms<T: Pod>(&self,
+    data: &T,
+    label: Option<&str>
+  ) -> wgpu::Buffer {
+    let data_array = [*data];
+    let data_bytes = bytemuck::cast_slice(&data_array);
+    self.create_uniform_buffer(data_bytes, label)
   }
 
   /**

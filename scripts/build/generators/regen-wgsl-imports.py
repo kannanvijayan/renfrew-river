@@ -26,6 +26,7 @@ class ScriptContext:
       )
   
   def process(self):
+    print("Processing {:s}".format(self.__script_path))
     output_lines = []
     # Process each line in the script.
     for line_no in range(len(self.__script_lines)):
@@ -128,7 +129,7 @@ def main():
   overwrite_scripts = dict()
 
   # Process all the scripts in the source tree.
-  for root, _, files in os.walk(src_root):
+  for root, x, files in os.walk(src_root):
     for file in files:
       if not file.endswith(".wgsl"):
         continue

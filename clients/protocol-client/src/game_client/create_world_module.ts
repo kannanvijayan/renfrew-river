@@ -1,7 +1,8 @@
 import GameClientModule from "./module";
 import SubcmdSender from "./subcmd_sender";
 import CreateWorldSubcmd from "../protocol/commands/create_world_subcmd";
-import WorldDescriptor, { WorldDescriptorInput, WorldDescriptorValidation } from "../types/world_descriptor";
+import { WorldDescriptorInput, WorldDescriptorValidation }
+  from "../types/world_descriptor";
 import { GenerationStepKind } from "../lib";
 
 export class GameClientCreateWorldModule

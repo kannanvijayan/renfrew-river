@@ -1,3 +1,4 @@
+use sha256;
 use crate::ruleset::RulesetEntry;
 
 use super::{ WorldDims, WorldDimsInput, WorldDimsValidation };
@@ -21,6 +22,12 @@ impl WorldDescriptor {
       dims: self.dims.to_input(),
       ruleset_name: self.ruleset_name.clone(),
     }
+  }
+
+  pub(crate) fn seed_u32(&self) -> u32 {
+    let hex_string = sha256::digest(&self.seed);
+    let hex_string = &hex_string[0..8];
+    u32::from_str_radix(hex_string, 16).unwrap()
   }
 }
 

@@ -4,11 +4,11 @@ use crate::cog::CogBufferType;
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct ShadyRegister(u8);
 impl ShadyRegister {
-  pub(crate) fn new(val: u8) -> Self {
+  pub(crate) const fn new(val: u8) -> Self {
     ShadyRegister(val)
   }
 
-  pub(crate) fn to_u8(&self) -> u8 {
+  pub(crate) const fn to_u8(&self) -> u8 {
     self.0
   }
 }

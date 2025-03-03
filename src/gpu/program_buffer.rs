@@ -13,6 +13,7 @@ use crate::{
  * Programs can be remove and added and the underlying buffer will be
  * updated.
  */
+#[derive(Clone)]
 pub(crate) struct ProgramBuffer {
   // The in-cpu program representations and information.
   programs: Vec<ShadyProgramInfo>,
@@ -76,6 +77,7 @@ impl ProgramBuffer {
   }
 }
 
+#[derive(Clone)]
 struct ShadyProgramInfo {
   name: String,
   index: ShadyProgramIndex,

@@ -1,4 +1,4 @@
-use super::CogTask;
+use super::{CogShaderRegistry, CogTask};
 
 /**
  * Represents a sequences of tasks that can be executed on the GPU
@@ -16,9 +16,12 @@ impl CogInvoke {
     self.tasks.push(Box::new(task));
   }
 
-  pub(crate) fn execute(&self, encoder: &mut wgpu::CommandEncoder) {
+  pub(crate) fn execute(&self,
+    shader_registry: &CogShaderRegistry,
+    encoder: &mut wgpu::CommandEncoder
+  ) {
     for task in &self.tasks {
-      task.execute(encoder);
+      task.encode(shader_registry, encoder);
     }
   }
 }
