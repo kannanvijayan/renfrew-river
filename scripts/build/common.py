@@ -6,7 +6,7 @@ ROOT_PATH = os.path.realpath(
 
 RUST_SRC_PATH = os.path.join(ROOT_PATH, "src")
 
-GPU_COMMANDS_SUBPATH = os.path.join("cog", "wgsl")
+GPU_COMMANDS_SUBPATH = os.path.join("gpu", "wgsl")
 GPU_COMMANDS_DIR = os.path.join(RUST_SRC_PATH, GPU_COMMANDS_SUBPATH)
 
 WGSL_LIBRARY_DIRNAME = "library"
