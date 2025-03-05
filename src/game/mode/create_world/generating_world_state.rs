@@ -1,15 +1,12 @@
 use crate::{
-  cog::{ CogDevice, CogShaderRegistry },
-  gpu::{ CellDataBuffer, ProgramBuffer },
+  cog::{ CogDevice, CogTask },
+  gpu::{ task::create_world::RandGenTask, CellDataBuffer, ProgramBuffer, ShaderRegistry },
   protocol::mode::create_world::{
-    CreateWorldSubcmdResponse,
-    TakeGenerationStepCmd,
-    CurrentGenerationPhaseCmd,
-    CurrentGenerationPhaseRsp,
+    CreateWorldSubcmdResponse, CurrentGenerationPhaseCmd, CurrentGenerationPhaseRsp, TakeGenerationStepCmd
   },
   ruleset::Ruleset,
   shady_vm::ShadyProgramIndex,
-  world::{ GenerationPhase, GenerationStepKind, WorldDescriptor },
+  world::{ CellCoord, GenerationPhase, GenerationStepKind, WorldDescriptor },
 };
 
 pub(crate) struct GeneratingWorldState {
@@ -17,7 +14,7 @@ pub(crate) struct GeneratingWorldState {
   ruleset: Ruleset,
   phase: GenerationPhase,
   device: CogDevice,
-  shaders: CogShaderRegistry,
+  shaders: ShaderRegistry,
   cell_data_buffer: CellDataBuffer,
   programs: GeneratingWorldPrograms,
 }
@@ -25,10 +22,11 @@ impl GeneratingWorldState {
   pub(crate) fn new(descriptor: WorldDescriptor, ruleset: Ruleset) -> Self {
     let phase = GenerationPhase::NewlyCreated;
     let device = CogDevice::new();
-    let shaders = CogShaderRegistry::new(&device);
+    let shaders = ShaderRegistry::new(&device);
     let cell_data_buffer = CellDataBuffer::new(&device, descriptor.dims);
     let programs = GeneratingWorldPrograms::new(&device, &ruleset);
-    GeneratingWorldState {
+    // TODO !!!!FIXME!!!!
+    let mut state = GeneratingWorldState {
       descriptor,
       ruleset,
       phase,
@@ -36,7 +34,11 @@ impl GeneratingWorldState {
       shaders,
       cell_data_buffer,
       programs,
-    }
+    };
+    state.handle_take_generation_step_cmd(TakeGenerationStepCmd {
+      kind: GenerationStepKind::RandGen
+    });
+    state
   }
 
   pub(crate) fn handle_take_generation_step_cmd(&mut self,
@@ -70,6 +72,19 @@ impl GeneratingWorldState {
         ),
       ]);
     }
+    let rand_mapbuf = self.device.create_map_buffer::<u32>(
+      self.descriptor.dims,
+      "RandGen_Output"
+    );
+    let randgen_task = RandGenTask::new(
+      self.descriptor.dims,
+      self.descriptor.seed_u32(),
+      rand_mapbuf.clone()
+    );
+    self.device.encode_and_run("CreateWorld_RandGen", |enc| {
+      randgen_task.encode(enc);
+    });
+
     self.phase = GenerationPhase::PreInitialize;
     CreateWorldSubcmdResponse::Ok {}
   }

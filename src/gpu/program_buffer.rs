@@ -1,7 +1,4 @@
-use std::{
-  collections::HashMap,
-  mem,
-};
+use std::collections::HashMap;
 use crate::{
   cog::CogDevice,
   shady_vm::{ ShadyProgram, ShadyProgramGpuBuffer, ShadyProgramIndex },
@@ -68,7 +65,7 @@ impl ProgramBuffer {
     // TODO: resize buffer if too small.
     for info in self.programs.iter() {
       let index = info.index.to_u32() as usize;
-      info.program.write_to_buffer(index, &self.buffer)
+      self.buffer.write_slice(index, &info.program.bitcode);
     }
   }
 

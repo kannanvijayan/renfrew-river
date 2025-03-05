@@ -63,10 +63,9 @@ fn perlin_stage(
   seed: u32,
   stage: u32,
   scale: u32,
-  x: u32,
-  y: u32,
+  xy: vec2<u32>,
 ) -> f32 {
-  let pt: vec2<f32> = vec2<f32>(f32(x), f32(y)) / f32(scale);
+  let pt: vec2<f32> = vec2<f32>(xy) / f32(scale);
 
   let tl: vec2<f32> = floor(pt);
   let tr: vec2<f32> = vec2<f32>(tl.x + 1.0, tl.y);
@@ -82,22 +81,22 @@ fn perlin_stage(
   let fade_border_y = u32(
     f32(world_dims[1]) * (PERLIN_BORDER_FADE_WIDTH_PERCENT / 100.0)
   );
-  if (y < fade_border_y) {
-    keep_y = f32(y) / f32(fade_border_y);
+  if (xy.y < fade_border_y) {
+    keep_y = f32(xy.y) / f32(fade_border_y);
   }
-  if (y > (world_dims[1] - fade_border_y)) {
-    keep_y = f32(world_dims[1] - y) / f32(fade_border_y);
+  if (xy.y > (world_dims[1] - fade_border_y)) {
+    keep_y = f32(world_dims[1] - xy.y) / f32(fade_border_y);
   }
 
   var keep_x: f32 = 1.0;
   let fade_border_x = u32(
     f32(world_dims[0]) * (PERLIN_BORDER_FADE_WIDTH_PERCENT / 100.0)
   );
-  if (x < fade_border_x) {
-    keep_x = f32(x) / f32(fade_border_x);
+  if (xy.x < fade_border_x) {
+    keep_x = f32(xy.x) / f32(fade_border_x);
   }
-  if (x > (world_dims[0] - fade_border_x)) {
-    keep_x = f32(world_dims[0] - x) / f32(fade_border_x);
+  if (xy.x > (world_dims[0] - fade_border_x)) {
+    keep_x = f32(world_dims[0] - xy.x) / f32(fade_border_x);
   }
 
   let pt_tl = pt - tl;
@@ -137,7 +136,7 @@ fn perlin_stage(
   return max(min(value, 1.0f), -1.0f);
 }
 
-fn perlin_gen_f32(world_dims: vec2<u32>, seed: u32, x: u32, y: u32) -> f32 {
+fn perlin_gen_f32(world_dims: vec2<u32>, seed: u32, xy: vec2<u32>) -> f32 {
   var accum: f32 = 0.0;
   var max_value: f32 = 0.0;
   var amplitude: f32 = 1.0;
@@ -149,7 +148,7 @@ fn perlin_gen_f32(world_dims: vec2<u32>, seed: u32, x: u32, y: u32) -> f32 {
     s >= PERLIN_OCTAVE_MIN;
     s = s / PERLIN_OCTAVE_STEP
   ) {
-    let val = perlin_stage(world_dims, seed, stage, u32(s), x, y);
+    let val = perlin_stage(world_dims, seed, stage, u32(s), xy);
     accum = accum + val * amplitude;
     max_value = max_value + amplitude;
     amplitude = amplitude * cragginess_multiplier;
@@ -159,7 +158,7 @@ fn perlin_gen_f32(world_dims: vec2<u32>, seed: u32, x: u32, y: u32) -> f32 {
   return (res + 1.0f) / 2.0f;
 }
 
-fn perlin_gen_u16(world_dims: vec2<u32>, seed: u32, x: u32, y: u32) -> u32 {
-  let unit_ranged: f32 = perlin_gen_f32(world_dims, seed, x, y);
+fn perlin_gen_u16(world_dims: vec2<u32>, seed: u32, xy: vec2<u32>) -> u32 {
+  let unit_ranged: f32 = perlin_gen_f32(world_dims, seed, xy);
   return u32(unit_ranged * f32(0xFFFF));
 }

@@ -65,10 +65,9 @@ fn perlin_stage(
   seed: u32,
   stage: u32,
   scale: u32,
-  x: u32,
-  y: u32,
+  xy: vec2<u32>,
 ) -> f32 {
-  let pt: vec2<f32> = vec2<f32>(f32(x), f32(y)) / f32(scale);
+  let pt: vec2<f32> = vec2<f32>(xy) / f32(scale);
 
   let tl: vec2<f32> = floor(pt);
   let tr: vec2<f32> = vec2<f32>(tl.x + 1.0, tl.y);
@@ -84,22 +83,22 @@ fn perlin_stage(
   let fade_border_y = u32(
     f32(world_dims[1]) * (PERLIN_BORDER_FADE_WIDTH_PERCENT / 100.0)
   );
-  if (y < fade_border_y) {
-    keep_y = f32(y) / f32(fade_border_y);
+  if (xy.y < fade_border_y) {
+    keep_y = f32(xy.y) / f32(fade_border_y);
   }
-  if (y > (world_dims[1] - fade_border_y)) {
-    keep_y = f32(world_dims[1] - y) / f32(fade_border_y);
+  if (xy.y > (world_dims[1] - fade_border_y)) {
+    keep_y = f32(world_dims[1] - xy.y) / f32(fade_border_y);
   }
 
   var keep_x: f32 = 1.0;
   let fade_border_x = u32(
     f32(world_dims[0]) * (PERLIN_BORDER_FADE_WIDTH_PERCENT / 100.0)
   );
-  if (x < fade_border_x) {
-    keep_x = f32(x) / f32(fade_border_x);
+  if (xy.x < fade_border_x) {
+    keep_x = f32(xy.x) / f32(fade_border_x);
   }
-  if (x > (world_dims[0] - fade_border_x)) {
-    keep_x = f32(world_dims[0] - x) / f32(fade_border_x);
+  if (xy.x > (world_dims[0] - fade_border_x)) {
+    keep_x = f32(world_dims[0] - xy.x) / f32(fade_border_x);
   }
 
   let pt_tl = pt - tl;
@@ -139,7 +138,7 @@ fn perlin_stage(
   return max(min(value, 1.0f), -1.0f);
 }
 
-fn perlin_gen_f32(world_dims: vec2<u32>, seed: u32, x: u32, y: u32) -> f32 {
+fn perlin_gen_f32(world_dims: vec2<u32>, seed: u32, xy: vec2<u32>) -> f32 {
   var accum: f32 = 0.0;
   var max_value: f32 = 0.0;
   var amplitude: f32 = 1.0;
@@ -151,7 +150,7 @@ fn perlin_gen_f32(world_dims: vec2<u32>, seed: u32, x: u32, y: u32) -> f32 {
     s >= PERLIN_OCTAVE_MIN;
     s = s / PERLIN_OCTAVE_STEP
   ) {
-    let val = perlin_stage(world_dims, seed, stage, u32(s), x, y);
+    let val = perlin_stage(world_dims, seed, stage, u32(s), xy);
     accum = accum + val * amplitude;
     max_value = max_value + amplitude;
     amplitude = amplitude * cragginess_multiplier;
@@ -161,8 +160,8 @@ fn perlin_gen_f32(world_dims: vec2<u32>, seed: u32, x: u32, y: u32) -> f32 {
   return (res + 1.0f) / 2.0f;
 }
 
-fn perlin_gen_u16(world_dims: vec2<u32>, seed: u32, x: u32, y: u32) -> u32 {
-  let unit_ranged: f32 = perlin_gen_f32(world_dims, seed, x, y);
+fn perlin_gen_u16(world_dims: vec2<u32>, seed: u32, xy: vec2<u32>) -> u32 {
+  let unit_ranged: f32 = perlin_gen_f32(world_dims, seed, xy);
   return u32(unit_ranged * f32(0xFFFF));
 }
 // END_LIBRARY(perlin_gen)
@@ -598,6 +597,8 @@ fn shady_machine_state_pop_ret(state_ptr: ptr<private, ShadyMachineState>) -> u3
 
 struct Uniforms {
   world_dims: vec2<u32>,
+  top_left: vec2<u32>,
+  out_dims: vec2<u32>,
   seed: u32,
 };
 
@@ -605,21 +606,33 @@ struct Uniforms {
 var<uniform> uniforms: Uniforms;
 
 @group(0) @binding(1)
-var<storage, write> output_buffer: array<ShadyRegisterFile>;
+var<storage, write> output_buffer: array<u32>;
 
 @compute
 @workgroup_size(8, 8)
-fn randgen_task(
+fn rand_gen_task(
   @builtin(global_invocation_id) global_id: vec3<u32>
 ) {
-  // We generate 2 values per invocation.
-  let x = global_id.x;
-  let y = global_id.y;
-  // Bounds check.
-  if (x >= uniforms.world_dims[0] || y >= uniforms.world_dims[1]) {
+  let world_dims = uniforms.world_dims;
+  let out_dims = uniforms.out_dims;
+  let seed = uniforms.seed;
+
+  // Bounds check against the output buffer.
+  let rel_xy = global_id.xy;
+  if (rel_xy.x >= out_dims.x || rel_xy.y >= out_dims.y) {
     return;
   }
-  var value = perlin_gen_u16(uniforms.world_dims, uniforms.seed, x, y);
-  let index: u32 = (y * uniforms.world_dims[0]) + x;
-  output_buffer[index].regs[0] = i32(value);
+
+  // Bounds check against the world.
+  let cell_xy = uniforms.top_left + rel_xy;
+  if (cell_xy.x >= world_dims[0] || cell_xy.y >= world_dims[1]) {
+    return;
+  }
+
+  // Generate the value.
+  var value = perlin_gen_u16(world_dims, seed, cell_xy);
+
+  // Write it to correct location in output buffer.
+  let index: u32 = (rel_xy.y * out_dims.x) + rel_xy.x;
+  output_buffer[index] = value;
 }

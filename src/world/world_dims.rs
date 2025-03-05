@@ -37,10 +37,19 @@ impl WorldDims {
   pub(crate) const fn coord_index(&self, coord: CellCoord) -> u32 {
     (coord.row_u32() * self.columns_u32()) + coord.col_u32()
   }
+  pub(crate) const fn index_coord(&self, index: usize) -> CellCoord {
+    CellCoord::new(
+      (index as u32 % self.columns_u32()) as u16,
+      (index as u32 / self.columns_u32()) as u16
+    )
+  }
 
   pub(crate) fn fits_within(&self, other: WorldDims) -> bool {
     self.columns <= other.columns && self.rows <= other.rows
   }
+
+  pub(crate) const fn columns_u16(&self) -> u16 { self.columns as u16 }
+  pub(crate) const fn rows_u16(&self) -> u16 { self.rows as u16 }
 
   pub(crate) const fn columns_u32(&self) -> u32 { self.columns as u32 }
   pub(crate) const fn rows_u32(&self) -> u32 { self.rows as u32 }

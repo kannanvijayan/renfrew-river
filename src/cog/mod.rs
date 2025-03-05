@@ -4,17 +4,39 @@
  */
 
 mod constants;
+mod bind_group;
 mod buffer;
+mod compute;
 mod device;
+mod encoder;
 mod task;
 mod invoke;
-mod wgsl;
-mod shader_registry;
+mod shader;
 
 pub(crate) use self::{
-  buffer::{ CogBufferType, CogSeqBuffer, CogMapBuffer },
+  bind_group::{ CogBindGroup, CogBindGroupBuilder },
+  buffer::{
+    CogBufferBase,
+    CogBufferType,
+    CogMapBuffer,
+    CogSeqBuffer,
+    CogUniformBuffer,
+    CogUniformType,
+  },
+  compute::{
+    CogComputePass1D,
+    CogComputePass2D,
+    CogComputePipeline,
+  },
   device::CogDevice,
+  encoder::CogEncoder,
   invoke::CogInvoke,
+  shader::{
+    CogShaderEntrypoint1D,
+    CogShaderEntrypoint2D,
+    CogShaderModule,
+    CogShaderScript,
+    CogShaderStore,
+  },
   task::CogTask,
-  shader_registry::CogShaderRegistry,
 };

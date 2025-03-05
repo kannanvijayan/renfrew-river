@@ -18,13 +18,6 @@ impl ShadyProgram {
     ShadyProgram { bitcode }
   }
 
-  pub(crate) fn write_to_buffer(&self,
-    offset: usize,
-    buffer: &ShadyProgramGpuBuffer,
-  ) {
-    buffer.write_slice(offset, &self.bitcode);
-  }
-
   pub(crate) fn num_instrs(&self) -> usize {
     self.bitcode.len()
   }
