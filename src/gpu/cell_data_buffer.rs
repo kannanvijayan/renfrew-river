@@ -1,5 +1,5 @@
 use crate::{
-  cog::{CogDevice, CogMapBuffer},
+  cog::{ CogDevice, CogMapBuffer },
   world::{ CellData, WorldDims },
 };
 

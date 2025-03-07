@@ -5,6 +5,7 @@ type FormatRules = {
 export default FormatRules;
 
 export type FormatWordRules = {
+  name: string,
   components: FormatComponentRules[],
 };
 
@@ -51,8 +52,8 @@ export function addFormatRuleComponent(format: FormatRules, name: string, bits: 
         wordFormats: format.wordFormats.map((existingWordFormat) => {
           if (existingWordFormat === wordFormat) {
             return {
+              name: `${format.wordFormats.length}`,
               components: [
-                ...existingWordFormat.components,
                 { name, offset: usedBits, bits },
               ],
             };
@@ -67,6 +68,7 @@ export function addFormatRuleComponent(format: FormatRules, name: string, bits: 
     wordFormats: [
       ...format.wordFormats,
       {
+        name: "0",
         components: [ { name, offset: 0, bits } ],
       },
     ],

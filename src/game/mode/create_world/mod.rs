@@ -11,6 +11,7 @@ use crate::{
     TakeGenerationStepCmd,
     UpdateDescriptorInputCmd,
     CurrentGenerationPhaseCmd,
+    GetMapDataCmd,
   },
   world::{ WorldDescriptor, WorldDescriptorInput }
 };
@@ -54,6 +55,8 @@ impl CreateWorldMode {
         self.handle_take_generation_step_cmd(cmd, data_store),
       CreateWorldSubcmdEnvelope::CurrentGenerationPhase(cmd) =>
         self.handle_current_generation_phase_cmd(cmd),
+      CreateWorldSubcmdEnvelope::GetMapData(cmd) =>
+        self.handle_get_map_data_cmd(cmd, data_store),
     }
   }
 
@@ -152,6 +155,26 @@ impl CreateWorldMode {
     match &mut self.state {
       CreateWorldState::GeneratingWorld(ref mut generating_world_state) => {
         generating_world_state.handle_current_generation_phase_cmd(cmd)
+      },
+      _ => {
+        CreateWorldSubcmdResponse::Failed(
+          vec![
+            "Must be in GeneratingWorld state to get current generation phase"
+              .to_string(),
+          ]
+        )
+      }
+    }
+  }
+
+  fn handle_get_map_data_cmd(
+    &mut self,
+    cmd: GetMapDataCmd,
+    data_store: &DataStore,
+  ) -> CreateWorldSubcmdResponse {
+    match &mut self.state {
+      CreateWorldState::GeneratingWorld(ref mut generating_world_state) => {
+        generating_world_state.handle_get_map_data_cmd(cmd, data_store)
       },
       _ => {
         CreateWorldSubcmdResponse::Failed(

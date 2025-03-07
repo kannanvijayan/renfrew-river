@@ -5,8 +5,8 @@ use std::{
   marker::PhantomData,
   ops::Deref,
 };
-use crate::cog::CogDevice;
 use super::{
+  CogDevice,
   CogComputePass1D,
   CogComputePass2D,
   CogEncoder,

@@ -190,11 +190,13 @@ impl<T: CogBufferType> BufferWrite<T> {
   pub(crate) fn with_slice_mut<F>(&self, func: F)
     where F: FnOnce(&mut [T::GpuType])
   {
-    let slice = self.base.wgpu_buffer().slice(..);
-    let mut view = slice.get_mapped_range_mut();
-    eprintln!("KVKV with_slice_mut() view_ptr={:p}", view.as_ptr());
-    let view_ref: &mut [T::GpuType] = bytemuck::cast_slice_mut(&mut view);
-    func(view_ref);
+    {
+      let slice = self.base.wgpu_buffer().slice(..);
+      let mut view = slice.get_mapped_range_mut();
+      eprintln!("KVKV with_slice_mut() view_ptr={:p}", view.as_ptr());
+      let view_ref: &mut [T::GpuType] = bytemuck::cast_slice_mut(&mut view);
+      func(view_ref);
+    }
     self.base.wgpu_buffer().unmap();
   }
 }

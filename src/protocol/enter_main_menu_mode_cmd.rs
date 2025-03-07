@@ -1,7 +1,7 @@
 use serde;
 use super::{
   command::{ Command, CommandEnvelope },
-  response::{FailedResponse, ResponseEnvelope}
+  response::{ FailedResponse, ResponseEnvelope },
 };
 
 #[derive(Debug, Clone)]

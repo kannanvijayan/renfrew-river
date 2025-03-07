@@ -6,7 +6,7 @@ mod uniform;
 
 pub(crate) use self::{
   base::CogBufferBase,
-  map::{ CogMapBuffer, CogBufferReadMap, CogBufferWriteMap },
+  map::CogMapBuffer,
   seq::CogSeqBuffer,
   uniform::{ CogUniformBuffer, CogUniformType },
 };

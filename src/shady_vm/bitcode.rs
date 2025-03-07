@@ -1,5 +1,4 @@
 use serde::{ Serialize, Deserialize };
-
 use crate::cog::CogBufferType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

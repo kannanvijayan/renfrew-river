@@ -1,3 +1,5 @@
+use super::cell_data::CellComponentSelector;
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -28,4 +30,14 @@ impl GenerationPhase {
       GenerationPhase::Finalized => "Finalized",
     }
   }
+}
+
+#[derive(Clone, Debug)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) enum GenerationCellDatumId {
+  /** Value of named randgen field. */
+  RandGen {},
+
+  /** Value of map cell format word component */
+  Selector(CellComponentSelector),
 }

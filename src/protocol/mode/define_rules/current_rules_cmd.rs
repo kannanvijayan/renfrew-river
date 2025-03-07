@@ -5,7 +5,7 @@ use crate::{
     mode::define_rules::DefineRulesSubcmdResponse,
     response::ResponseEnvelope,
   },
-  ruleset::{Ruleset, RulesetInput, RulesetValidation},
+  ruleset::{ Ruleset, RulesetInput, RulesetValidation },
 };
 use super::DefineRulesSubcmdEnvelope;
 

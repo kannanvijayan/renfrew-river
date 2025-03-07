@@ -11,8 +11,10 @@ use warp::{
   ws::Message,
 };
 use crate::{
-  game::GameServerConfig, network::{NetworkServerConfig, ServerState}, protocol::CommandEnvelope
+  game::GameServerConfig,
+  protocol::CommandEnvelope
 };
+use super::{ NetworkServerConfig, ServerState };
 
 /**
  * The network server.  Fronts a game-server over a socket.

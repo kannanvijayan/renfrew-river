@@ -1,5 +1,4 @@
 use serde;
-
 use crate::ruleset::RulesetEntry;
 use super::mode::{
   define_rules::DefineRulesSubcmdResponse,

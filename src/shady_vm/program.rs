@@ -1,9 +1,11 @@
 use serde;
 use std::mem;
 use crate::{
-  cog::{ CogBufferType, CogDevice, CogSeqBuffer },
-  shady_vm::bitcode::{self, Instruction},
+  cog::{ CogBufferType, CogSeqBuffer },
+  shady_vm::bitcode::{ self, Instruction },
 };
+
+use super::register_file;
 
 /**
  * An assembled program.
@@ -31,6 +33,31 @@ impl ShadyProgram {
     -> impl ExactSizeIterator<Item=&bitcode::Instruction>
   {
     self.bitcode.iter()
+  }
+
+  pub(crate) fn append_terminal_instruction(&mut self) {
+    // The terminal instruction is a jump to address location 0.
+    self.bitcode.push(bitcode::Instruction::new(
+      bitcode::OpWord {
+        cond: bitcode::Condition::Always,
+        set_flags: false,
+        imm_src1: true,
+        imm_src2: true,
+        shift16_src2: false,
+        ind_src1: false,
+        ind_src2: false,
+        ind_dst: false,
+        kind: bitcode::OperationKind::Add,
+        cflow: bitcode::ControlFlow::None,
+      },
+      bitcode::DstWord {
+        reg: register_file::SHADY_REG_PC,
+        negate: false,
+        bump: 0,
+      },
+      bitcode::SrcWord::Immediate { value: 0 },
+      bitcode::SrcWord::Immediate { value: 0 },
+    ));
   }
 
   pub(crate) fn test_dump(&self) {

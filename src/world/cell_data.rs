@@ -40,3 +40,27 @@ impl From<CellDataWords> for CellData {
     CellData::new(native)
   }
 }
+
+/**
+ * Identifies a cell word.
+ */
+#[derive(Clone, Debug)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct CellWordName(pub(crate) String);
+
+/**
+ * Identifies a cell word component.
+ */
+#[derive(Clone, Debug)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct CellComponentName(pub(crate) String);
+
+/**
+ * A selector for a cell component.
+ */
+#[derive(Clone, Debug)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct CellComponentSelector {
+  pub(crate) word: CellWordName,
+  pub(crate) component: CellComponentName,
+}

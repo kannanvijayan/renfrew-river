@@ -1,6 +1,4 @@
-
 use super::FileManagerSubtree;
-
 use crate::ruleset::{ Ruleset, RulesetEntry };
 
 #[derive(Debug, Clone)]

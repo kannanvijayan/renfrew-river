@@ -1,12 +1,22 @@
 use crate::{
   cog::{ CogDevice, CogTask },
-  gpu::{ task::create_world::RandGenTask, CellDataBuffer, ProgramBuffer, ShaderRegistry },
+  data_store,
+  gpu::{
+    task::create_world::RandGenTask,
+    CellDataBuffer,
+    ProgramBuffer,
+    ShaderRegistry,
+  },
   protocol::mode::create_world::{
-    CreateWorldSubcmdResponse, CurrentGenerationPhaseCmd, CurrentGenerationPhaseRsp, TakeGenerationStepCmd
+    CreateWorldSubcmdResponse,
+    CurrentGenerationPhaseCmd,
+    CurrentGenerationPhaseRsp,
+    GetMapDataCmd,
+    TakeGenerationStepCmd,
   },
   ruleset::Ruleset,
-  shady_vm::ShadyProgramIndex,
-  world::{ CellCoord, GenerationPhase, GenerationStepKind, WorldDescriptor },
+  shady_vm::{ ShadyProgram, ShadyProgramIndex, ShasmProgram },
+  world::{ GenerationPhase, GenerationStepKind, WorldDescriptor }
 };
 
 pub(crate) struct GeneratingWorldState {
@@ -25,8 +35,7 @@ impl GeneratingWorldState {
     let shaders = ShaderRegistry::new(&device);
     let cell_data_buffer = CellDataBuffer::new(&device, descriptor.dims);
     let programs = GeneratingWorldPrograms::new(&device, &ruleset);
-    // TODO !!!!FIXME!!!!
-    let mut state = GeneratingWorldState {
+    GeneratingWorldState {
       descriptor,
       ruleset,
       phase,
@@ -34,11 +43,7 @@ impl GeneratingWorldState {
       shaders,
       cell_data_buffer,
       programs,
-    };
-    state.handle_take_generation_step_cmd(TakeGenerationStepCmd {
-      kind: GenerationStepKind::RandGen
-    });
-    state
+    }
   }
 
   pub(crate) fn handle_take_generation_step_cmd(&mut self,
@@ -61,6 +66,13 @@ impl GeneratingWorldState {
     CreateWorldSubcmdResponse::CurrentGenerationPhase(
       CurrentGenerationPhaseRsp { phase: self.phase }
     )
+  }
+
+  pub(crate) fn handle_get_map_data_cmd(&self,
+    _cmd: GetMapDataCmd,
+    _data_store: &data_store::DataStore
+  ) -> CreateWorldSubcmdResponse {
+    panic!("TODO: Implement GeneratingWorldState::handle_get_map_data_cmd");
   }
 
   fn step_rand_gen(&mut self) -> CreateWorldSubcmdResponse {
@@ -154,26 +166,22 @@ impl GeneratingWorldPrograms {
     let mut program_buffer = ProgramBuffer::new(device);
     let stage = &ruleset.terrain_gen.stage;
 
-    let init_program_index = program_buffer.add_program(
-      "TerrainGen_Init",
-      stage.init_program.parse_shady_program()
-        .expect("Failed to parse init program")
-    );
-    let pairwise_program_index = program_buffer.add_program(
-      "TerrainGen_Pairwise",
-      stage.pairwise_program.parse_shady_program()
-        .expect("Failed to parse pairwise program")
-    );
-    let merge_program_index = program_buffer.add_program(
-      "TerrainGen_Merge",
-      stage.merge_program.parse_shady_program()
-        .expect("Failed to parse merge program")
-    );
-    let final_program_index = program_buffer.add_program(
-      "TerrainGen_Final",
-      stage.final_program.parse_shady_program()
-        .expect("Failed to parse final program")
-    );
+    let init_program = Self::parse_terminated(&stage.init_program);
+    let pairwise_program = Self::parse_terminated(&stage.pairwise_program);
+    let merge_program = Self::parse_terminated(&stage.merge_program);
+    let final_program = Self::parse_terminated(&stage.final_program);
+
+    let init_program_index =
+      program_buffer.add_program("TerrainGen_Init", init_program);
+
+    let pairwise_program_index =
+      program_buffer.add_program("TerrainGen_Pairwise", pairwise_program);
+
+    let merge_program_index =
+      program_buffer.add_program("TerrainGen_Merge", merge_program);
+    
+    let final_program_index =
+      program_buffer.add_program("TerrainGen_Final", final_program);
 
     program_buffer.sync_gpu_buffer();
 
@@ -185,11 +193,11 @@ impl GeneratingWorldPrograms {
       final_program_index,
     }
   }
+
+  fn parse_terminated(shasm_program: &ShasmProgram) -> ShadyProgram {
+    let mut shady_program = shasm_program.parse_shady_program()
+      .expect("Failed to parse program");
+    shady_program.append_terminal_instruction();
+    shady_program
+  }
 } 
-
-/**
- * Keeps track of the visually focused region of the world.
- */
-pub(crate) struct GeneratingWorldViewState {
-
-}

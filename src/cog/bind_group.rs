@@ -5,8 +5,6 @@ use super::{
   CogDevice,
   CogMapBuffer,
   CogSeqBuffer,
-  CogUniformBuffer,
-  CogUniformType,
 };
 
 

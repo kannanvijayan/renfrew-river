@@ -2,6 +2,7 @@ use crate::world::{WorldDescriptorInput, WorldDescriptorValidation};
 use super::{
   current_descriptor_input_cmd::CurrentDescriptorInputRsp,
   current_generation_phase_cmd::CurrentGenerationPhaseRsp,
+  get_map_data_cmd::GetMapDataRsp,
 };
 
 #[derive(Debug, Clone)]
@@ -13,4 +14,5 @@ pub(crate) enum CreateWorldSubcmdResponse {
   CurrentDescriptorInput(CurrentDescriptorInputRsp),
   Failed(Vec<String>),
   CurrentGenerationPhase(CurrentGenerationPhaseRsp),
+  MapData(GetMapDataRsp),
 }

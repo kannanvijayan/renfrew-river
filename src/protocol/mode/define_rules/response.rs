@@ -1,4 +1,4 @@
-use crate::ruleset::{Ruleset, RulesetValidation};
+use crate::ruleset::{ Ruleset, RulesetValidation };
 use super::current_rules_cmd::CurrentRulesRsp;
 
 #[derive(Debug, Clone)]

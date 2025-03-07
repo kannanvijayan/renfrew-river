@@ -1,4 +1,4 @@
-use super::{CogDevice, CogEncoder, CogTask};
+use super::{ CogDevice, CogEncoder, CogTask };
 
 /**
  * Represents a sequences of tasks that can be executed on the GPU

@@ -1,5 +1,4 @@
 use std::mem;
-
 use super::{
   buffer::CogBufferBase,
   CogBufferType,

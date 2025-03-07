@@ -1,9 +1,6 @@
 use std::{ marker::PhantomData, mem };
 use bytemuck::Pod;
-use wgpu::{
-  util::DeviceExt,
-  BufferUsages,
-};
+use wgpu::BufferUsages;
 use crate::cog::CogDevice;
 use super::CogBufferBase;
 

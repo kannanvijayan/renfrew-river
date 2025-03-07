@@ -1,5 +1,5 @@
 use crate::{
-  cog::{CogDevice, CogShaderModule},
+  cog::{ CogDevice, CogShaderModule },
   gpu::wgsl::create_world,
 };
 

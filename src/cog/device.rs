@@ -12,9 +12,17 @@ use std::{
   },
 };
 use crate::world::WorldDims;
-
 use super::{
-  buffer::{ CogUniformBuffer, CogUniformType }, constants::GPU_MIN_BUFFER_SIZE, CogBufferType, CogEncoder, CogMapBuffer, CogSeqBuffer, CogShaderModule, CogShaderScript, CogShaderStore
+  constants::GPU_MIN_BUFFER_SIZE,
+  CogUniformBuffer,
+  CogUniformType,
+  CogBufferType,
+  CogEncoder,
+  CogMapBuffer,
+  CogSeqBuffer,
+  CogShaderModule,
+  CogShaderScript,
+  CogShaderStore,
 };
 
 

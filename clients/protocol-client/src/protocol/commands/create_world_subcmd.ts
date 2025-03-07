@@ -1,8 +1,11 @@
 import {
+  CellCoord,
+  GenerationCellDatumId,
   GenerationPhase,
   GenerationStepKind,
   WorldDescriptorInput,
   WorldDescriptorValidation,
+  WorldDims,
 } from "../../lib";
 
 type CreateWorldSubcmd = {
@@ -48,6 +51,20 @@ type CreateWorldSubcmd = {
       }
     },
   },
+  GetMapData: {
+    params: {
+      top_left: CellCoord,
+      dims: WorldDims,
+      datum_ids: GenerationCellDatumId[],
+    },
+    response: {
+      GetMapData: {
+        top_left: CellCoord,
+        dims: WorldDims,
+        data: number[][],
+      }
+    }
+  }
 }
 
 export default CreateWorldSubcmd;

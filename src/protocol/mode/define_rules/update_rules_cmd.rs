@@ -5,7 +5,7 @@ use crate::{
     mode::define_rules::DefineRulesSubcmdResponse,
     response::ResponseEnvelope,
   },
-  shady_vm::{ShasmParseError, ShasmProgramValidation},
+  shady_vm::{ ShasmParseError, ShasmProgramValidation },
   ruleset::{
     FormatComponentInput,
     FormatComponentValidation,

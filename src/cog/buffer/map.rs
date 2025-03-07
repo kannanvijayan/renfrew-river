@@ -1,7 +1,7 @@
 use std::{ marker::PhantomData, mem };
 use futures;
 use crate::{
-  cog::{buffer::seq::CogSeqBuffer, CogDevice},
+  cog::{ CogSeqBuffer, CogDevice },
   world::{ CellCoord, WorldDims },
 };
 use super::{ CogBufferBase, CogBufferType };
@@ -226,7 +226,7 @@ impl<T: CogBufferType> BufferRead<T> {
   }
 }
 
-pub(crate) struct CogBufferReadMap<'a, T: CogBufferType> {
+struct CogBufferReadMap<'a, T: CogBufferType> {
   dims: WorldDims,
   data: &'a [T::GpuType],
 }
@@ -297,7 +297,7 @@ impl<T: CogBufferType> BufferWrite<T> {
   }
 }
 
-pub(crate) struct CogBufferWriteMap<'a, T: CogBufferType> {
+struct CogBufferWriteMap<'a, T: CogBufferType> {
   dims: WorldDims,
   data: &'a mut [T::GpuType],
 }

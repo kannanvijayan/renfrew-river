@@ -1,3 +1,4 @@
+import { CellComponentSelector } from "./cell";
 
 type GenerationStepKind =
   | "RandGen"
@@ -13,4 +14,19 @@ type GenerationPhase =
   | "PreMerge"
   | "Finalized";
 
-export { GenerationStepKind, GenerationPhase };
+type GenerationCellDatumId =
+  | { RandGen: {} }
+  | { Selector: CellComponentSelector };
+
+const GenerationCellDatumId = {
+  toStringKey(id: GenerationCellDatumId): string {
+    if ("RandGen" in id) {
+      return "RandGen";
+    } else {
+      const { word, component } = id.Selector;
+      return `Selector:${word}:${component}`;
+    }
+  }
+}
+
+export { GenerationStepKind, GenerationPhase, GenerationCellDatumId };
