@@ -13,7 +13,6 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.3",
-    "@pixi/react": "^8.0.0",
     "@reduxjs/toolkit": "^2.5.1",
     "pixi.js": "^8.8.1",
     "react": "^19.0.0",

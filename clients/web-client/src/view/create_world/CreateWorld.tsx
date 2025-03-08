@@ -1,4 +1,5 @@
 import CreateWorldViewState from "../../state/view/create_world/create_world";
+import MapGraphics from "../graphics/MapGraphics";
 import SpecifyNewWorld from "./SpecifyNewWorld";
 
 export default function CreateWorld(props: {
@@ -10,6 +11,8 @@ export default function CreateWorld(props: {
   if ("SpecifyDescriptor" in viewState) {
     console.log("CreateWorld: SpecifyDescriptor");
     return (<SpecifyNewWorld viewState={viewState.SpecifyDescriptor} />);
+  } else if ("GeneratingWorld" in viewState) {
+    return (<MapGraphics />);
   } else {
     console.error("CreateWorld: invalid viewState", viewState);
     return <></>;
