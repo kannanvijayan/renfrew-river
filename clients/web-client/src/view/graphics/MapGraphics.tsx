@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import HexMesh from "../../graphics/hex_mesh";
 import Graphics from "../../graphics/graphics";
 
 /**
@@ -37,7 +36,7 @@ export default function MapGraphics() {
       canvas.width = scaledWidth;
       canvas.height = scaledHeight;
 
-      Graphics.create(canvas);
+      await Graphics.create(canvas);
     })();
 
     return () => {
