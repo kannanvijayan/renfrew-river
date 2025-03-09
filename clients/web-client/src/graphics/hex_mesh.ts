@@ -33,17 +33,20 @@ export default class HexMesh {
     } = opts;
 
     // Create elevations texture.
-    const elevations = new Uint8Array(worldColumns * worldRows);
+    const elevations = new Float32Array(worldColumns * worldRows * 4);
     for (let i = 0; i < worldColumns * worldRows; i++) {
-      elevations[i] = Math.floor(Math.random() * 256);
+      elevations[4*i] = Math.random();
+      elevations[4*i + 1] = Math.floor(Math.random() * 256);
+      elevations[4*i + 2] = Math.floor(Math.random() * 256);
+      elevations[4*i + 3] = Math.floor(Math.random() * 256);
     }
     const elevationsTexture = PIXI.Texture.fromBuffer(
       elevations,
       worldColumns,
       worldRows,
       {
-        format: PIXI.FORMATS.RED,
-        type: PIXI.TYPES.UNSIGNED_BYTE,
+        format: PIXI.FORMATS.RGBA,
+        type: PIXI.TYPES.FLOAT
       }
     );
     elevationsTexture.baseTexture.addListener(
