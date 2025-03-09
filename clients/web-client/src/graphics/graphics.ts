@@ -10,9 +10,16 @@ export default class Graphics {
     this.canvas = canvas;
     this.pixi = pixi;
     const hexMesh = new HexMesh({
-      screenSize: [canvas.width, canvas.height],
+      columns: 1000,
+      rows: 1000,
+      topLeftWorldColumn: 0,
+      topLeftWorldRow: 0,
+      worldColumns: 1000,
+      worldRows: 1000,
     });
     this.hexMesh = hexMesh;
+    this.hexMesh.mesh.x = 0;
+    this.hexMesh.mesh.y = 0;
     this.pixi.stage.addChild(hexMesh.mesh);
     this.pixi.ticker.add(() => {
       this.pixi.renderer.render(this.pixi.stage);
@@ -21,7 +28,6 @@ export default class Graphics {
 
   public updateSize(width: number, height: number): void {
     this.pixi.renderer.resize(width, height);
-    this.hexMesh.updateSize(width, height);
   }
 
   public static async create(canvas: HTMLCanvasElement): Promise<Graphics> {
@@ -30,7 +36,7 @@ export default class Graphics {
       width: canvas.width,
       height: canvas.height,
       antialias: false,
-      clearBeforeRender: true,
+      clearBeforeRender: false,
     });
     return new Graphics(canvas, pixi);
   }

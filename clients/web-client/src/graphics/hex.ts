@@ -7,10 +7,10 @@ import { CellCoord } from "renfrew-river-protocol-client";
  * and then scale the result to the zoom level.
  */
 export const NORMAL_SCALE_CELL = {
-  width: 1,
-  height: 1,
-  mulWidth: 3 / 4,
-  mulHeight: 1,
+  width: 200,
+  height: 200,
+  mulWidth: 200 * (3 / 4),
+  mulHeight: 200,
 };
 
 export function normalOffsetXForCellBoundingBox(column: number): number {
@@ -96,7 +96,7 @@ export type HexPointNames =
 /**
  * Point coordinates of a hexagon within a unit-1 square.
  */
-export const HEX_COORDS: Record<HexPointNames, PIXI.PointData> = {
+export const HEX_COORDS: Record<HexPointNames, PIXI.IPointData> = {
   topLeft: { x: 0.25, y: 0 },
   topRight: { x: 0.75, y: 0 },
   right: { x: 1, y: 0.5 },
@@ -108,7 +108,7 @@ export const HEX_COORDS: Record<HexPointNames, PIXI.PointData> = {
 /**
  * Points for a hexagon in an array.
  */
-export const HEX_POINTS: PIXI.PointData[] = Object.values(HEX_COORDS);
+export const HEX_POINTS: PIXI.IPointData[] = Object.values(HEX_COORDS);
 
 /**
  * PIXI polygon for a hexagon, scaled by 100
@@ -117,7 +117,7 @@ export const HEX_POLYGON_100: PIXI.Polygon =
   new PIXI.Polygon(HEX_POINTS.map(p => new PIXI.Point(p.x * 100, p.y * 100)));
 
 
-function unitScreenCoordToClipCoord(simpleCoord: PIXI.PointData): PIXI.PointData {
+function unitScreenCoordToClipCoord(simpleCoord: PIXI.IPointData): PIXI.IPointData {
   const { x, y } = simpleCoord;
   return {
     x: (x - 0.5) * NORMAL_SCALE_CELL.width,
@@ -128,7 +128,7 @@ function unitScreenCoordToClipCoord(simpleCoord: PIXI.PointData): PIXI.PointData
 /**
  * Hex points in clip coordinate system.
  */
-export const HEX_POINTS_CLIP_COORDS: Record<HexPointNames, PIXI.PointData> = {
+export const HEX_POINTS_CLIP_COORDS: Record<HexPointNames, PIXI.IPointData> = {
   topLeft: unitScreenCoordToClipCoord(HEX_COORDS.topLeft),
   topRight: unitScreenCoordToClipCoord(HEX_COORDS.topRight),
   right: unitScreenCoordToClipCoord(HEX_COORDS.right),
@@ -137,7 +137,7 @@ export const HEX_POINTS_CLIP_COORDS: Record<HexPointNames, PIXI.PointData> = {
   left: unitScreenCoordToClipCoord(HEX_COORDS.left),
 };
 
-export function pointDataToArray(pointData: PIXI.PointData): number[] {
+export function pointDataToArray(pointData: PIXI.IPointData): number[] {
   return [pointData.x, pointData.y];
 }
 
