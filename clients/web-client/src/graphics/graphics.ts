@@ -29,7 +29,6 @@ export default class Graphics {
       view: canvas,
       width: canvas.width,
       height: canvas.height,
-      antialias: true,
       resolution: window.devicePixelRatio,
     });
     return new Graphics(canvas, pixi);

@@ -28,55 +28,27 @@ function makeTexture(): PIXI.Texture {
   const textureData = new Float32Array(1024 * 1024 * 4);
   for (let i = 0; i < (1024 * 1024); i++) {
     const row = Math.floor(i / 1024);
-    // For the first 10 rows, switch between black and green.
-    if (row < 10 || (row >= (1024 - 10))) {
-      if (row % 2 === 0) {
-        textureData[i * 4 + 0] = 0.0;
-        textureData[i * 4 + 1] = 0.0;
-        textureData[i * 4 + 2] = 0.0;
-        textureData[i * 4 + 3] = 1.0;
-      } else {
-        textureData[i * 4 + 0] = 0.0;
-        textureData[i * 4 + 1] = 1.0;
-        textureData[i * 4 + 2] = 0.0;
-        textureData[i * 4 + 3] = 1.0;
+    if (true) {
+      switch (i % 3) {
+        case 0:
+          textureData[i * 4 + 0] = 1.0;
+          textureData[i * 4 + 1] = 0.0;
+          textureData[i * 4 + 2] = 0.0;
+          textureData[i * 4 + 3] = 1.0;
+          break;
+        case 1:
+          textureData[i * 4 + 0] = 0.0;
+          textureData[i * 4 + 1] = 1.0;
+          textureData[i * 4 + 2] = 0.0;
+          textureData[i * 4 + 3] = 1.0;
+          break;
+        case 2:
+          textureData[i * 4 + 0] = 0.0;
+          textureData[i * 4 + 1] = 0.0;
+          textureData[i * 4 + 2] = 1.0;
+          textureData[i * 4 + 3] = 1.0;
+          break;
       }
-      continue;
-    }
-    // For the first 50 rows, switch between red and yellow.
-    if (row < 50 || (row >= (1024 - 50))) {
-      if (row % 2 === 0) {
-        textureData[i * 4 + 0] = 1.0;
-        textureData[i * 4 + 1] = 0.0;
-        textureData[i * 4 + 2] = 0.0;
-        textureData[i * 4 + 3] = 1.0;
-      } else {
-        textureData[i * 4 + 0] = 1.0;
-        textureData[i * 4 + 1] = 1.0;
-        textureData[i * 4 + 2] = 0.0;
-        textureData[i * 4 + 3] = 1.0;
-      }
-      continue;
-    }
-    switch (i % 3) {
-      case 0:
-        textureData[i * 4 + 0] = 1.0;
-        textureData[i * 4 + 1] = 0.0;
-        textureData[i * 4 + 2] = 0.0;
-        textureData[i * 4 + 3] = 1.0;
-        break;
-      case 1:
-        textureData[i * 4 + 0] = 0.0;
-        textureData[i * 4 + 1] = 1.0;
-        textureData[i * 4 + 2] = 0.0;
-        textureData[i * 4 + 3] = 1.0;
-        break;
-      case 2:
-        textureData[i * 4 + 0] = 0.0;
-        textureData[i * 4 + 1] = 0.0;
-        textureData[i * 4 + 2] = 1.0;
-        textureData[i * 4 + 3] = 1.0;
-        break;
     }
   }
   return PIXI.Texture.fromBuffer(textureData, 1024, 1024, {
@@ -106,7 +78,7 @@ function makeShader(screenSize: [number, number], texMapData: PIXI.Texture)
   console.log("Setting screen size", screenSize);
   return PIXI.Shader.from(VERTEX_SHADER, FRAGMENT_SHADER, {
     uScreenSize: screenSize,
-    uMapCellWidth: 10,
+    uMapCellWidth: 300,
     texMapData,
   });
 }
@@ -133,7 +105,7 @@ const HEXGRID_LIB = `
   const vec2 cNormalScaleCell = vec2(1.0, 1.0);
   const vec2 cNormalScaleMul = vec2(0.75, 1.0);
 
-  const float cEpsilon = 0.0001;
+  const float cEpsilon = 0.00001;
   float isZero(float x) {
     if (abs(x) < cEpsilon) {
       return 1.0;
@@ -148,7 +120,7 @@ const HEXGRID_LIB = `
 
   vec2 hexCellUnderNormalOffset(vec2 normalOffset) {
     float bbCol = floor(normalOffset.x / cNormalScaleMul.x);
-    float oddColumn = fmod(bbCol, 2.0);
+    float oddColumn = floor(fmod(bbCol, 2.0));
     float columnShift = oddColumn * (cNormalScaleCell.y / 2.0);
     float bbRow = floor((normalOffset.y - columnShift) / cNormalScaleMul.y);
     vec2 bb = vec2(bbCol, bbRow);
@@ -169,8 +141,8 @@ const HEXGRID_LIB = `
       }
     } else {
       // Bottom half.
-      if (ratio < slope) {
-        bb = bb - vec2(1.0, oddColumn * -1.0);
+      if (ratio <= slope) {
+        bb = bb + vec2(-1.0, oddColumn);
       }
     }
     return bb;
@@ -190,21 +162,36 @@ const FRAGMENT_SHADER = `
   void main() {
     vec2 normPos = (vPos * uScreenSize) / uMapCellWidth;
     vec2 hexCell = hexCellUnderNormalOffset(normPos);
-    vec2 texCoord = (hexCell * vec2(1.0, -1.0)) + vec2(0.0, 1024.0);
+    vec2 texCoord = (hexCell + vec2(0.5, 0.5));
     vec4 color2 = texture2D(texMapData, texCoord / 1024.0);
-    gl_FragColor = vec4(color2.xyz, 1.0);
+
+    vec4 color3 = vec4(color2.xyz, 1.0);
+    if (hexCell.y < 0.0 || hexCell.x < 0.0) {
+      color3 = vec4(1.0, 1.0, 1.0, 1.0);
+    }
 
     if (vPos.x > 0.5) {
-      vec4 color3;
       if (hexCell.y < 0.0) {
         color3 = vec4(1.0, 1.0, 1.0, 1.0);
       } else if (hexCell.y < 1.0) {
-        color3 = vec4(1.0, 0.0, 0.0, 1.0);
+        color3 = vec4(0.0, 0.5, 0.9, 1.0);
       } else {
         color3 = texture2D(texMapData, vec2(0.5, 0.5) / 1024.0);
       }
-      gl_FragColor = color3;
     }
+    if (vPos.x > 0.75) {
+      if (texCoord.y > 1024.0) {
+        color3 = vec4(1.0, 0.0, 1.0, 1.0);
+      } else if (texCoord.y > 1023.0) {
+        color3 = vec4(0.0, 0.9, 0.6, 1.0);
+      }
+
+      if ((texCoord.y < 1000.0) && (texCoord.y > 999.0)) {
+        color3 = texture2D(texMapData,
+          vec2(texCoord.x, 1023.5) / 1024.0);
+      }
+    } 
+    gl_FragColor = color3;
 
     /*
     float xf = fmod(pos.x, 100.0);
