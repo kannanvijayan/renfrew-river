@@ -1,13 +1,13 @@
 import { Box, Button, Typography } from "@mui/material";
 
+import Application from "../application";
+import RootState from "../state/root";
+import SessionState from "../state/session";
+import ViewState, { ViewMode } from "../state/view";
 import ConnectedViewState from "../state/view/connected_view";
 import { useRootDispatch } from "../store/hooks";
-import Session from "../session/session";
 
 import "./TopBar.css";
-import RootState from "../state/root";
-import ViewState, { ViewMode } from "../state/view";
-import SessionState from "../state/session";
 
 export default function TopBar(props: {
   viewState: ConnectedViewState,
@@ -43,9 +43,9 @@ function ConnectionStatus(props: {
 
   const disconnect = async () => {
     try {
-      Session.shutdownInstance();
+      Application.cleanupInstance();
     } catch (err) {
-      console.error("Failed to disconnect", err);
+      console.error("Failed to cleanup", err);
     } finally {
       dispatch(RootState.action.session(
         SessionState.action.setWsUrl(null)

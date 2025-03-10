@@ -1,4 +1,4 @@
-import GameClient, { WorldDescriptorInput, WorldDescriptorValidation } from "renfrew-river-protocol-client";
+import GameClient, { CellCoord, GenerationCellDatumId, WorldDescriptorInput, WorldDescriptorValidation, WorldDims } from "renfrew-river-protocol-client";
 
 import { BumpTimeout } from "../util/bump_timeout";
 import ConnectedViewState, { ConnectedViewMode } from "../state/view/connected_view";
@@ -54,6 +54,14 @@ export class CreateWorldModule {
       GeneratingWorld: null,
     }));
     return true;
+  }
+
+  public async getMapData(args: {
+    topLeft: CellCoord,
+    dims: WorldDims,
+    datumIds: GenerationCellDatumId[],
+  }): Promise<Uint32Array[]> {
+    return this.client.createWorld.getMapData(args);
   }
 
   public async leave(): Promise<true> {

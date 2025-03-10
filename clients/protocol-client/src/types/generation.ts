@@ -26,7 +26,14 @@ const GenerationCellDatumId = {
       const { word, component } = id.Selector;
       return `Selector:${word}:${component}`;
     }
+  },
+
+  equal(a: GenerationCellDatumId, b: GenerationCellDatumId): boolean {
+    return (
+      GenerationCellDatumId.toStringKey(a)
+        === GenerationCellDatumId.toStringKey(b)
+    );
   }
-}
+};
 
 export { GenerationStepKind, GenerationPhase, GenerationCellDatumId };

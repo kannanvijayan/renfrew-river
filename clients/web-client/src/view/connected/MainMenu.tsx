@@ -4,10 +4,10 @@ import "./MainMenu.css";
 import { useAppDispatch } from "../../store/hooks";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import DefineRulesViewState from "../../state/view/define_rules/define_rules";
-import Session from "../../session/session";
 import SessionState from "../../state/session";
 import { RulesetEntry } from "renfrew-river-protocol-client";
 import CreateWorldViewState from "../../state/view/create_world/create_world";
+import Application from "../../application";
 
 export default function MainMenu(props:{
   sessionState: SessionState,
@@ -58,7 +58,7 @@ function MainMenuTitle() {
 function DefineRulesetButton() {
   const dispatchConnected = useAppDispatch.view.connected();
   const onClick = async () => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     await session.defineRules.enter();
     session.defineRules.view.bumpValidationTimeout();
     dispatchConnected(ConnectedViewState.action.setViewMode(
@@ -98,7 +98,7 @@ function CreateWorldButton(props: {
   const dispatchConnected = useAppDispatch.view.connected();
   const dispatchCreateWorld = useAppDispatch.view.connected.createWorld();
   const onClick = async () => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     await session.createWorld.enter();
     session.createWorld.view.bumpValidationTimeout();
     const worldDescriptor = await session.createWorld.currentDescriptorInput();

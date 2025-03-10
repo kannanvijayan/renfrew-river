@@ -27,7 +27,7 @@ import TerrainGenerationViewState, { TerrainGenerationAction }
 
 import { RootDispatch, RootStore } from "./root";
 import { StateChangeListener, subscribeToChange } from "./subscribe";
-import Session from "../session/session";
+import Application from "../application";
 
 export const useRootDispatch = useDispatch.withTypes<RootDispatch>();
 export const useRootSelector = useSelector.withTypes<RootState>();
@@ -187,7 +187,7 @@ function createWorldWatchDescriptorChange() {
       !("SpecifyDescriptor" in oldCreateWorld) ||
       newDescriptor !== oldCreateWorld.SpecifyDescriptor.descriptor
     ) {
-      const session = Session.getInstance();
+      const session = Application.getInstance().getSession();
       session.createWorld.view.bumpValidationTimeout();
     }
   });

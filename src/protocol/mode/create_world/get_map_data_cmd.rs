@@ -19,14 +19,18 @@ use super::CreateWorldSubcmdEnvelope;
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct GetMapDataCmd {
+  #[serde(rename = "topLeft")]
   pub(crate) top_left: CellCoord,
   pub(crate) dims: WorldDims,
+
+  #[serde(rename = "datumIds")]
   pub(crate) datum_ids: Vec<GenerationCellDatumId>,
 }
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct GetMapDataRsp {
+  #[serde(rename = "topLeft")]
   pub(crate) top_left: CellCoord,
   pub(crate) dims: WorldDims,
   pub(crate) data: Vec<Vec<u32>>,

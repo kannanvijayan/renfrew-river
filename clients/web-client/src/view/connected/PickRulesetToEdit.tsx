@@ -1,8 +1,8 @@
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import { useAppDispatch } from "../../store/hooks";
-import Session from "../../session/session";
 import RulesetPicker from "../common/RulesetPicker";
 import { RulesetEntry } from "renfrew-river-protocol-client";
+import Application from "../../application";
 
 export default function PickRulesetToEdit(props: {
   rulesetList: RulesetEntry[],
@@ -17,7 +17,7 @@ export default function PickRulesetToEdit(props: {
   };
 
   const onRulesetClicked = async (name: string) => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     await session.defineRules.enter();
     await session.defineRules.loadRules(name);
     await session.defineRules.view.syncRecvRulesetInput();

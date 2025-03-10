@@ -53,13 +53,13 @@ type CreateWorldSubcmd = {
   },
   GetMapData: {
     params: {
-      top_left: CellCoord,
+      topLeft: CellCoord,
       dims: WorldDims,
-      datum_ids: GenerationCellDatumId[],
+      datumIds: GenerationCellDatumId[],
     },
     response: {
-      GetMapData: {
-        top_left: CellCoord,
+      MapData: {
+        topLeft: CellCoord,
         dims: WorldDims,
         data: number[][],
       }

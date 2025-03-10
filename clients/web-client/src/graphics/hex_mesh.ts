@@ -9,7 +9,6 @@ import Deferred from '../util/deferred';
 
 export default class HexMesh {
   public readonly elevationsTexture: PIXI.Texture;
-  public readonly animalKindsTexture: PIXI.Texture;
   public readonly mesh: PIXI.Mesh<PIXI.Shader>;
   private dispatchedUpdateListeners: Deferred<void>[];
   private pendingUpdateListeners: Deferred<void>[];
@@ -54,25 +53,6 @@ export default class HexMesh {
       this.handleTextureUpdated.bind(this)
     );
 
-    // Create animal kinds texture.
-    const animalKinds = new Uint8Array(worldColumns * worldRows);
-    for (let i = 0; i < worldColumns * worldRows; i++) {
-      animalKinds[i] = Math.random() < 0.5 ? 1 : 0;
-    }
-    const animalKindsTexture = PIXI.Texture.fromBuffer(
-      animalKinds,
-      worldColumns,
-      worldRows,
-      {
-        format: PIXI.FORMATS.RED,
-        type: PIXI.TYPES.UNSIGNED_BYTE,
-      }
-    );
-    animalKindsTexture.baseTexture.addListener(
-      "update",
-      this.handleTextureUpdated.bind(this)
-    );
-
     const geometry = makeGeometry({ columns, rows });
     const shader = makeShader({
       columns,
@@ -82,11 +62,9 @@ export default class HexMesh {
       topLeftWorldColumn,
       topLeftWorldRow,
       elevationsTexture,
-      animalKindsTexture,
     });
 
     this.elevationsTexture = elevationsTexture;
-    this.animalKindsTexture = animalKindsTexture;
     this.mesh = new PIXI.Mesh(geometry, shader);
     this.dispatchedUpdateListeners = [];
     this.pendingUpdateListeners = [];
@@ -107,7 +85,6 @@ export default class HexMesh {
       this.dispatchedUpdateListeners.push(deferred);
 
       this.elevationsTexture.update();
-      this.animalKindsTexture.update();
     }
     return deferred.getPromise();
   }
@@ -127,7 +104,6 @@ export default class HexMesh {
       // Schedule another update and make the pending listeners the dispatched.
       this.updateInProgress = 2;
       this.elevationsTexture.update();
-      this.animalKindsTexture.update();
       this.dispatchedUpdateListeners = this.pendingUpdateListeners;
       this.pendingUpdateListeners = [];
       // Leave updateInProgress as true.
@@ -269,7 +245,6 @@ function makeShader(opts: {
   topLeftWorldColumn: number,
   topLeftWorldRow: number,
   elevationsTexture: PIXI.Texture,
-  animalKindsTexture: PIXI.Texture,
 }) {
   const {
     columns,
@@ -278,7 +253,6 @@ function makeShader(opts: {
     worldRows,
     topLeftWorldColumn,
     topLeftWorldRow,
-    animalKindsTexture,
     elevationsTexture,
   } = opts;
   const uniforms = {
@@ -289,7 +263,6 @@ function makeShader(opts: {
     topLeftWorldColumn,
     topLeftWorldRow,
     elevationTex: elevationsTexture,
-    animalKindTex: animalKindsTexture,
   };
 
   const adjX = NORMAL_SCALE_CELL.width / 2;
@@ -335,7 +308,6 @@ function makeShader(opts: {
     uniform float worldColumns;
     uniform float worldRows;
     uniform sampler2D elevationTex;
-    uniform sampler2D animalKindTex;
     uniform float topLeftWorldColumn;
     uniform float topLeftWorldRow;
 
@@ -354,11 +326,7 @@ function makeShader(opts: {
       float texY = textureY + adjY;
 
       float elevation = texture2D(elevationTex, vec2(texX, texY)).r;
-      float animalKind = texture2D(animalKindTex, vec2(texX, texY)).r;
-      if (animalKind > 0.0) {
-        // color red
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-      } else if (elevation < 0.5) {
+      if (elevation < 0.5) {
         // color blue, lower elevation is darker blue.
         float xxx = elevation * 1000.0;
         float hundreds = floor(xxx / 100.0);

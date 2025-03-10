@@ -4,10 +4,10 @@ import PerlinEdit from "./PerlinEdit";
 import GeneratorProgramEdit from "./GeneratorProgramEdit";
 import DefineRulesViewState from "../../state/view/define_rules/define_rules";
 import { useAppDispatch, useAppListener } from "../../store/hooks";
-import Session from "../../session/session";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import SecondStageFrame from "../common/SecondStageFrame";
 import { ReactNode } from "react";
+import Application from "../../application";
 
 export default function DefineRules(props: {
   viewState: DefineRulesViewState | null,
@@ -27,14 +27,14 @@ export default function DefineRules(props: {
   useAppListener.view.connected.defineRules((newDefRules, oldDefRules) => {
     if (newDefRules?.terrainGeneration !== oldDefRules?.terrainGeneration) {
       console.log("DefineRulesetMain: new rules");
-      const session = Session.getInstance();
+      const session = Application.getInstance().getSession();
       session.defineRules.view.bumpValidationTimeout();
     }
   });
 
   const dispatchConnected = useAppDispatch.view.connected();
   const onBackClicked = async () => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     await session.defineRules.leave();
     dispatchConnected(ConnectedViewState.action.setViewMode(
       ConnectedViewMode.MAIN_MENU

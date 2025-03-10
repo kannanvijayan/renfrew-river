@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import Graphics from "../../graphics/graphics";
+import Application from "../../application";
 
 /**
  * This component wraps a persistent `Canvas` element which hosts
@@ -15,6 +15,7 @@ export default function MapGraphics() {
     }
 
     const canvas = canvasRef.current;
+    const application = Application.getInstance();
    
     (async () => {
       console.log("Initializing PIXI Application");
@@ -36,7 +37,7 @@ export default function MapGraphics() {
       canvas.width = scaledWidth;
       canvas.height = scaledHeight;
 
-      await Graphics.create(canvas);
+      await application.initGraphics(canvas);
     })();
 
     return () => {

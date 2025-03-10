@@ -4,9 +4,9 @@ import { ReactNode } from "react";
 import { useAppDispatch, useAppListener } from "../../store/hooks";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import CreateWorldViewState, { SpecifyDescriptorViewState } from "../../state/view/create_world/create_world";
-import Session from "../../session/session";
 import { WorldDescriptorValidation } from "renfrew-river-protocol-client";
 import ValidationErrors from "../common/ValidationErrors";
+import Application from "../../application";
 
 export default function SpecifyNewWorld(props: {
   viewState: SpecifyDescriptorViewState
@@ -21,12 +21,12 @@ export default function SpecifyNewWorld(props: {
 
   const dispatchCreateWorld = useAppDispatch.view.connected.createWorld();
   const onCreateClicked = async () => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     await session.createWorld.beginGeneration();
   };
 
   const onBackClicked = () => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     session.createWorld.leave();
   };
 

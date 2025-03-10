@@ -5,9 +5,9 @@ import RootState from "../state/root";
 import SessionState from "../state/session";
 import ViewState, { ViewMode } from "../state/view";
 
-import WsTransport from "./ws_transport";
-import { DefineRulesModule } from "./define_rules";
-import { CreateWorldModule } from "./create_world";
+import WsTransport from "../session/ws_transport";
+import { DefineRulesModule } from "../session/define_rules";
+import { CreateWorldModule } from "../session/create_world";
 import { dispatchApp } from "../store/dispatch";
 import ConnectedViewState, { ConnectedViewMode } from "../state/view/connected_view";
 
@@ -16,9 +16,6 @@ import ConnectedViewState, { ConnectedViewMode } from "../state/view/connected_v
  * to the server.
  */
 export default class Session {
-  private static instance: Session | null = null;
-  private static instancePromise: Promise<Session> | null = null;
-
   public readonly serverAddr: string;
   public readonly client: GameClient;
 
@@ -26,68 +23,32 @@ export default class Session {
   public readonly createWorld: CreateWorldModule;
 
   public static async connectToServer(serverAddr: string): Promise<Session> {
-    const currentSession = Session.maybeGetInstance();
-    if (currentSession) {
-      if (currentSession.serverAddr === serverAddr) {
-        return currentSession;
-      }
-      throw new Error("Session already initialized");
-    }
-
-    if (Session.instancePromise) {
-      return Session.instancePromise;
-    }
-
     const resetViewState = () => {
-      Session.instance = null;
-      Session.instancePromise = null;
       store.dispatch(RootState.action.view(
         ViewState.action.setMode(ViewMode.UNCONNECTED)
       ));
     };
 
-    Session.instancePromise = null;
-    Session.instancePromise = (async () => {
-      const ws = new WebSocket(serverAddr);
-      const transport = new WsTransport(ws);
-      const client = await new Promise<GameClient>(resolve => {
-        const client = new GameClient({
-          transport,
-          callbacks: {
-            onConnect: () => resolve(client),
-            onError: (err) => {
-              console.error("Session: Failed to connect to server", err);
-              resetViewState();
-            },
-            onClose: () => resetViewState(),
+    const ws = new WebSocket(serverAddr);
+    const transport = new WsTransport(ws);
+    const client = await new Promise<GameClient>(resolve => {
+      const client = new GameClient({
+        transport,
+        callbacks: {
+          onConnect: () => resolve(client),
+          onError: (err) => {
+            console.error("Session: Failed to connect to server", err);
+            resetViewState();
           },
-        });
+          onClose: () => resetViewState(),
+        },
       });
-      const inst = await Session.createInstance({ serverAddr, client });
-      await inst.postConnectInitialize();
-      return inst;
-    })();
+    });
+    const inst = new Session({ serverAddr, client });
+    inst.retrieveRulesetList();
+    await inst.postConnectInitialize();
 
-    return Session.instancePromise;
-  }
-
-  public static shutdownInstance() {
-    if (!Session.instance) {
-      throw new Error("Session not initialized");
-    }
-    Session.instance.shutdown();
-    Session.instance = null;
-  }
-
-  public static getInstance(): Session {
-    if (!Session.instance) {
-      throw new Error("Session not initialized");
-    }
-    return Session.instance;
-  }
-
-  public static maybeGetInstance(): Session | null {
-    return Session.instance;
+    return inst;
   }
 
   public gameModeInfo(): Promise<GameModeInfo | null> {
@@ -127,6 +88,11 @@ export default class Session {
     }
   }
 
+  public cleanup(): void {
+    console.log("Cleaning up Session");
+    this.shutdown();
+  }
+
   private constructor(args: {
     serverAddr: string,
     client: GameClient,
@@ -135,19 +101,6 @@ export default class Session {
     this.client = args.client;
     this.defineRules = new DefineRulesModule(this.client);
     this.createWorld = new CreateWorldModule(this.client);
-  }
-
-  private static createInstance(args: {
-    serverAddr: string,
-    client: GameClient,
-  }): Session {
-    const { serverAddr, client } = args;
-    if (Session.instance) {
-      throw new Error("Session already initialized");
-    }
-    Session.instance = new Session({ serverAddr, client });
-    Session.instance.retrieveRulesetList();
-    return Session.instance;
   }
 
   private shutdown() {

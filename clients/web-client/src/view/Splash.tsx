@@ -1,11 +1,11 @@
 import Button from "@mui/material/Button";
 import { Box, Container, Input, Typography } from "@mui/material";
 
-import Session from "../session/session";
 import UnconnectedViewState from "../state/view/unconnected_view";
 import { useAppDispatch } from "../store/hooks";
 
 import "./Splash.css";
+import Application from "../application";
 
 export default function Splash(props: {
   viewState: UnconnectedViewState,
@@ -14,7 +14,9 @@ export default function Splash(props: {
 
   const dispatchUnconnected = useAppDispatch.view.unconnected();
 
-  const connect = () => Session.connectToServer(viewState.wsUrlInput);
+  const connect = () => {
+    return Application.getInstance().initSession(viewState.wsUrlInput);
+  };
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatchUnconnected(

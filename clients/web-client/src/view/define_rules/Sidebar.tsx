@@ -3,11 +3,12 @@ import {
   RulesetValidation,
   TerrainGenValidation,
 } from "renfrew-river-protocol-client";
-import { useAppDispatch } from "../../store/hooks";
-import DefineRulesViewState from "../../state/view/define_rules/define_rules";
+
+import Application from "../../application";
 import ValidationErrors from "../common/ValidationErrors";
-import Session from "../../session/session";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
+import DefineRulesViewState from "../../state/view/define_rules/define_rules";
+import { useAppDispatch } from "../../store/hooks";
 
 export default function Sidebar(props: {
   viewState: DefineRulesViewState,
@@ -38,13 +39,13 @@ function NameAndDescription(props: {
   const dispatchDefineRules = useAppDispatch.view.connected.defRules();
 
   const onNameChange = (value: string) => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     dispatchDefineRules(DefineRulesViewState.action.setName(value));
     session.defineRules.view.bumpValidationTimeout();
   };
 
   const onDescriptionChange = (value: string) => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     dispatchDefineRules(DefineRulesViewState.action.setDescription(value));
     session.defineRules.view.bumpValidationTimeout();
   }
@@ -292,7 +293,7 @@ function CreateButton(props: {
   const dispatchConnected = useAppDispatch.view.connected();
 
   const onClick = async () => {
-    const session = Session.getInstance();
+    const session = Application.getInstance().getSession();
     try {
       await session.defineRules.saveRules();
       await session.retrieveRulesetList();

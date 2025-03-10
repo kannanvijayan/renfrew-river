@@ -46,11 +46,11 @@ export default class WorldMapTiledData {
   private invalidationListeners: (() => void)[];
 
   constructor(opts: {
-    readMapDataCallback: ReadMapDataCallback,
+    readMapData: ReadMapDataCallback,
     worldDims: WorldDims,
   }) {
-    const { readMapDataCallback, worldDims } = opts;
-    this.readMapDataCallback = readMapDataCallback;
+    const { readMapData, worldDims } = opts;
+    this.readMapDataCallback = readMapData;
     this.worldDims = worldDims;
     this.mapDataSet = new MapDataSet(this.worldDims);
 
@@ -353,8 +353,11 @@ export default class WorldMapTiledData {
     }
 
     for (const [datumId, updateData] of mapDataUpdates) {
-      const dataMap = this.mapDataSet.getDataMap(datumId);
-      dataMap.write2D({ topLeft, dims, data: updateData });
+      this.mapDataSet.writeDataMap({
+        datumId,
+        topLeft,
+        data: updateData,
+      });
     }
 
     this.tileLoadStates[tileIndex] = "Loaded";
