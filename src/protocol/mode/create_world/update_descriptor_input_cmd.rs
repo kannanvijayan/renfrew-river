@@ -6,8 +6,10 @@ use crate::{
     response::ResponseEnvelope,
   },
   world::{
+    WorldDescriptor,
     WorldDescriptorInput,
     WorldDescriptorValidation,
+    WorldDims,
     WorldDimsInput,
     WorldDimsValidation
   },
@@ -23,7 +25,7 @@ pub(crate) struct UpdateDescriptorInputCmd {
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) enum UpdateDescriptorInputRsp {
-  Ok {},
+  Valid(WorldDescriptor),
   Invalid(WorldDescriptorValidation),
 }
 impl Command for UpdateDescriptorInputCmd {
@@ -41,8 +43,8 @@ impl Command for UpdateDescriptorInputCmd {
   }
   fn embed_response(response: Self::Response) -> ResponseEnvelope {
     let subcmd_response = match response {
-      UpdateDescriptorInputRsp::Ok {} =>
-        CreateWorldSubcmdResponse::Ok {},
+      UpdateDescriptorInputRsp::Valid(descriptor) =>
+        CreateWorldSubcmdResponse::ValidWorldDescriptor(descriptor),
       UpdateDescriptorInputRsp::Invalid(validation) =>
         CreateWorldSubcmdResponse::InvalidWorldDescriptor(validation),
     };
@@ -64,7 +66,13 @@ impl Command for UpdateDescriptorInputCmd {
     };
 
     let update_descriptor_input_ok_response_example =
-      UpdateDescriptorInputRsp::Ok {};
+      UpdateDescriptorInputRsp::Valid(WorldDescriptor {
+        name: "My World".to_string(),
+        description: "My world description".to_string(),
+        seed: "12345".to_string(),
+        dims: WorldDims::new(1000, 1000),
+        ruleset_name: "Example Ruleset".to_string(),
+      });
     
     let update_descriptor_input_err_response_example =
       UpdateDescriptorInputRsp::Invalid(WorldDescriptorValidation {

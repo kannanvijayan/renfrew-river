@@ -1,7 +1,7 @@
 import GameClientModule from "./module";
 import SubcmdSender from "./subcmd_sender";
 import CreateWorldSubcmd from "../protocol/commands/create_world_subcmd";
-import { WorldDescriptorInput, WorldDescriptorValidation }
+import WorldDescriptor, { WorldDescriptorInput, WorldDescriptorValidation }
   from "../types/world_descriptor";
 import { CellCoord, GenerationCellDatumId, GenerationStepKind, WorldDims } from "../lib";
 
@@ -30,13 +30,11 @@ export class GameClientCreateWorldModule
 
   public async updateDescriptorInput(
     descriptor: WorldDescriptorInput
-  ): Promise<true|WorldDescriptorValidation> {
-    const response = await this.sendSubcmd("UpdateDescriptorInput", { descriptor });
-    if ("Ok" in response) {
-      return true;
-    } else {
-      return response.InvalidWorldDescriptor;
-    }
+  ): Promise<
+    | { Valid: WorldDescriptor }
+    | { Invalid: WorldDescriptorValidation }
+  > {
+    return await this.sendSubcmd("UpdateDescriptorInput", { descriptor });
   }
 
   public async takeGenerationStep(kind: GenerationStepKind): Promise<true> {

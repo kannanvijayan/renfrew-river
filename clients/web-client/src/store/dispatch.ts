@@ -2,7 +2,9 @@
 import RootState, { RootAction } from "../state/root";
 import ViewState, { ViewAction } from "../state/view";
 import ConnectedViewState, { ConnectedViewAction } from "../state/view/connected_view";
-import { CreateWorldAction } from "../state/view/create_world/create_world";
+import CreateWorldViewState, { CreateWorldAction } from "../state/view/create_world/create_world";
+import { GeneratingWorldAction } from "../state/view/create_world/generating_world";
+import { SpecifyDescriptorAction } from "../state/view/create_world/specify_descriptor";
 import { DefineRulesAction } from "../state/view/define_rules/define_rules";
 import { UnconnectedViewAction } from "../state/view/unconnected_view";
 import { functionObject } from "../util/function_object";
@@ -44,12 +46,31 @@ function dispatchCreateWorldView(
   );
 }
 
+function dispatchSpecifyDescriptorView(
+  specifyDescriptorAction: SpecifyDescriptorAction
+) {
+  dispatchCreateWorldView(
+    CreateWorldViewState.action.specifyDescriptor(specifyDescriptorAction)
+  );
+}
+
+function dispatchGeneratingWorldView(
+  generatingWorldAction: GeneratingWorldAction
+) {
+  dispatchCreateWorldView(
+    CreateWorldViewState.action.generatingWorld(generatingWorldAction)
+  );
+}
+
 export const dispatchApp = functionObject(dispatchRoot, {
   view: functionObject(dispatchView, {
     unconnected: dispatchUnconnectedView,
     connected: functionObject(dispatchConnectedView, {
       defineRules: dispatchDefineRulesView,
-      createWorld: dispatchCreateWorldView,
+      createWorld: functionObject(dispatchCreateWorldView, {
+        specifyDescriptor: dispatchSpecifyDescriptorView,
+        generatingWorld: dispatchGeneratingWorldView,
+      }),
     }),
   }),
 });

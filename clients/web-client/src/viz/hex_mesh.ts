@@ -6,8 +6,11 @@ import {
   normalOffsetYForCellBoundingBox
 } from './hex';
 import Deferred from '../util/deferred';
+import WorldMapTiledData from '../simulation/map/world_map_tiled_data';
 
 export default class HexMesh {
+  private readonly mapData: WorldMapTiledData;
+
   public readonly elevationsTexture: PIXI.Texture;
   public readonly mesh: PIXI.Mesh<PIXI.Shader>;
   private dispatchedUpdateListeners: Deferred<void>[];
@@ -15,6 +18,7 @@ export default class HexMesh {
   private updateInProgress: number;
 
   public constructor(opts: {
+    mapData: WorldMapTiledData,
     columns: number,
     rows: number,
     worldColumns: number,
@@ -23,6 +27,7 @@ export default class HexMesh {
     topLeftWorldRow: number,
   }) {
     const {
+      mapData,
       columns,
       rows,
       worldColumns,
@@ -30,6 +35,8 @@ export default class HexMesh {
       topLeftWorldColumn,
       topLeftWorldRow,
     } = opts;
+
+    this.mapData = mapData;
 
     // Create elevations texture.
     const elevations = new Float32Array(worldColumns * worldRows * 4);

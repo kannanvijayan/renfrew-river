@@ -7,6 +7,7 @@ import DefineRulesViewState from "../../state/view/define_rules/define_rules";
 import SessionState from "../../state/session";
 import { RulesetEntry } from "renfrew-river-protocol-client";
 import CreateWorldViewState from "../../state/view/create_world/create_world";
+import SpecifyDescriptorViewState from "../../state/view/create_world/specify_descriptor";
 import Application from "../../application";
 
 export default function MainMenu(props:{
@@ -96,7 +97,8 @@ function CreateWorldButton(props: {
   const { rulesets } = props;
   const disabled = rulesets.length === 0;
   const dispatchConnected = useAppDispatch.view.connected();
-  const dispatchCreateWorld = useAppDispatch.view.connected.createWorld();
+  const dispatchSpecifyDescriptor =
+    useAppDispatch.view.connected.createWorld.specifyDescriptor();
   const onClick = async () => {
     const session = Application.getInstance().getSession();
     await session.createWorld.enter();
@@ -105,7 +107,9 @@ function CreateWorldButton(props: {
     dispatchConnected(ConnectedViewState.action.setCreateWorld(
       CreateWorldViewState.initialState
     ));
-    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor(worldDescriptor));
+    dispatchSpecifyDescriptor(
+      SpecifyDescriptorViewState.action.setDescriptor(worldDescriptor)
+    );
     dispatchConnected(ConnectedViewState.action.setViewMode(
       ConnectedViewMode.CREATE_WORLD
     ));

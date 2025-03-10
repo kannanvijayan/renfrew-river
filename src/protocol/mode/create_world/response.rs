@@ -1,4 +1,8 @@
-use crate::world::{WorldDescriptorInput, WorldDescriptorValidation};
+use crate::world::{
+  WorldDescriptor,
+  WorldDescriptorInput,
+  WorldDescriptorValidation,
+};
 use super::{
   current_descriptor_input_cmd::CurrentDescriptorInputRsp,
   current_generation_phase_cmd::CurrentGenerationPhaseRsp,
@@ -10,6 +14,7 @@ use super::{
 pub(crate) enum CreateWorldSubcmdResponse {
   Ok {},
   BeganNewWorld(WorldDescriptorInput),
+  ValidWorldDescriptor(WorldDescriptor),
   InvalidWorldDescriptor(WorldDescriptorValidation),
   CurrentDescriptorInput(CurrentDescriptorInputRsp),
   Failed(Vec<String>),

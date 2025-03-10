@@ -8,7 +8,7 @@ import MapData from "./map/map_data";
  */
 export default class Simulation {
   public readonly descriptor: WorldDescriptor;
-  private readonly mapData: WorldMapTiledData;
+  public readonly mapData: WorldMapTiledData;
 
   public constructor(args: {
     descriptor: WorldDescriptor,

@@ -1,5 +1,5 @@
 import { WorldDescriptor } from "renfrew-river-protocol-client";
-import Graphics from "./graphics/graphics";
+import Viz from "./viz/viz";
 import Session from "./session/session";
 import Simulation from "./simulation/simulation";
 
@@ -16,7 +16,7 @@ export default class Application {
 
   // Represents the current game rendering context.
   // GPU-memory rendering state is managed here.
-  private graphics: Graphics | null =  null;
+  private viz: Viz | null =  null;
 
   public async initSession(serverAddr: string): Promise<Session> {
     if (this.session && this.session.serverAddr !== serverAddr) {
@@ -29,27 +29,35 @@ export default class Application {
     return this.session;
   }
 
-  public async initGraphics(canvas: HTMLCanvasElement): Promise<Graphics> {
-    if (this.graphics) {
-      this.graphics.reset(canvas);
-    }
-    if (!this.graphics) {
-      this.graphics = Graphics.create(canvas);
-    }
-    return this.graphics;
-  }
-
   public async initSimulation(descriptor: WorldDescriptor): Promise<Simulation> {
+    if (!this.session) {
+      throw new Error("Session must be initialized before simulation");
+    }
+
     // Can just set to null to free old data.
     if (this.simulation) {
       this.simulation = null;
     }
-    if (!this.session) {
-      throw new Error("Session not initialized");
-    }
     const session = this.session;
     this.simulation = new Simulation({ descriptor, session });
     return this.simulation;
+  }
+
+  public async initViz(canvas: HTMLCanvasElement): Promise<Viz> {
+    if (!this.session) {
+      throw new Error("Session must be initialized before viz");
+    }
+    if (!this.simulation) {
+      throw new Error("Simulation must be initialized before viz");
+    }
+
+    if (this.viz) {
+      this.viz.reset(canvas);
+    }
+    if (!this.viz) {
+      this.viz = Viz.create(canvas, this.simulation);
+    }
+    return this.viz;
   }
 
   public getSession(): Session {
@@ -59,11 +67,11 @@ export default class Application {
     return this.session;
   }
 
-  public getGraphics(): Graphics {
-    if (!this.graphics) {
-      throw new Error("Graphics not initialized");
+  public getViz(): Viz {
+    if (!this.viz) {
+      throw new Error("Viz not initialized");
     }
-    return this.graphics;
+    return this.viz;
   }
 
   private constructor() {
@@ -75,9 +83,9 @@ export default class Application {
   }
 
   private cleanup(): void {
-    if (this.graphics) {
-      this.graphics.cleanup();
-      this.graphics = null;
+    if (this.viz) {
+      this.viz.cleanup();
+      this.viz = null;
     }
     if (this.session) {
       this.session.cleanup();

@@ -28,6 +28,8 @@ import TerrainGenerationViewState, { TerrainGenerationAction }
 import { RootDispatch, RootStore } from "./root";
 import { StateChangeListener, subscribeToChange } from "./subscribe";
 import Application from "../application";
+import { SpecifyDescriptorAction } from "../state/view/create_world/specify_descriptor";
+import { GeneratingWorldAction } from "../state/view/create_world/generating_world";
 
 export const useRootDispatch = useDispatch.withTypes<RootDispatch>();
 export const useRootSelector = useSelector.withTypes<RootState>();
@@ -63,15 +65,6 @@ function useDefineRulesViewDispatch() {
   }
 }
 
-function useCreateWorldViewDispatch() {
-  const connectedViewDispatch = useConnectedViewDispatch();
-  return (createWorldAction: CreateWorldAction) => {
-    connectedViewDispatch(
-      ConnectedViewState.action.createWorld(createWorldAction)
-    );
-  }
-}
-
 function useDefineRulesTerrainGenerationDispatch() {
   const defRulesViewDispatch = useDefineRulesViewDispatch();
   return (terrainGenerationAction: TerrainGenerationAction) => {
@@ -99,6 +92,33 @@ function useDefineRulesGeneratorProgramDispatch() {
   }
 }
 
+function useCreateWorldViewDispatch() {
+  const connectedViewDispatch = useConnectedViewDispatch();
+  return (createWorldAction: CreateWorldAction) => {
+    connectedViewDispatch(
+      ConnectedViewState.action.createWorld(createWorldAction)
+    );
+  }
+}
+
+function useSpecifyDescriptorDispatch() {
+  const createWorldViewDispatch = useCreateWorldViewDispatch();
+  return (specifyDescriptorAction: SpecifyDescriptorAction) => {
+    createWorldViewDispatch(
+      CreateWorldViewState.action.specifyDescriptor(specifyDescriptorAction)
+    );
+  }
+}
+
+function useGeneratingWorldDispatch() {
+  const createWorldViewDispatch = useCreateWorldViewDispatch();
+  return (generatingWorldAction: GeneratingWorldAction) => {
+    createWorldViewDispatch(
+      CreateWorldViewState.action.generatingWorld(generatingWorldAction)
+    );
+  }
+}
+
 export const useAppDispatch = functionObject(useRootDispatch, {
   view: functionObject(useViewDispatch, {
     unconnected: useUnconnectedViewDispatch,
@@ -109,7 +129,10 @@ export const useAppDispatch = functionObject(useRootDispatch, {
           generatorProgram: useDefineRulesGeneratorProgramDispatch,
         }),
       }),
-      createWorld: useCreateWorldViewDispatch,
+      createWorld: functionObject(useCreateWorldViewDispatch, {
+        specifyDescriptor: useSpecifyDescriptorDispatch,
+        generatingWorld: useGeneratingWorldDispatch,
+      }),
     }),
   }),
 });

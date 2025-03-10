@@ -3,7 +3,7 @@ import SecondStageFrame from "../common/SecondStageFrame";
 import { ReactNode } from "react";
 import { useAppDispatch, useAppListener } from "../../store/hooks";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
-import CreateWorldViewState, { SpecifyDescriptorViewState } from "../../state/view/create_world/create_world";
+import SpecifyDescriptorViewState from "../../state/view/create_world/specify_descriptor";
 import { WorldDescriptorValidation } from "renfrew-river-protocol-client";
 import ValidationErrors from "../common/ValidationErrors";
 import Application from "../../application";
@@ -16,13 +16,19 @@ export default function SpecifyNewWorld(props: {
   const { name, description, seed, dims, rulesetName } = descriptor;
 
   const validation = viewState.validation;
+  const validatedDescriptor = viewState.validatedDescriptor;
 
   useAppListener.view.connected.createWorld.watchDescriptorChange();
 
-  const dispatchCreateWorld = useAppDispatch.view.connected.createWorld();
+  const dispatchSpecifyDescriptor = 
+    useAppDispatch.view.connected.createWorld.specifyDescriptor();
   const onCreateClicked = async () => {
     const session = Application.getInstance().getSession();
-    await session.createWorld.beginGeneration();
+    if (!validatedDescriptor) {
+      console.error("SpecifyNewWorld: validatedDescriptor is null");
+      return;
+    }
+    await session.createWorld.beginGeneration(validatedDescriptor);
   };
 
   const onBackClicked = () => {
@@ -31,31 +37,31 @@ export default function SpecifyNewWorld(props: {
   };
 
   const onNameChange = (value: string) => {
-    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor({
+    dispatchSpecifyDescriptor(SpecifyDescriptorViewState.action.setDescriptor({
       ...descriptor,
       name: value,
     }));
   };
   const onDescriptionChange = (value: string) => {
-    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor({
+    dispatchSpecifyDescriptor(SpecifyDescriptorViewState.action.setDescriptor({
       ...descriptor,
       description: value,
     }));
   };
   const onSeedChange = (value: string) => {
-    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor({
+    dispatchSpecifyDescriptor(SpecifyDescriptorViewState.action.setDescriptor({
       ...descriptor,
       seed: value,
     }));
   };
   const onWidthChange = (value: string) => {
-    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor({
+    dispatchSpecifyDescriptor(SpecifyDescriptorViewState.action.setDescriptor({
       ...descriptor,
       dims: { ...dims, columns: value },
     }));
   };
   const onHeightChange = (value: string) => {
-    dispatchCreateWorld(CreateWorldViewState.action.setDescriptor({
+    dispatchSpecifyDescriptor(SpecifyDescriptorViewState.action.setDescriptor({
       ...descriptor,
       dims: { ...dims, rows: value },
     }));

@@ -3,6 +3,7 @@ import {
   GenerationCellDatumId,
   GenerationPhase,
   GenerationStepKind,
+  WorldDescriptor,
   WorldDescriptorInput,
   WorldDescriptorValidation,
   WorldDims,
@@ -23,8 +24,8 @@ type CreateWorldSubcmd = {
       descriptor: WorldDescriptorInput,
     },
     response: {
-      Ok: {},
-      InvalidWorldDescriptor: WorldDescriptorValidation,
+      Valid: WorldDescriptor,
+      Invalid: WorldDescriptorValidation,
     },
   },
   BeginGeneration: {

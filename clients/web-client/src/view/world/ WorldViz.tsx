@@ -1,12 +1,17 @@
 import { useEffect, useRef } from "react";
 import Application from "../../application";
+import { WorldDescriptor } from "renfrew-river-protocol-client";
 
 /**
  * This component wraps a persistent `Canvas` element which hosts
  * a PIXI.js `Application` instance. The `Application` instance
  * is used to render the game map.
  */
-export default function MapGraphics() {
+export default function WorldViz(args: {
+  worldDescriptor: WorldDescriptor,
+}) {
+  const { worldDescriptor } = args;
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -37,7 +42,8 @@ export default function MapGraphics() {
       canvas.width = scaledWidth;
       canvas.height = scaledHeight;
 
-      await application.initGraphics(canvas);
+      application.initSimulation(worldDescriptor);
+      await application.initViz(canvas);
     })();
 
     return () => {
