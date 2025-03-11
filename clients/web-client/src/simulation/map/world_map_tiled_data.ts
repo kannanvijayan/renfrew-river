@@ -345,6 +345,10 @@ export default class WorldMapTiledData {
     };
     const mapDataUpdates = await this.readMapData(topLeft, dims);
     console.warn("KVKV performTileLoad got map data updates");
+    if (mapDataUpdates.length === 0) {
+      this.tileLoadStates[tileIndex] = "Loaded";
+      return "updated";
+    }
 
     // If the generation has changed since the request was made, then
     // the data is stale and we should not write it.
@@ -369,6 +373,9 @@ export default class WorldMapTiledData {
     : Promise<[GenerationCellDatumId, MapData][]>
   {
     const datumIds = this.mapDataSet.getObservedDatumIds();
+    if (datumIds.length === 0) {
+      return [];
+    }
     const result = await this.readMapDataCallback({ topLeft, dims, datumIds });
     return result.map((mapData, i) => [datumIds[i], mapData]);
   }

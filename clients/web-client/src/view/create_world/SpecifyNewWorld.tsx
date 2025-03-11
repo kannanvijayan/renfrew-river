@@ -4,7 +4,6 @@ import { ReactNode } from "react";
 import { useAppDispatch, useAppListener } from "../../store/hooks";
 import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
 import SpecifyDescriptorViewState from "../../state/view/create_world/specify_descriptor";
-import { WorldDescriptorValidation } from "renfrew-river-protocol-client";
 import ValidationErrors from "../common/ValidationErrors";
 import Application from "../../application";
 
@@ -67,8 +66,7 @@ export default function SpecifyNewWorld(props: {
     }));
   };
 
-  const isValid =
-    validation ? WorldDescriptorValidation.isValid(validation) : true;
+  const isValid = !!validatedDescriptor;
 
   return (
     <SecondStageFrame title="Create World" onBackClicked={onBackClicked}

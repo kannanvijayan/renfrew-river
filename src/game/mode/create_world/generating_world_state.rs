@@ -2,21 +2,17 @@ use crate::{
   cog::{ CogDevice, CogTask },
   data_store,
   gpu::{
-    task::create_world::RandGenTask,
+    task::create_world::{ RandGenTask, ReadMapDataTask },
     CellDataBuffer,
     ProgramBuffer,
     ShaderRegistry,
   },
   protocol::mode::create_world::{
-    CreateWorldSubcmdResponse,
-    CurrentGenerationPhaseCmd,
-    CurrentGenerationPhaseRsp,
-    GetMapDataCmd,
-    TakeGenerationStepCmd,
+    CreateWorldSubcmdResponse, CurrentGenerationPhaseCmd, CurrentGenerationPhaseRsp, GetMapDataCmd, GetMapDataRsp, TakeGenerationStepCmd
   },
-  ruleset::Ruleset,
+  ruleset::{FormatComponentSelector, Ruleset},
   shady_vm::{ ShadyProgram, ShadyProgramIndex, ShasmProgram },
-  world::{ GenerationPhase, GenerationStepKind, WorldDescriptor }
+  world::{ GenerationCellDatumId, GenerationPhase, GenerationStepKind, WorldDescriptor }
 };
 
 pub(crate) struct GeneratingWorldState {
@@ -69,10 +65,107 @@ impl GeneratingWorldState {
   }
 
   pub(crate) fn handle_get_map_data_cmd(&self,
-    _cmd: GetMapDataCmd,
+    cmd: GetMapDataCmd,
     _data_store: &data_store::DataStore
   ) -> CreateWorldSubcmdResponse {
-    panic!("TODO: Implement GeneratingWorldState::handle_get_map_data_cmd");
+    if cmd.datum_ids.len() == 0 {
+      return CreateWorldSubcmdResponse::Failed(vec![
+        "No datum ids provided".to_string(),
+      ]);
+    }
+    if cmd.datum_ids.len() > 4 {
+      return CreateWorldSubcmdResponse::Failed(vec![
+        "Too many datum ids".to_string(),
+      ]);
+    }
+
+    let mut selectors: Vec<FormatComponentSelector> = Vec::new();
+    for datum_id in &cmd.datum_ids {
+      match self.make_selector_for_datum_id(datum_id) {
+        Ok(sel) => selectors.push(sel),
+        Err(err) => { return CreateWorldSubcmdResponse::Failed(err); }
+      }
+    }
+
+    if ! self.descriptor.dims.contains_coord(cmd.top_left) {
+      return CreateWorldSubcmdResponse::Failed(vec![
+        "Top left coordinate is out of bounds".to_string(),
+      ]);
+    }
+
+    let br = cmd.dims.bottom_right_inclusive(cmd.top_left);
+    if ! self.descriptor.dims.contains_coord(br) {
+      return CreateWorldSubcmdResponse::Failed(vec![
+        "Bottom right coordinate is out of bounds".to_string(),
+      ]);
+    }
+
+    // Create the output buffer.
+    let output_buffer = self.device.create_seq_buffer::<u32>(
+      cmd.dims.area() as usize  * selectors.len(),
+      "GetMapData_Output"
+    );
+
+    // Run the command.
+    let read_map_data_task = ReadMapDataTask::new(
+      self.descriptor.dims,
+      cmd.top_left,
+      cmd.dims,
+      selectors.clone(),
+      self.cell_data_buffer.clone(),
+      output_buffer.clone()
+    );
+    self.device.encode_and_run("CreateWorld_ReadMapData", |enc| {
+      read_map_data_task.encode(enc);
+    });
+
+    // Read the result from the output buffer.
+    let mut result_vecs: Vec<Vec<u32>> = Vec::new();
+    output_buffer.read_mapped_full(|data| {
+      for sel_i in 0 .. selectors.len() {
+        let subvec = &mut result_vecs[sel_i];
+        for entry_i in 0 .. cmd.dims.area() as usize {
+          let value = data[entry_i * selectors.len() + sel_i];
+          subvec.push(value);
+        }
+      }
+    });
+
+    CreateWorldSubcmdResponse::MapData(GetMapDataRsp {
+      top_left: cmd.top_left,
+      dims: cmd.dims,
+      data: result_vecs,
+    })
+  }
+
+  fn make_selector_for_datum_id(&self,
+    datum_id: &GenerationCellDatumId,
+  ) -> Result<FormatComponentSelector, Vec<String>> {
+    match datum_id {
+      GenerationCellDatumId::RandGen {} => {
+        if ! matches!(self.phase, GenerationPhase::PreInitialize) {
+          return Err(vec![
+            "RandGen datum id is only valid in PreInitialize phase".to_string(),
+          ]);
+        }
+        Ok(FormatComponentSelector::new(0, 0, 32))
+      },
+      GenerationCellDatumId::Selector(sel) => {
+        if ! matches!(self.phase, GenerationPhase::CellInitialized) {
+          return Err(vec![
+            "Selector datum id is only valid in CellInitialized phase".to_string(),
+            format!("{:?}", sel)
+          ]);
+        }
+        sel.format_selector(&self.ruleset.terrain_gen.stage.format).map_or_else(
+          || Err(vec![
+            "Invalid selector".to_string(),
+            format!("{:?}", sel)
+          ]),
+          |selector| Ok(selector)
+        )
+      },
+    }
   }
 
   fn step_rand_gen(&mut self) -> CreateWorldSubcmdResponse {

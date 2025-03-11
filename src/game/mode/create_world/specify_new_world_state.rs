@@ -36,7 +36,8 @@ impl SpecifyNewWorldState {
   ) -> CreateWorldSubcmdResponse {
     self.descriptor_input = update_descriptor_input_cmd.descriptor;
     match self.validate_current(data_store) {
-      Ok(_) => CreateWorldSubcmdResponse::Ok {},
+      Ok(descriptor) =>
+        CreateWorldSubcmdResponse::ValidWorldDescriptor(descriptor),
       Err(validation) =>
         CreateWorldSubcmdResponse::InvalidWorldDescriptor(validation)
     }

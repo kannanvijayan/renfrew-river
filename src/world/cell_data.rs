@@ -1,5 +1,5 @@
 use serde;
-use crate::cog::CogBufferType;
+use crate::{cog::CogBufferType, ruleset::{FormatComponentSelector, FormatRules}};
 
 pub(crate) const CELL_DATA_NUM_WORDS: usize = 8;
 pub(crate) type CellDataWords = [u32; CELL_DATA_NUM_WORDS];
@@ -15,6 +15,8 @@ pub(crate) struct CellData {
   pub(crate) words: CellDataWords,
 }
 impl CellData {
+  pub(crate) const NUM_WORDS: u32 = CELL_DATA_NUM_WORDS as u32;
+
   pub(crate) const fn new(words: CellDataWords) -> CellData {
     CellData { words }
   }
@@ -42,25 +44,18 @@ impl From<CellDataWords> for CellData {
 }
 
 /**
- * Identifies a cell word.
- */
-#[derive(Clone, Debug)]
-#[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct CellWordName(pub(crate) String);
-
-/**
- * Identifies a cell word component.
- */
-#[derive(Clone, Debug)]
-#[derive(serde::Serialize, serde::Deserialize)]
-pub(crate) struct CellComponentName(pub(crate) String);
-
-/**
  * A selector for a cell component.
  */
 #[derive(Clone, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub(crate) struct CellComponentSelector {
-  pub(crate) word: CellWordName,
-  pub(crate) component: CellComponentName,
+  pub(crate) word: String,
+  pub(crate) component: String,
+}
+impl CellComponentSelector {
+  pub(crate) fn format_selector(&self, format_rules: &FormatRules)
+    -> Option<FormatComponentSelector>
+  {
+    format_rules.selector_for(&self.word, &self.component)
+  }
 }

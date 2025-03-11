@@ -1,5 +1,5 @@
 import CreateWorldViewState from "../../state/view/create_world/create_world";
-import WorldViz from "../world/ WorldViz";
+import WorldViz from "../world/WorldViz";
 import SpecifyNewWorld from "./SpecifyNewWorld";
 
 export default function CreateWorld(props: {

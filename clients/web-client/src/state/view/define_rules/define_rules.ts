@@ -261,6 +261,9 @@ type SetValidationAction = {
   validation: RulesetValidation | null,
 };
 
+type DefineRulesDispatchTargets =
+  | "terrain_generation";
+
 type TargetedDefineRulesAction<T extends DefineRulesDispatchTargets> = {
   type: "dispatch",
   target: T,
@@ -271,9 +274,6 @@ type TargetedDefineRulesAction<T extends DefineRulesDispatchTargets> = {
 
 type TerrainGenerationDispatchAction =
   TargetedDefineRulesAction<"terrain_generation">;
-
-type DefineRulesDispatchTargets =
-  | "terrain_generation";
 
 type DefineRulesAction =
   | SetCategoryAction

@@ -59,7 +59,24 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
     unsafe { &*(self as *const CogSeqBuffer<T> as *const CogSeqBuffer<U>) }
   }
 
-  fn read_mapped<R, F>(&self, index: usize, len: usize, func: F) -> R
+  /**
+   * Cast this buffer to a buffer over a different type that may be a
+   * a different size.  This returns a new buffer since it needs a new
+   * length.
+   */
+  pub(crate) fn cast_resized<U: CogBufferType>(&self) -> CogSeqBuffer<U> {
+    let byte_len = self.len * mem::size_of::<T::GpuType>();
+    let new_len = byte_len / mem::size_of::<U::GpuType>();
+    CogSeqBuffer::<U>::new(self.base.clone(), new_len)
+  }
+
+  pub(crate) fn read_mapped_full<R, F>(&self, func: F) -> R
+    where F: FnOnce(&[T::GpuType]) -> R
+  {
+    self.read_mapped(0, self.len, func)
+  }
+
+  pub(crate) fn read_mapped<R, F>(&self, index: usize, len: usize, func: F) -> R
     where F: FnOnce(&[T::GpuType]) -> R
   {
     assert!(index + len <= self.len);

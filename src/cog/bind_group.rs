@@ -76,6 +76,7 @@ impl CogBindGroupBuilder {
   }
 
   pub(crate) fn add_uniform_buffer(self, buffer: &CogBufferBase) -> Self {
+    eprintln!("KVKV add_uniform_buffer size={}", buffer.wgpu_buffer().size());
     self.add_buffer(buffer, 0, buffer.wgpu_buffer().size())
   }
 

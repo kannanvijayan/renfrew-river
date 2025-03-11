@@ -37,6 +37,25 @@ impl FormatRules {
       .map(|wf| wf.to_input()).collect();
     FormatInput { word_formats }
   }
+
+  pub(crate) fn selector_for(&self, word_name: &str, component_name: &str)
+    -> Option<FormatComponentSelector>
+  {
+    for (word_index, word) in self.word_formats.iter().enumerate() {
+      if word.name == word_name {
+        for component in &word.components {
+          if component.name == component_name {
+            return Some(FormatComponentSelector {
+              word: word_index as u8,
+              offset: component.offset,
+              count: component.bits,
+            });
+          }
+        }
+      }
+    }
+    None
+  }
 }
 
 /**
@@ -353,5 +372,47 @@ impl FormatComponentValidation {
       && self.name.is_empty()
       && self.offset.is_empty()
       && self.bits.is_empty()
+  }
+}
+
+/**
+ * A component selector for a word within a format.
+ */
+#[derive(Debug, Clone, Copy)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub(crate) struct FormatComponentSelector {
+  pub(crate) word: u8,
+  pub(crate) offset: u8,
+  pub(crate) count: u8,
+}
+impl FormatComponentSelector {
+  pub(crate) const WORD_SHIFT: u32 = 0;
+  pub(crate) const WORD_BITS: u32 = 5;
+  pub(crate) const WORD_MASK: u32 = (1 << Self::WORD_BITS) - 1;
+
+  pub(crate) const OFFSET_SHIFT: u32 = Self::WORD_BITS;
+  pub(crate) const OFFSET_BITS: u32 = 5;
+  pub(crate) const OFFSET_MASK: u32 = (1 << Self::OFFSET_BITS) - 1;
+
+  pub(crate) const COUNT_SHIFT: u32 = Self::WORD_BITS + Self::OFFSET_BITS;
+  pub(crate) const COUNT_BITS: u32 = 5;
+  pub(crate) const COUNT_MASK: u32 = (1 << Self::COUNT_BITS) - 1;
+
+  pub(crate) fn new(word: u8, offset: u8, count: u8) -> Self {
+    Self { word, offset, count }
+  }
+
+  pub(crate) fn to_u32(&self) -> u32 {
+    let word = (self.word as u32) & Self::WORD_MASK;
+    let offset = ((self.offset as u32) & Self::OFFSET_MASK) << Self::OFFSET_SHIFT;
+    let count = ((self.count as u32) & Self::COUNT_MASK) << Self::COUNT_SHIFT;
+    word | offset | count
+  }
+
+  pub(crate) fn from_u32(value: u32) -> Self {
+    let word = ((value >> Self::WORD_SHIFT) & Self::WORD_MASK) as u8;
+    let offset = ((value >> Self::OFFSET_SHIFT) & Self::OFFSET_MASK) as u8;
+    let count = ((value >> Self::COUNT_SHIFT) & Self::COUNT_MASK) as u8;
+    Self { word, offset, count }
   }
 }

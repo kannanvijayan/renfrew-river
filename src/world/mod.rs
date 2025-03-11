@@ -9,8 +9,6 @@ pub(crate) use self::{
   cell_coord::CellCoord,
   cell_data::{
     CellData,
-    CellWordName,
-    CellComponentName,
     CellComponentSelector,
   },
   generation::{

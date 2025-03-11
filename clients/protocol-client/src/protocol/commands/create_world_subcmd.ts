@@ -24,8 +24,8 @@ type CreateWorldSubcmd = {
       descriptor: WorldDescriptorInput,
     },
     response: {
-      Valid: WorldDescriptor,
-      Invalid: WorldDescriptorValidation,
+      ValidWorldDescriptor: WorldDescriptor,
+      InvalidWorldDescriptor: WorldDescriptorValidation,
     },
   },
   BeginGeneration: {

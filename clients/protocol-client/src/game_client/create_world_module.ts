@@ -34,7 +34,14 @@ export class GameClientCreateWorldModule
     | { Valid: WorldDescriptor }
     | { Invalid: WorldDescriptorValidation }
   > {
-    return await this.sendSubcmd("UpdateDescriptorInput", { descriptor });
+    const result = await this.sendSubcmd("UpdateDescriptorInput", { descriptor });
+    if ("ValidWorldDescriptor" in result) {
+      return { Valid: result.ValidWorldDescriptor };
+    }
+    if ("InvalidWorldDescriptor" in result) {
+      return { Invalid: result.InvalidWorldDescriptor };
+    }
+    throw new Error("Invalid response from UpdateDescriptorInput");
   }
 
   public async takeGenerationStep(kind: GenerationStepKind): Promise<true> {

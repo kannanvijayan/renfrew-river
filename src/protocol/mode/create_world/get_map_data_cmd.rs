@@ -6,10 +6,8 @@ use crate::{
     response::ResponseEnvelope
   },
   world::{
-    CellComponentName,
     CellComponentSelector,
     CellCoord,
-    CellWordName,
     GenerationCellDatumId,
     WorldDims,
   },
@@ -61,12 +59,12 @@ impl Command for GetMapDataCmd {
       datum_ids: vec![
         GenerationCellDatumId::RandGen {},
         GenerationCellDatumId::Selector(CellComponentSelector {
-          word: CellWordName("word0".to_string()),
-          component: CellComponentName("elevation".to_string()),
+          word: "word0".to_string(),
+          component: "elevation".to_string(),
         }),
         GenerationCellDatumId::Selector(CellComponentSelector {
-          word: CellWordName("word2".to_string()),
-          component: CellComponentName("temperature".to_string()),
+          word: "word2".to_string(),
+          component: "temperature".to_string(),
         })
       ],
     };

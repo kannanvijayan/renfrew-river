@@ -1,5 +1,5 @@
 use crate::{
-  cog::{ CogMapBuffer, CogShaderEntrypoint2D, CogShaderScript, CogUniformType },
+  cog::{ CogShaderEntrypoint2D, CogShaderScript, CogUniformType },
   world::{ CellCoord, WorldDims }
 };
 
@@ -14,7 +14,7 @@ impl CogShaderScript for RandGenShaderScript {
 
 pub(crate) struct RandGenEntrypoint;
 impl CogShaderEntrypoint2D<RandGenShaderScript> for RandGenEntrypoint {
-  const NAME: &'static str = "rand_gen_task";
+  const NAME: &'static str = "rand_gen";
   const WORKGROUP_SIZE: [u32; 2] = [8, 8];
 }
 
@@ -36,8 +36,4 @@ impl Into<[u32; 8]> for RandGenUniforms {
       self.rand_seed, 0
     ]
   }
-}
-
-pub(crate) struct RandGenBuffers {
-  pub(crate) output: CogMapBuffer<u32>,
 }

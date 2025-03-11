@@ -1,17 +1,3 @@
-// Elevation
-////////////////////////////////////////////////////////////
-
-/**
- * Represents tile elevation.
- */
-struct Elevation {
-  value: u32,
-}
-/** The number of significant bits in each elevation value. */
-const ELEVATION_BITS: u32 = 12u;
-
-/** Bit mask for extracting elevation values. */
-const ELEVATION_MASK: u32 = 0xFFFu;
 
 // WorldDims
 ////////////////////////////////////////////////////////////
@@ -88,32 +74,21 @@ fn packed_cell_coord_new_invalid() -> PackedCellCoord {
   return PackedCellCoord(PACKED_CELL_COORD_INVALID);
 }
 
-// AnimalData
+// CellData
 ////////////////////////////////////////////////////////////
 
-/** Data associated with an animal. */
-struct AnimalData {
-  position: PackedCellCoord,
+const CELL_DATA_NUM_WORDS: u32 = 8u;
+
+struct CellDataWord {
+  word: u32
 }
 
-/** Animal ids. */
-struct AnimalId {
-  value: u32,
+/** Get a word from a cell data. */
+fn cell_data_word_offset(index: u32) -> u32 {
+  return index * CELL_DATA_NUM_WORDS;
 }
 
-const INVALID_ANIMAL_ID_VALUE = 0xFFFFFFFFu;
-
-/** Check if an animal id is valid. */
-fn animal_id_is_valid(animal_id: AnimalId) -> bool {
-  return animal_id.value != INVALID_ANIMAL_ID_VALUE;
-}
-
-/** Check if two animal ids are equal. */
-fn animal_id_equal(animal_id1: AnimalId, animal_id2: AnimalId) -> bool {
-  return animal_id1.value == animal_id2.value;
-}
-
-/** Create an invalid animal id. */
-fn animal_id_new_invalid() -> AnimalId {
-  return AnimalId(INVALID_ANIMAL_ID_VALUE);
+/** Get a specific word from a cell data. */
+fn cell_data_word_offset_of_word(index: u32, word: u32) -> u32 {
+  return cell_data_word_offset(index) + word;
 }
