@@ -1,17 +1,17 @@
 import GameClient, {
   CellCoord,
   GenerationCellDatumId,
-  WorldDescriptor,
+  GenerationStepKind,
   WorldDescriptorInput,
   WorldDims,
 } from "renfrew-river-protocol-client";
 
-import { BumpTimeout } from "../util/bump_timeout";
 import ConnectedViewState, { ConnectedViewMode } from "../state/view/connected_view";
 import CreateWorldViewState from "../state/view/create_world/create_world";
-import { store } from "../store/root";
-import { dispatchApp } from "../store/dispatch";
 import SpecifyDescriptorViewState from "../state/view/create_world/specify_descriptor";
+import { dispatchApp } from "../store/dispatch";
+import { store } from "../store/root";
+import { BumpTimeout } from "../util/bump_timeout";
 
 export class CreateWorldModule {
   private readonly client: GameClient;
@@ -49,12 +49,14 @@ export class CreateWorldModule {
     return current.descriptor;
   }
 
-  public async beginGeneration(descriptor: WorldDescriptor): Promise<true> {
+  public async beginWorldGeneration(): Promise<true> {
+    // Begin the world generation process.
     await this.client.createWorld.beginGeneration();
-    dispatchApp.view.connected(ConnectedViewState.action.setCreateWorld({
-      GeneratingWorld: { descriptor }
-    }));
     return true;
+  }
+
+  public async takeGenerationStep(stepKind: GenerationStepKind): Promise<true> {
+    return this.client.createWorld.takeGenerationStep(stepKind);
   }
 
   public async getMapData(args: {

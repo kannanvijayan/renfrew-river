@@ -1,8 +1,9 @@
 import { Reducer } from "@reduxjs/toolkit";
-import { WorldDescriptor } from "renfrew-river-protocol-client";
+import { GenerationPhase, WorldDescriptor } from "renfrew-river-protocol-client";
 
 type GeneratingWorldViewState = {
   descriptor: WorldDescriptor,
+  phase: GenerationPhase,
 }
 
 const GeneratingWorldViewState = {
@@ -11,6 +12,9 @@ const GeneratingWorldViewState = {
   action: {
     setDescriptor(descriptor: WorldDescriptor): SetDescriptorAction {
       return { type: "set_descriptor", descriptor };
+    },
+    setPhase(phase: GenerationPhase): SetPhaseAction {
+      return { type: "set_phase", phase };
     },
   },
 
@@ -23,6 +27,15 @@ const GeneratingWorldViewState = {
         return state;
       }
       return { ...state, descriptor };
+    },
+    set_phase(state: GeneratingWorldViewState, action: SetPhaseAction)
+      : GeneratingWorldViewState
+    {
+      const { phase } = action;
+      if (state.phase === phase) {
+        return state;
+      }
+      return { ...state, phase };
     },
   },
 
@@ -43,12 +56,19 @@ type SetDescriptorAction = {
   descriptor: WorldDescriptor,
 };
 
+type SetPhaseAction = {
+  type: "set_phase",
+  phase: GenerationPhase,
+};
+
 type GeneratingWorldAction =
-  | SetDescriptorAction;
+  | SetDescriptorAction
+  | SetPhaseAction;
 
 export default GeneratingWorldViewState;
 export type {
   GeneratingWorldAction,
 
   SetDescriptorAction,
+  SetPhaseAction,
 };

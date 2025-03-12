@@ -14,7 +14,7 @@ impl CogShaderScript for RandGenShaderScript {
 
 pub(crate) struct RandGenEntrypoint;
 impl CogShaderEntrypoint2D<RandGenShaderScript> for RandGenEntrypoint {
-  const NAME: &'static str = "rand_gen";
+  const NAME: &'static str = "rand_gen_task";
   const WORKGROUP_SIZE: [u32; 2] = [8, 8];
 }
 

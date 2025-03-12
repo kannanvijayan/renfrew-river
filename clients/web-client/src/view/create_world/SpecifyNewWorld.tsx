@@ -1,11 +1,11 @@
 import { Box, Button, Input, Typography } from "@mui/material";
-import SecondStageFrame from "../common/SecondStageFrame";
 import { ReactNode } from "react";
-import { useAppDispatch, useAppListener } from "../../store/hooks";
-import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
-import SpecifyDescriptorViewState from "../../state/view/create_world/specify_descriptor";
-import ValidationErrors from "../common/ValidationErrors";
 import Application from "../../application";
+import SpecifyDescriptorViewState from "../../state/view/create_world/specify_descriptor";
+import ConnectedViewState, { ConnectedViewMode } from "../../state/view/connected_view";
+import { useAppDispatch, useAppListener } from "../../store/hooks";
+import SecondStageFrame from "../common/SecondStageFrame";
+import ValidationErrors from "../common/ValidationErrors";
 
 export default function SpecifyNewWorld(props: {
   viewState: SpecifyDescriptorViewState
@@ -22,12 +22,11 @@ export default function SpecifyNewWorld(props: {
   const dispatchSpecifyDescriptor = 
     useAppDispatch.view.connected.createWorld.specifyDescriptor();
   const onCreateClicked = async () => {
-    const session = Application.getInstance().getSession();
     if (!validatedDescriptor) {
       console.error("SpecifyNewWorld: validatedDescriptor is null");
       return;
     }
-    await session.createWorld.beginGeneration(validatedDescriptor);
+    Application.getInstance().beginWorldCreation(validatedDescriptor);
   };
 
   const onBackClicked = () => {

@@ -2,11 +2,11 @@ import * as PIXI from "pixi.js";
 import WorldMapTiledData from "../simulation/map/world_map_tiled_data";
 import Simulation from "../simulation/simulation";
 import CellMap from "./cell_map";
+import { DatumVizSpec } from "./datum";
 
 export default class Viz {
   public readonly canvas: HTMLCanvasElement;
   private readonly pixi: PIXI.Application;
-  private mapData: WorldMapTiledData;
   private cellMap: CellMap;
 
   public static create(canvas: HTMLCanvasElement, simulation: Simulation): Viz {
@@ -21,8 +21,17 @@ export default class Viz {
     return new Viz(canvas, pixi, simulation.mapData);
   }
 
+  public handleMapInvalidation(): void {
+    console.log("Viz: Handling map invalidation");
+    this.cellMap.handleMapInvalidation();
+  }
+
   public updateSize(width: number, height: number): void {
     this.pixi.renderer.resize(width, height);
+  }
+
+  public setVisualizedDatumIds(spec: DatumVizSpec|undefined): void {
+    this.cellMap.setVisualizedDatumIds(spec);
   }
 
   public cleanup(): void {
@@ -44,7 +53,6 @@ export default class Viz {
   ) {
     this.canvas = canvas;
     this.pixi = pixi;
-    this.mapData = mapData;
     this.cellMap = new CellMap({
       worldColumns: mapData.worldDims.columns,
       worldRows: mapData.worldDims.rows,

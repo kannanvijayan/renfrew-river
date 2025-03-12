@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import Application from "../../application";
-import { WorldDescriptor } from "renfrew-river-protocol-client";
+import GeneratingWorldViewState from "../../state/view/create_world/generating_world";
 
 /**
  * This component wraps a persistent `Canvas` element which hosts
@@ -8,18 +8,23 @@ import { WorldDescriptor } from "renfrew-river-protocol-client";
  * is used to render the game map.
  */
 export default function WorldViz(args: {
-  worldDescriptor: WorldDescriptor,
+  viewState: GeneratingWorldViewState,
 }) {
-  const { worldDescriptor } = args;
+  const { viewState } = args;
+  const { descriptor } = viewState;
+
+  console.log("KVKV WorldViz", { viewState, descriptor });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (canvasRef.current === null) {
-      return;
+    let canvas = canvasRef.current;
+    console.log("KVKV WorldViz useEffect", { canvas, descriptor });
+    if (canvas === null) {
+      canvas = document.createElement("canvas");
+      canvasRef.current = canvas;
     }
 
-    const canvas = canvasRef.current;
     const application = Application.getInstance();
    
     (async () => {
@@ -42,13 +47,13 @@ export default function WorldViz(args: {
       canvas.width = scaledWidth;
       canvas.height = scaledHeight;
 
-      application.initSimulation(worldDescriptor);
       await application.initViz(canvas);
+      application.getViz().setVisualizedDatumIds({ colorTileWith: 0 });
     })();
 
     return () => {
     };
-  }, [canvasRef]);
+  }, [canvasRef, descriptor]);
 
   return <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />;
 }

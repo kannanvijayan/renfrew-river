@@ -45,7 +45,7 @@ export default class WorldMapTiledData {
   private generation: number;
   private invalidationListeners: (() => void)[];
 
-  constructor(opts: {
+  public constructor(opts: {
     readMapData: ReadMapDataCallback,
     worldDims: WorldDims,
   }) {
@@ -73,6 +73,10 @@ export default class WorldMapTiledData {
 
     // Invalidate the data.
     this.invalidate();
+  }
+
+  public getTextureSource(): MapData<"float32", 4> {
+    return this.mapDataSet.getTextureSource();
   }
 
   public async ensureViewAndQueueSurroundings(
@@ -189,14 +193,16 @@ export default class WorldMapTiledData {
     }
   }
 
-  public addInvalidationListener(listener: () => void): void {
+  public addInvalidationListener(listener: () => void): () => void {
     this.invalidationListeners.push(listener);
+    return () => this.removeInvalidationListener(listener);
   }
 
-  public removeInvalidationListener(listener: () => void): void {
+  private removeInvalidationListener(listener: () => void): void {
     const index = this.invalidationListeners.indexOf(listener);
-    if (index === -1) {
-      throw new Error("WorldElevationsTiled.removeInvalidationListener: listener not found");
+    if (index < 0) {
+      console.error("WorldElevationsTiled.removeInvalidationListener: listener not found");
+      return;
     }
     this.invalidationListeners.splice(index, 1);
   }
@@ -370,7 +376,7 @@ export default class WorldMapTiledData {
   }
 
   private async readMapData(topLeft: CellCoord, dims: WorldDims)
-    : Promise<[GenerationCellDatumId, MapData][]>
+    : Promise<[GenerationCellDatumId, MapData<"uint32", 1>][]>
   {
     const datumIds = this.mapDataSet.getObservedDatumIds();
     if (datumIds.length === 0) {

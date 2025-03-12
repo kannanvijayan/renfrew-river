@@ -1,5 +1,5 @@
 import CreateWorldViewState from "../../state/view/create_world/create_world";
-import WorldViz from "../world/WorldViz";
+import WorldViz from "./WorldViz";
 import SpecifyNewWorld from "./SpecifyNewWorld";
 
 export default function CreateWorld(props: {
@@ -12,7 +12,7 @@ export default function CreateWorld(props: {
     console.log("CreateWorld: SpecifyDescriptor");
     return (<SpecifyNewWorld viewState={viewState.SpecifyDescriptor} />);
   } else if ("GeneratingWorld" in viewState) {
-    return (<WorldViz worldDescriptor={viewState.GeneratingWorld.descriptor} />);
+    return (<WorldViz viewState={viewState.GeneratingWorld} />);
   } else {
     console.error("CreateWorld: invalid viewState", viewState);
     return <></>;

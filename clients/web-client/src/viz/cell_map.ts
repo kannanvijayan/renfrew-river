@@ -9,6 +9,7 @@ import {
 import HexMesh from './hex_mesh';
 import WorldMapTiledData from '../simulation/map/world_map_tiled_data';
 import { CellCoord } from "renfrew-river-protocol-client";
+import { DatumVizSpec } from './datum';
 
 export type CellMapOptions = {
   worldColumns: number;
@@ -80,9 +81,6 @@ export default class CellMap extends PIXI.Container {
   // Observer of the cell-map.
   private readonly observer: CellMapObserver;
 
-  // Commander of the cell-map.
-  private readonly commander: CellMapCommander;
-
   // Update counter, incremented every time `updateMeshPosition` is called.
   // This helps ensure that quick successive calls to `updateMeshPosition`
   // don't cause the prior call to proceed using the attributes written by
@@ -139,7 +137,6 @@ export default class CellMap extends PIXI.Container {
     });
 
     this.observer = new CellMapObserver(this);
-    this.commander = new CellMapCommander(this);
     this.updateCounter = 0;
 
     this.updateMeshPosition().then(() => {
@@ -154,9 +151,6 @@ export default class CellMap extends PIXI.Container {
 
   public getObserver(): CellMapObserver {
     return this.observer;
-  }
-  public getCommander(): CellMapCommander {
-    return this.commander;
   }
 
   public centerOnNormalScaleWorldPoint(
@@ -173,6 +167,10 @@ export default class CellMap extends PIXI.Container {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public updateTime(_time: number): void {
     // For animated sprites, update time in shader here.
+  }
+
+  public setVisualizedDatumIds(visualizedDatumIds?: DatumVizSpec): void {
+    this.hexMesh.setVisualizedDatumIds(visualizedDatumIds);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -209,7 +207,7 @@ export default class CellMap extends PIXI.Container {
     this.updateMeshPosition();
   }
 
-  public handleMapInvalidated(): void {
+  public handleMapInvalidation(): void {
     console.log("Map invalidated");
     this.updateMeshPosition();
   }
@@ -571,22 +569,5 @@ export class CellMapObserver {
 }
 
 export type RemoveListener<T> = () => T;
-
-export type CellMapChangeListener =
-  (cellMapObserver: CellMapObserver) => void;
-
-export type CellMapHoverCellChangedListener =
-  (cell: CellCoord) => void;
-export class CellMapCommander {
-  private cellMap: CellMap;
-
-  constructor(cellMap: CellMap) {
-    this.cellMap = cellMap;
-  }
-
-  public centerOnNormalScaleWorldPoint(
-    point: Readonly<PIXI.IPointData>
-  ): void {
-    this.cellMap.centerOnNormalScaleWorldPoint(point);
-  }
-}
+export type CellMapChangeListener = (cellMapObserver: CellMapObserver) => void;
+export type CellMapHoverCellChangedListener = (cell: CellCoord) => void;

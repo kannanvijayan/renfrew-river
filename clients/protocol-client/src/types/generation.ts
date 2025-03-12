@@ -7,6 +7,14 @@ type GenerationStepKind =
   | "PairwiseMerge"
   | "Finalize";
 
+const GenerationStepKind = {
+  RAND_GEN: "RandGen" as const,
+  INITIALIZE_CELL: "InitializeCell" as const,
+  PAIRWISE_STEP: "PairwiseStep" as const,
+  PAIRWISE_MERGE: "PairwiseMerge" as const,
+  FINALIZE: "Finalize" as const,
+};
+
 type GenerationPhase =
   | "NewlyCreated"
   | "PreInitialize"

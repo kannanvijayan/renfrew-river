@@ -1,17 +1,21 @@
 import * as PIXI from 'pixi.js';
+import WorldMapTiledData from '../simulation/map/world_map_tiled_data';
+import Deferred from '../util/deferred';
+import { DatumVizSpec } from './datum';
 import {
   HEX_TRIANGLES_CLIP,
   NORMAL_SCALE_CELL,
   normalOffsetXForCellBoundingBox,
   normalOffsetYForCellBoundingBox
 } from './hex';
-import Deferred from '../util/deferred';
-import WorldMapTiledData from '../simulation/map/world_map_tiled_data';
 
 export default class HexMesh {
   private readonly mapData: WorldMapTiledData;
 
-  public readonly elevationsTexture: PIXI.Texture;
+  // Specification for how to display the texture data.
+  private visualizedDatumIds: DatumVizSpec | undefined;
+
+  public readonly mapDataTexture: PIXI.Texture;
   public readonly mesh: PIXI.Mesh<PIXI.Shader>;
   private dispatchedUpdateListeners: Deferred<void>[];
   private pendingUpdateListeners: Deferred<void>[];
@@ -36,18 +40,16 @@ export default class HexMesh {
       topLeftWorldRow,
     } = opts;
 
+    console.log("HexMesh: constructor");
+
     this.mapData = mapData;
+    this.visualizedDatumIds = undefined;
 
     // Create elevations texture.
-    const elevations = new Float32Array(worldColumns * worldRows * 4);
-    for (let i = 0; i < worldColumns * worldRows; i++) {
-      elevations[4*i] = Math.random();
-      elevations[4*i + 1] = Math.floor(Math.random() * 256);
-      elevations[4*i + 2] = Math.floor(Math.random() * 256);
-      elevations[4*i + 3] = Math.floor(Math.random() * 256);
-    }
-    const elevationsTexture = PIXI.Texture.fromBuffer(
-      elevations,
+
+    const textureSource = mapData.getTextureSource().getArray();
+    const mapDataTexture = PIXI.Texture.fromBuffer(
+      textureSource,
       worldColumns,
       worldRows,
       {
@@ -55,7 +57,7 @@ export default class HexMesh {
         type: PIXI.TYPES.FLOAT
       }
     );
-    elevationsTexture.baseTexture.addListener(
+    mapDataTexture.baseTexture.addListener(
       "update",
       this.handleTextureUpdated.bind(this)
     );
@@ -68,10 +70,10 @@ export default class HexMesh {
       worldRows,
       topLeftWorldColumn,
       topLeftWorldRow,
-      elevationsTexture,
+      mapDataTexture,
     });
 
-    this.elevationsTexture = elevationsTexture;
+    this.mapDataTexture = mapDataTexture;
     this.mesh = new PIXI.Mesh(geometry, shader);
     this.dispatchedUpdateListeners = [];
     this.pendingUpdateListeners = [];
@@ -91,7 +93,7 @@ export default class HexMesh {
       // ASSERT: this.dispatchedUpdateListeners.length === 0
       this.dispatchedUpdateListeners.push(deferred);
 
-      this.elevationsTexture.update();
+      this.mapDataTexture.update();
     }
     return deferred.getPromise();
   }
@@ -110,7 +112,7 @@ export default class HexMesh {
     if (this.pendingUpdateListeners.length > 0) {
       // Schedule another update and make the pending listeners the dispatched.
       this.updateInProgress = 2;
-      this.elevationsTexture.update();
+      this.mapDataTexture.update();
       this.dispatchedUpdateListeners = this.pendingUpdateListeners;
       this.pendingUpdateListeners = [];
       // Leave updateInProgress as true.
@@ -123,6 +125,10 @@ export default class HexMesh {
     for (const deferred of invokeListeners) {
       deferred.resolvePromise();
     }
+  }
+
+  public setVisualizedDatumIds(visualizedDatumIds?: DatumVizSpec): void {
+    this.visualizedDatumIds = visualizedDatumIds;
   }
 }
 
@@ -251,7 +257,7 @@ function makeShader(opts: {
   worldRows: number,
   topLeftWorldColumn: number,
   topLeftWorldRow: number,
-  elevationsTexture: PIXI.Texture,
+  mapDataTexture: PIXI.Texture,
 }) {
   const {
     columns,
@@ -260,7 +266,7 @@ function makeShader(opts: {
     worldRows,
     topLeftWorldColumn,
     topLeftWorldRow,
-    elevationsTexture,
+    mapDataTexture
   } = opts;
   const uniforms = {
     columns,
@@ -269,7 +275,7 @@ function makeShader(opts: {
     worldRows,
     topLeftWorldColumn,
     topLeftWorldRow,
-    elevationTex: elevationsTexture,
+    txMapData: mapDataTexture,
   };
 
   const adjX = NORMAL_SCALE_CELL.width / 2;
@@ -314,7 +320,7 @@ function makeShader(opts: {
     uniform float rows;
     uniform float worldColumns;
     uniform float worldRows;
-    uniform sampler2D elevationTex;
+    uniform sampler2D txMapData;
     uniform float topLeftWorldColumn;
     uniform float topLeftWorldRow;
 
@@ -332,7 +338,7 @@ function makeShader(opts: {
       float texX = textureX + adjX;
       float texY = textureY + adjY;
 
-      float elevation = texture2D(elevationTex, vec2(texX, texY)).r;
+      float elevation = texture2D(txMapData, vec2(texX, texY)).r;
       if (elevation < 0.5) {
         // color blue, lower elevation is darker blue.
         float xxx = elevation * 1000.0;

@@ -3,6 +3,7 @@ import {
   GenerationCellDatumId,
   WorldDims,
 } from "renfrew-river-protocol-client";
+import { DatumVizIndex } from "../../viz/datum";
 
 export type MapDataArrayType =
   | "uint8" | "uint16" | "uint32"
@@ -78,7 +79,7 @@ export class MapDataBase {
   public inject2D(opts: {
     topLeft: CellCoord,
     dims: WorldDims,
-    index: |0|1|2|3,
+    index: DatumVizIndex,
     src: MapDataBase,
   }): void {
     const { topLeft, dims, index, src } = opts;
@@ -162,16 +163,20 @@ export default class MapData<
         (N extends 1 ? number : [number, number, number, number])
     );
   }
+
+  public getArray(): MapDataArrayClass[T] {
+    return this.array as MapDataArrayClass[T];
+  }
 }
 
 export class MapDataSet {
   private readonly worldDims: WorldDims;
   private readonly observedDatumIds: GenerationCellDatumId[];
-  private readonly visualizedDatumIds: [
-    GenerationCellDatumId | null,
-    GenerationCellDatumId | null,
-    GenerationCellDatumId | null,
-    GenerationCellDatumId | null,
+  private readonly visualizedDatumIndexes: [
+    number | null,
+    number | null,
+    number | null,
+    number | null,
   ] = [ null, null, null, null ];
 
   // The underlying typed array data that is updated from network.
@@ -179,13 +184,13 @@ export class MapDataSet {
 
   // A single f32x4 typed array that is used as a texture input
   // for the shader.
-  private readonly textureMapData: MapData<"float32", 4>;
+  private readonly textureSource: MapData<"float32", 4>;
 
   public constructor(worldDims: WorldDims) {
     this.worldDims = worldDims;
     this.observedDatumIds = [];
     this.dataMaps = new Map();
-    this.textureMapData = new MapData({
+    this.textureSource = new MapData({
       dataType: "float32",
       size: 4,
       dims: worldDims
@@ -199,19 +204,21 @@ export class MapDataSet {
   public setObservedDatumIds(datumIds: GenerationCellDatumId[]): void {
     this.observedDatumIds.splice(0, this.observedDatumIds.length, ...datumIds);
     this.dataMaps.clear();
+    this.visualizedDatumIndexes.fill(null);
     for (const datumId of datumIds) {
       this.ensureDataMap(datumId);
     }
   }
 
-  public setVisualizedDatumId(
-    index: number,
-    datumId: GenerationCellDatumId | null,
-  ): void {
-    if (index < 0 || index >= this.visualizedDatumIds.length) {
+  public setVisualizedDatumId(index: number, datumIndex: number): void {
+    if (index < 0 || index >= this.visualizedDatumIndexes.length) {
       throw new Error("MapDataSet.setVisualizedDatumId: index out of range");
     }
-    this.visualizedDatumIds[index] = datumId;
+    this.visualizedDatumIndexes[index] = datumIndex;
+  }
+
+  public getTextureSource(): MapData<"float32", 4> {
+    return this.textureSource;
   }
 
   public getDataMap(datumId: GenerationCellDatumId): MapData {
@@ -230,6 +237,8 @@ export class MapDataSet {
   }): void {
     const { datumId, topLeft, data } = args;
     const dims = data.dims;
+
+    // Write it to the datum-id specific map.
     const dataMap = this.getDataMap(datumId);
     dataMap.write2D({
       topLeft,
@@ -237,21 +246,29 @@ export class MapDataSet {
       data,
     });
 
-    this.visualizedDatumIds.forEach((vizDatumId, index) => {
-      if (vizDatumId && GenerationCellDatumId.equal(datumId, vizDatumId)) {
-        this.syncTextureData(vizDatumId, index as |0|1|2|3, topLeft, dims);
+    // Write any visualized datum id values to the texture map.
+    this.visualizedDatumIndexes.forEach((datumIndex, vizIndex) => {
+      if (datumIndex === null) {
+        return;
+      }
+      const vizDatumId = this.observedDatumIds[datumIndex];
+      if (vizDatumId === undefined) {
+        throw new Error("MapDataSet.writeDataMap: visualized datum id not found");
+      }
+      if (datumIndex !== null && GenerationCellDatumId.equal(datumId, vizDatumId)) {
+        this.syncTextureData(vizDatumId, vizIndex as DatumVizIndex, topLeft, dims);
       }
     });
   }
 
   private syncTextureData(
     datumId: GenerationCellDatumId,
-    index: |0|1|2|3,
+    index: DatumVizIndex,
     topLeft: CellCoord,
     dims: WorldDims,
   ): void {
     const mapData = this.getDataMap(datumId);
-    this.textureMapData.inject2D({
+    this.textureSource.inject2D({
       topLeft,
       dims,
       index,
@@ -259,14 +276,14 @@ export class MapDataSet {
     });
   }
 
-  private ensureDataMap(datumId: GenerationCellDatumId): MapData {
+  private ensureDataMap(datumId: GenerationCellDatumId): MapData<"uint32", 1> {
     const key = GenerationCellDatumId.toStringKey(datumId);
     let dataMap = this.dataMaps.get(key);
     if (dataMap) {
       throw new Error("MapDataSet.createDataMap: data map already exists");
     }
     dataMap = new MapData({
-      dataType: "int32",
+      dataType: "uint32",
       size: 1,
       dims: this.worldDims,
     });
@@ -279,7 +296,7 @@ export type ReadMapDataCallback = (args: {
   topLeft: CellCoord,
   dims: WorldDims,
   datumIds: GenerationCellDatumId[]
-}) => Promise<MapData[]>;
+}) => Promise<MapData<"uint32", 1>[]>;
 
 export type ReadMiniMapDataCallback = (args: {
   miniDims: WorldDims,

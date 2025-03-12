@@ -123,6 +123,7 @@ impl GeneratingWorldState {
     let mut result_vecs: Vec<Vec<u32>> = Vec::new();
     output_buffer.read_mapped_full(|data| {
       for sel_i in 0 .. selectors.len() {
+        result_vecs.push(Vec::new());
         let subvec = &mut result_vecs[sel_i];
         for entry_i in 0 .. cmd.dims.area() as usize {
           let value = data[entry_i * selectors.len() + sel_i];
