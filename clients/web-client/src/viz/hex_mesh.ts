@@ -351,8 +351,9 @@ function makeShader(opts: {
         float xxx = elevation * 1000.0;
         float hundreds = floor(xxx / 100.0);
         float rem = xxx - (hundreds * 100.0);
-        float blue = 0.3 + (rem / 100.0) * 0.5;
-        gl_FragColor = vec4(0.1, 0.1, blue, 1.0);
+        float blue = 0.1 + (rem / 100.0) * 0.8;
+        float green = 0.1 + (hundreds / 10.0) * 0.8;
+        gl_FragColor = vec4(0.3 * green, green, sqrt(green * green + blue * blue), 1.0);
       } else if (elevation <= 1.0) {
         float level = (elevation - 0.5) * 2.0;
         float xxx = level * 1000.0;
