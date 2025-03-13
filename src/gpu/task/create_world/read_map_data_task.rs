@@ -1,20 +1,17 @@
 use crate::{
   cog::{ CogEncoder, CogSeqBuffer, CogTask },
-  gpu::{
-    wgsl::common::{
-      ReadMapDataEntrypoint,
-      ReadMapDataShaderScript,
-      ReadMapDataUniforms,
-    },
-    CellDataBuffer,
+  gpu::wgsl::common::{
+    ReadMapDataEntrypoint,
+    ReadMapDataShaderScript,
+    ReadMapDataUniforms,
   },
-  ruleset::FormatComponentSelector,
-  world::{ CellCoord, CellData, WorldDims },
+  ruleset::FormatComponentSelectorReadSpec,
+  world::{ CellCoord, WorldDims },
 };
 
 pub(crate) struct ReadMapDataTask {
   uniforms: ReadMapDataUniforms,
-  input_buffer: CellDataBuffer,
+  input_buffer: CogSeqBuffer<u32>,
   output_buffer: CogSeqBuffer<u32>,
 }
 impl ReadMapDataTask {
@@ -22,18 +19,20 @@ impl ReadMapDataTask {
     world_dims: WorldDims,
     top_left: CellCoord,
     area: WorldDims,
-    selectors_vec: Vec<FormatComponentSelector>,
-    input_buffer: CellDataBuffer,
+    selectors_vec: Vec<FormatComponentSelectorReadSpec>,
+    input_buffer: CogSeqBuffer<u32>,
+    input_entry_size: u32,
     output_buffer: CogSeqBuffer<u32>,
   ) -> Self {
     const MAX_SELECTORS: usize = 4;
-    let num_selectors = selectors_vec.len();
+    assert!(input_entry_size > 0, "Input entry size must be > 0");
     assert!(
-      num_selectors <= MAX_SELECTORS,
+      selectors_vec.len() <= MAX_SELECTORS,
       "Too many selectors: {}",
-      num_selectors,
+      selectors_vec.len(),
     );
-    let mut selectors: [Option<FormatComponentSelector>; MAX_SELECTORS] =
+    assert!(selectors_vec.len() > 0, "No selectors");
+    let mut selectors: [Option<FormatComponentSelectorReadSpec>; MAX_SELECTORS] =
       [None; MAX_SELECTORS];
     for (i, sel) in selectors_vec.iter().enumerate() {
       selectors[i] = Some(*sel);
@@ -43,7 +42,7 @@ impl ReadMapDataTask {
       top_left,
       area,
       selectors,
-      input_entry_size: CellData::NUM_WORDS,
+      input_entry_size,
       output_entry_size: selectors_vec.len() as u32,
     };
 
@@ -67,7 +66,7 @@ impl CogTask for ReadMapDataTask {
       "CreateWorld_RandGenTask",
       |cpass| {
         cpass.add_bind_group(|bg| {
-          bg.add_seq_buffer(&self.input_buffer.as_u32_seq_buffer())
+          bg.add_seq_buffer(&self.input_buffer)
             .add_seq_buffer(&self.output_buffer)
         });
       }

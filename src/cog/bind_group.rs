@@ -76,7 +76,6 @@ impl CogBindGroupBuilder {
   }
 
   pub(crate) fn add_uniform_buffer(self, buffer: &CogBufferBase) -> Self {
-    eprintln!("KVKV add_uniform_buffer size={}", buffer.wgpu_buffer().size());
     self.add_buffer(buffer, 0, buffer.wgpu_buffer().size())
   }
 
@@ -96,9 +95,8 @@ impl CogBindGroupBuilder {
   }
 
   pub(crate) fn build(self) -> CogBindGroup {
-    let num_entries = self.entries.len() as u32;
-    debug_assert!(self.entries.len() <= num_entries as usize);
-    if self.entries.len() != num_entries as usize {
+    debug_assert!(self.entries.len() <= self.num_entries as usize);
+    if self.entries.len() != self.num_entries as usize {
       panic!("Wrong number of buffer binding entries in group");
     }
     let wgpu_layout = self.wgpu_layout;

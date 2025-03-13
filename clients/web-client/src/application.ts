@@ -71,6 +71,14 @@ export default class Application {
     return true;
   }
 
+  public async initWorldCreationViz(canvas: HTMLCanvasElement): Promise<Viz> {
+    const simulation = this.getSimulation();
+    const viz = await this.initViz(canvas);
+    viz.setVisualizedDatumIds({ colorTileWith: 0 });
+    simulation.mapData.invalidate();
+    return viz;
+  }
+
   public async initViz(canvas: HTMLCanvasElement): Promise<Viz> {
     if (!this.session) {
       throw new Error("Session must be initialized before viz");

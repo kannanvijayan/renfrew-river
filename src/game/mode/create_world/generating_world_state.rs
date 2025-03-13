@@ -1,5 +1,5 @@
 use crate::{
-  cog::{ CogDevice, CogTask },
+  cog::{ CogDevice, CogMapBuffer, CogTask },
   data_store,
   gpu::{
     task::create_world::{ RandGenTask, ReadMapDataTask },
@@ -8,11 +8,22 @@ use crate::{
     ShaderRegistry,
   },
   protocol::mode::create_world::{
-    CreateWorldSubcmdResponse, CurrentGenerationPhaseCmd, CurrentGenerationPhaseRsp, GetMapDataCmd, GetMapDataRsp, TakeGenerationStepCmd
+    CreateWorldSubcmdResponse,
+    CurrentGenerationPhaseCmd,
+    CurrentGenerationPhaseRsp,
+    GetMapDataCmd,
+    GetMapDataRsp,
+    TakeGenerationStepCmd,
   },
-  ruleset::{FormatComponentSelector, Ruleset},
+  ruleset::{ FormatComponentSelector, FormatComponentSelectorReadSpec, Ruleset },
   shady_vm::{ ShadyProgram, ShadyProgramIndex, ShasmProgram },
-  world::{ GenerationCellDatumId, GenerationPhase, GenerationStepKind, WorldDescriptor }
+  world::{
+    CellData,
+    GenerationCellDatumId,
+    GenerationPhase,
+    GenerationStepKind,
+    WorldDescriptor,
+  },
 };
 
 pub(crate) struct GeneratingWorldState {
@@ -20,7 +31,7 @@ pub(crate) struct GeneratingWorldState {
   ruleset: Ruleset,
   phase: GenerationPhase,
   device: CogDevice,
-  shaders: ShaderRegistry,
+  randgen_buffer: CogMapBuffer<u32>,
   cell_data_buffer: CellDataBuffer,
   programs: GeneratingWorldPrograms,
 }
@@ -28,15 +39,18 @@ impl GeneratingWorldState {
   pub(crate) fn new(descriptor: WorldDescriptor, ruleset: Ruleset) -> Self {
     let phase = GenerationPhase::NewlyCreated;
     let device = CogDevice::new();
-    let shaders = ShaderRegistry::new(&device);
     let cell_data_buffer = CellDataBuffer::new(&device, descriptor.dims);
+    let randgen_buffer = device.create_map_buffer::<u32>(
+      descriptor.dims,
+      "RandGen_Output"
+    );
     let programs = GeneratingWorldPrograms::new(&device, &ruleset);
     GeneratingWorldState {
       descriptor,
       ruleset,
       phase,
       device,
-      shaders,
+      randgen_buffer,
       cell_data_buffer,
       programs,
     }
@@ -68,6 +82,7 @@ impl GeneratingWorldState {
     cmd: GetMapDataCmd,
     _data_store: &data_store::DataStore
   ) -> CreateWorldSubcmdResponse {
+    // Validate datum ids.
     if cmd.datum_ids.len() == 0 {
       return CreateWorldSubcmdResponse::Failed(vec![
         "No datum ids provided".to_string(),
@@ -77,14 +92,6 @@ impl GeneratingWorldState {
       return CreateWorldSubcmdResponse::Failed(vec![
         "Too many datum ids".to_string(),
       ]);
-    }
-
-    let mut selectors: Vec<FormatComponentSelector> = Vec::new();
-    for datum_id in &cmd.datum_ids {
-      match self.make_selector_for_datum_id(datum_id) {
-        Ok(sel) => selectors.push(sel),
-        Err(err) => { return CreateWorldSubcmdResponse::Failed(err); }
-      }
     }
 
     if ! self.descriptor.dims.contains_coord(cmd.top_left) {
@@ -100,6 +107,17 @@ impl GeneratingWorldState {
       ]);
     }
 
+    // Convert them to selectors.
+    let mut selectors: Vec<FormatComponentSelectorReadSpec> = Vec::new();
+    for (i, datum_id) in cmd.datum_ids.iter().enumerate() {
+      match self.make_selector_for_datum_id(datum_id) {
+        Ok(sel) => selectors.push(
+          FormatComponentSelectorReadSpec::new(sel, i as u8)
+        ),
+        Err(err) => { return CreateWorldSubcmdResponse::Failed(err); }
+      }
+    }
+
     // Create the output buffer.
     let output_buffer = self.device.create_seq_buffer::<u32>(
       cmd.dims.area() as usize  * selectors.len(),
@@ -107,14 +125,30 @@ impl GeneratingWorldState {
     );
 
     // Run the command.
-    let read_map_data_task = ReadMapDataTask::new(
-      self.descriptor.dims,
-      cmd.top_left,
-      cmd.dims,
-      selectors.clone(),
-      self.cell_data_buffer.clone(),
-      output_buffer.clone()
-    );
+    let read_map_data_task =
+      if matches!(self.phase, GenerationPhase::PreInitialize) {
+        // In PreInitialize phase, we need to read from the randgen buffer.
+        ReadMapDataTask::new(
+          self.descriptor.dims,
+          cmd.top_left,
+          cmd.dims,
+          selectors.clone(),
+          self.randgen_buffer.as_seq_buffer().clone(),
+          1,
+          output_buffer.clone()
+        )
+      } else {
+        // In all other phases, we read from the cell data buffer.
+        ReadMapDataTask::new(
+          self.descriptor.dims,
+          cmd.top_left,
+          cmd.dims,
+          selectors.clone(),
+          self.cell_data_buffer.as_u32_seq_buffer(),
+          CellData::NUM_WORDS,
+          output_buffer.clone()
+        )
+      };
     self.device.encode_and_run("CreateWorld_ReadMapData", |enc| {
       read_map_data_task.encode(enc);
     });
@@ -149,7 +183,7 @@ impl GeneratingWorldState {
             "RandGen datum id is only valid in PreInitialize phase".to_string(),
           ]);
         }
-        Ok(FormatComponentSelector::new(0, 0, 32))
+        Ok(FormatComponentSelector::new(0, 0, 30))
       },
       GenerationCellDatumId::Selector(sel) => {
         if ! matches!(self.phase, GenerationPhase::CellInitialized) {
@@ -178,14 +212,10 @@ impl GeneratingWorldState {
         ),
       ]);
     }
-    let rand_mapbuf = self.device.create_map_buffer::<u32>(
-      self.descriptor.dims,
-      "RandGen_Output"
-    );
     let randgen_task = RandGenTask::new(
       self.descriptor.dims,
       self.descriptor.seed_u32(),
-      rand_mapbuf.clone()
+      self.randgen_buffer.clone(),
     );
     self.device.encode_and_run("CreateWorld_RandGen", |enc| {
       randgen_task.encode(enc);

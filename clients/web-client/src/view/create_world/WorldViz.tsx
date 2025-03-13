@@ -13,13 +13,10 @@ export default function WorldViz(args: {
   const { viewState } = args;
   const { descriptor } = viewState;
 
-  console.log("KVKV WorldViz", { viewState, descriptor });
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     let canvas = canvasRef.current;
-    console.log("KVKV WorldViz useEffect", { canvas, descriptor });
     if (canvas === null) {
       canvas = document.createElement("canvas");
       canvasRef.current = canvas;
@@ -47,8 +44,7 @@ export default function WorldViz(args: {
       canvas.width = scaledWidth;
       canvas.height = scaledHeight;
 
-      await application.initViz(canvas);
-      application.getViz().setVisualizedDatumIds({ colorTileWith: 0 });
+      await application.initWorldCreationViz(canvas);
     })();
 
     return () => {

@@ -109,7 +109,6 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
   }
 
   pub(crate) fn write_slice(&self, index: usize, data: &[T]) {
-    eprintln!("KVKV CogSeqBuffer::write_slice() index={} data.len()={}", index, data.len());
     self.write_mapped(index, data.len(), |slice| {
       for (i, item) in data.iter().enumerate() {
         slice[i] = (item.clone()).into();
@@ -188,7 +187,6 @@ impl<T: CogBufferType> BufferWrite<T> {
   pub(crate) fn new_uninit(device: &CogDevice, len: usize, label: &str)
     -> BufferWrite<T>
   {
-    eprintln!("KVKV BufferWrite::new_uninit() len={}", len);
     use wgpu::BufferUsages as BU;
     let size = (len as u64) * (Self::ELEM_SIZE as u64);
     let usage = BU::COPY_SRC | BU::MAP_WRITE;
@@ -210,7 +208,6 @@ impl<T: CogBufferType> BufferWrite<T> {
     {
       let slice = self.base.wgpu_buffer().slice(..);
       let mut view = slice.get_mapped_range_mut();
-      eprintln!("KVKV with_slice_mut() view_ptr={:p}", view.as_ptr());
       let view_ref: &mut [T::GpuType] = bytemuck::cast_slice_mut(&mut view);
       func(view_ref);
     }

@@ -109,7 +109,6 @@ impl<'a> PassBase<'a> {
   {
     let bind_group_index = self.bind_groups.len();
     let bind_group_sizes = self.pipeline.bind_group_sizes;
-    eprintln!("KVKV add_bind_group: idx={} sizes={:?}", bind_group_index, bind_group_sizes);
     if self.bind_groups.len() >= bind_group_sizes.len() {
       panic!("Too many bind groups");
     }

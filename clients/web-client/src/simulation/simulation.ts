@@ -24,7 +24,7 @@ export default class Simulation {
         return responseData.map(data => new MapData({
           dataType: "uint32",
           size: 1,
-          dims: worldDims,
+          dims: args.dims,
           array: new Uint32Array(data),
         }));
       },

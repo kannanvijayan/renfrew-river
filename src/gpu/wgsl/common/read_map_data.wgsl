@@ -189,13 +189,13 @@ struct FormatSelectorReadSpec {
 }
 
 
-// FormatSelectorSpecWord
+// FormatSelectorReadSpecWord
 ////////////////////////////////////////////////////////////
 
 /**
  * A format selector spec encoded in a single u32.
  */
-struct FormatSelectorSpecWord {
+struct FormatSelectorReadSpecWord {
   /** The format selector spec. */
   word: u32
 }
@@ -205,8 +205,10 @@ const FORMAT_SELECTOR_OUT_INDEX_OFFSET: u32 = 15u;
 const FORMAT_SELECTOR_OUT_INDEX_BITS: u32 = 5u;
 
 /** Encodes a format selector spec in a single u32. */
-fn format_selector_spec_word_encode(selector: FormatSelectorReadSpec) -> FormatSelectorSpecWord {
-  return FormatSelectorSpecWord(
+fn format_selector_spec_word_encode(selector: FormatSelectorReadSpec)
+  -> FormatSelectorReadSpecWord
+{
+  return FormatSelectorReadSpecWord(
     (selector.selector.word << FORMAT_SELECTOR_WORD_OFFSET) |
     (selector.selector.shift << FORMAT_SELECTOR_SHIFT_OFFSET) |
     (selector.selector.count << FORMAT_SELECTOR_COUNT_OFFSET) |
@@ -217,7 +219,9 @@ fn format_selector_spec_word_encode(selector: FormatSelectorReadSpec) -> FormatS
 /**
  * Decodes a format selector spec from a u32.
  */
-fn format_selector_spec_word_decode(fssw: FormatSelectorSpecWord) -> FormatSelectorReadSpec {
+fn format_selector_spec_word_decode(fssw: FormatSelectorReadSpecWord)
+  -> FormatSelectorReadSpec
+{
   let value: u32 = fssw.word;
   return FormatSelectorReadSpec(
     FormatSelector(
@@ -232,10 +236,10 @@ fn format_selector_spec_word_decode(fssw: FormatSelectorSpecWord) -> FormatSelec
 // END_LIBRARY(format_types)
 
 struct Uniforms {
+  selectors: vec4<u32>,
   world_dims: vec2<u32>,
   top_left: vec2<u32>,
   area: vec2<u32>,
-  selectors: vec4<u32>,
   input_entry_size: u32,
   output_entry_size: u32,
 };
@@ -275,8 +279,9 @@ fn read_map_data(
 
   let cell_idx = hexcell_index(world_dims, cell_xy);
   let input_offset = cell_idx * input_entry_size;
+
   for (var i: u32 = 0u; i < 4u; i = i + 1u) {
-    let sel_word = FormatSelectorSpecWord(selectors[i]);
+    let sel_word = FormatSelectorReadSpecWord(selectors[i]);
     let selector_spec = format_selector_spec_word_decode(sel_word);
     if (selector_spec.out_index >= output_entry_size) {
       continue;

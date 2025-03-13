@@ -14,7 +14,6 @@ export default function Sidebar(props: {
   viewState: DefineRulesViewState,
 }) {
   const { viewState } = props;
-  console.log("KVKV VIEWSTATE", viewState);
   const updateExisting = viewState.updateExisting;
   return (
     <Box display="flex" flexDirection="column"

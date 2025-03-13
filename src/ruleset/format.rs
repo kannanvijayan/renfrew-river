@@ -403,7 +403,7 @@ impl FormatComponentSelector {
   }
 
   pub(crate) fn to_u32(&self) -> u32 {
-    let word = (self.word as u32) & Self::WORD_MASK;
+    let word = ((self.word as u32) & Self::WORD_MASK) << Self::WORD_SHIFT;
     let offset = ((self.offset as u32) & Self::OFFSET_MASK) << Self::OFFSET_SHIFT;
     let count = ((self.count as u32) & Self::COUNT_MASK) << Self::COUNT_SHIFT;
     word | offset | count
@@ -414,5 +414,34 @@ impl FormatComponentSelector {
     let offset = ((value >> Self::OFFSET_SHIFT) & Self::OFFSET_MASK) as u8;
     let count = ((value >> Self::COUNT_SHIFT) & Self::COUNT_MASK) as u8;
     Self { word, offset, count }
+  }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct FormatComponentSelectorReadSpec {
+  selector: FormatComponentSelector,
+  out_index: u8,
+}
+impl FormatComponentSelectorReadSpec {
+  pub(crate) const OUT_INDEX_SHIFT: u32 =
+    FormatComponentSelector::COUNT_SHIFT + FormatComponentSelector::COUNT_BITS;
+  pub(crate) const OUT_INDEX_BITS: u32 = 5;
+  pub(crate) const OUT_INDEX_MASK: u32 = (1 << Self::OUT_INDEX_BITS) - 1;
+
+  pub(crate) fn new(selector: FormatComponentSelector, out_index: u8) -> Self {
+    Self { selector, out_index }
+  }
+
+  pub(crate) fn to_u32(&self) -> u32 {
+    let index = self.out_index as u32 & Self::OUT_INDEX_MASK;
+    self.selector.to_u32() | (index << Self::OUT_INDEX_SHIFT)
+  }
+
+  pub(crate) fn from_u32(value: u32) -> Self {
+    let selector = FormatComponentSelector::from_u32(value);
+    let out_index = (
+      (value >> Self::OUT_INDEX_SHIFT) & Self::OUT_INDEX_MASK
+    ) as u8;
+    Self { selector, out_index }
   }
 }

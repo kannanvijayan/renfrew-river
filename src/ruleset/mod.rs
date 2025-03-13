@@ -13,6 +13,7 @@ pub(crate) use self::{
     FormatComponentInput,
     FormatComponentValidation,
     FormatComponentSelector,
+    FormatComponentSelectorReadSpec,
   },
   terrain_gen::{
     TerrainGenRules,

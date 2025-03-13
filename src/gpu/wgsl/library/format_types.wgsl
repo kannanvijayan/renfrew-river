@@ -84,13 +84,13 @@ struct FormatSelectorReadSpec {
 }
 
 
-// FormatSelectorSpecWord
+// FormatSelectorReadSpecWord
 ////////////////////////////////////////////////////////////
 
 /**
  * A format selector spec encoded in a single u32.
  */
-struct FormatSelectorSpecWord {
+struct FormatSelectorReadSpecWord {
   /** The format selector spec. */
   word: u32
 }
@@ -100,8 +100,10 @@ const FORMAT_SELECTOR_OUT_INDEX_OFFSET: u32 = 15u;
 const FORMAT_SELECTOR_OUT_INDEX_BITS: u32 = 5u;
 
 /** Encodes a format selector spec in a single u32. */
-fn format_selector_spec_word_encode(selector: FormatSelectorReadSpec) -> FormatSelectorSpecWord {
-  return FormatSelectorSpecWord(
+fn format_selector_spec_word_encode(selector: FormatSelectorReadSpec)
+  -> FormatSelectorReadSpecWord
+{
+  return FormatSelectorReadSpecWord(
     (selector.selector.word << FORMAT_SELECTOR_WORD_OFFSET) |
     (selector.selector.shift << FORMAT_SELECTOR_SHIFT_OFFSET) |
     (selector.selector.count << FORMAT_SELECTOR_COUNT_OFFSET) |
@@ -112,7 +114,9 @@ fn format_selector_spec_word_encode(selector: FormatSelectorReadSpec) -> FormatS
 /**
  * Decodes a format selector spec from a u32.
  */
-fn format_selector_spec_word_decode(fssw: FormatSelectorSpecWord) -> FormatSelectorReadSpec {
+fn format_selector_spec_word_decode(fssw: FormatSelectorReadSpecWord)
+  -> FormatSelectorReadSpec
+{
   let value: u32 = fssw.word;
   return FormatSelectorReadSpec(
     FormatSelector(

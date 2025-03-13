@@ -70,7 +70,6 @@ export default class WorldMapTiledData {
 
   public setObservedDatumIds(datumIds: GenerationCellDatumId[]): void {
     this.mapDataSet.setObservedDatumIds(datumIds);
-
     // Invalidate the data.
     this.invalidate();
   }
@@ -332,7 +331,6 @@ export default class WorldMapTiledData {
     tileIndex: number,
     generation: number
   ): Promise<TileLoadCompletion> {
-    console.warn("KVKV performTileLoad", { tileIndex, generation });
     const { tileColumn, tileRow } = this.tileColumnAndRow(tileIndex);
     // Get or create a tile load request.
     const topLeft: CellCoord = {
@@ -350,7 +348,6 @@ export default class WorldMapTiledData {
       ),
     };
     const mapDataUpdates = await this.readMapData(topLeft, dims);
-    console.warn("KVKV performTileLoad got map data updates");
     if (mapDataUpdates.length === 0) {
       this.tileLoadStates[tileIndex] = "Loaded";
       return "updated";
