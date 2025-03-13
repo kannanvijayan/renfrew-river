@@ -19,7 +19,7 @@ export default class HexMesh {
   public readonly mesh: PIXI.Mesh<PIXI.Shader>;
   private dispatchedUpdateListeners: Deferred<void>[];
   private pendingUpdateListeners: Deferred<void>[];
-  private updateInProgress: number;
+  private textureUpdateInProgress: boolean;
 
   public constructor(opts: {
     mapData: WorldMapTiledData,
@@ -54,7 +54,7 @@ export default class HexMesh {
       worldRows,
       {
         format: PIXI.FORMATS.RGBA,
-        type: PIXI.TYPES.FLOAT
+        type: PIXI.TYPES.FLOAT,
       }
     );
     mapDataTexture.baseTexture.addListener(
@@ -77,41 +77,43 @@ export default class HexMesh {
     this.mesh = new PIXI.Mesh(geometry, shader);
     this.dispatchedUpdateListeners = [];
     this.pendingUpdateListeners = [];
-    this.updateInProgress = 0;
+    this.textureUpdateInProgress = false;
   }
 
   public updateTextures(): Promise<void> {
+    console.log("KVKV updateTextures BEGIN");
     const deferred = new Deferred<void>();
-    if (this.updateInProgress) {
+    if (this.textureUpdateInProgress) {
+      console.log("KVKV updateTextures HERE1");
       // If update in progress, add the current request to the list of
       // pending update listeners.
       this.pendingUpdateListeners.push(deferred);
     } else {
+      console.log("KVKV updateTextures HERE2");
       // Otherwise, invoke an update, and add the current request to the list
       // of dispatched update listeners.
-      this.updateInProgress = 2;
+      this.textureUpdateInProgress = true;
       // ASSERT: this.dispatchedUpdateListeners.length === 0
       this.dispatchedUpdateListeners.push(deferred);
 
+      console.log("KVKV updateTextures UPDATING");
       this.mapDataTexture.update();
     }
     return deferred.getPromise();
   }
 
   private handleTextureUpdated() {
+      console.log("KVKV handleTextureUpdated BEGIN", { progress: this.textureUpdateInProgress });
     // ASSERT: this.updateInProgress > 0
     // ASSERT: this.dispatchedUpdateListeners.length > 0
-    this.updateInProgress--;
-    if (this.updateInProgress > 0) {
-      // Still waiting for texture updates to finish.
-      return;
-    }
+    this.textureUpdateInProgress = false;
 
     const invokeListeners = this.dispatchedUpdateListeners;
+    console.log("KVKV handleTextureUpdated HERE1", { invokeListeners });
 
     if (this.pendingUpdateListeners.length > 0) {
       // Schedule another update and make the pending listeners the dispatched.
-      this.updateInProgress = 2;
+      this.textureUpdateInProgress = true;
       this.mapDataTexture.update();
       this.dispatchedUpdateListeners = this.pendingUpdateListeners;
       this.pendingUpdateListeners = [];
@@ -121,6 +123,7 @@ export default class HexMesh {
       this.dispatchedUpdateListeners = [];
     }
 
+    console.log("KVKV handleTextureUpdated HERE2");
     // Resolve the prior set of dispatched listeners.
     for (const deferred of invokeListeners) {
       deferred.resolvePromise();
@@ -339,20 +342,26 @@ function makeShader(opts: {
       float texY = textureY + adjY;
 
       float elevation = texture2D(txMapData, vec2(texX, texY)).r;
-      if (elevation < 0.5) {
+      if (elevation < 0.0) {
+        gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+      } else if (elevation == 0.0) {
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+      } else if (elevation < 0.5) {
         // color blue, lower elevation is darker blue.
         float xxx = elevation * 1000.0;
         float hundreds = floor(xxx / 100.0);
         float rem = xxx - (hundreds * 100.0);
         float blue = 0.3 + (rem / 100.0) * 0.5;
         gl_FragColor = vec4(0.1, 0.1, blue, 1.0);
-      } else {
+      } else if (elevation <= 1.0) {
         float level = (elevation - 0.5) * 2.0;
         float xxx = level * 1000.0;
         float hundreds = floor(xxx / 100.0);
         float rem = xxx - (hundreds * 100.0);
         level = 0.25 + (rem / 100.0) * 0.5;
         gl_FragColor = vec4(level, level * 0.75, level * 0.75, 1.0);
+      } else {
+        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
       }
     }
     `,

@@ -61,7 +61,7 @@ export class MapDataBase {
         `MapDataBase: array length mismatch: ${array.length} != ${dims.rows * dims.columns * size}`
       );
     }
-    this.array = array ? array : new arrayType(this.dims.rows * this.dims.columns);
+    this.array = array ?? new arrayType(dims.rows * dims.columns * size);
   }
 
   public valueAt(x: number, y: number): number | [number, number, number, number] {
@@ -81,19 +81,22 @@ export class MapDataBase {
     dims: WorldDims,
     index: DatumVizIndex,
     src: MapDataBase,
+    range: [number, number],
   }): void {
-    const { topLeft, dims, index, src } = opts;
+    console.log("KVKV MapDataBase.inject2D", { ...opts });
+    const { topLeft, dims, index, src, range } = opts;
     if (src.size !== 1) {
       throw new Error("MapDataBase.inject2D: can only inject size-1 maps");
-    }
-    if (this.dataType !== src.dataType) {
-      throw new Error("MapDataBase.write2D: data type mismatch");
     }
     const dstArray = this.array;
     const srcArray = src.array;
     this.write2DWith(topLeft, dims, 1, offset => {
       // Ignore srcIdx since we're copying from a same-sized buffer.
-      dstArray[offset + index] = srcArray[offset];
+      const value = srcArray[offset];
+      // Scale the value to [0, 1).
+      const scale = 1.0 / (range[1] - range[0]);
+      const scaledValue = (value - range[0]) * scale;
+      dstArray[offset + index] = scaledValue;
     });
   }
 
@@ -186,6 +189,9 @@ export class MapDataSet {
   // for the shader.
   private readonly textureSource: MapData<"float32", 4>;
 
+  // To handle texture updates.
+  private readonly textureUpdateListeners: (() => void)[];
+
   public constructor(worldDims: WorldDims) {
     this.worldDims = worldDims;
     this.observedDatumIds = [];
@@ -195,6 +201,7 @@ export class MapDataSet {
       size: 4,
       dims: worldDims
     });
+    this.textureUpdateListeners = [];
   }
 
   public getObservedDatumIds(): GenerationCellDatumId[] {
@@ -210,11 +217,16 @@ export class MapDataSet {
     }
   }
 
-  public setVisualizedDatumId(index: number, datumIndex: number): void {
+  public setVisualizedDatumId(index: number, datumIndex: number): "updated"|"exists" {
     if (index < 0 || index >= this.visualizedDatumIndexes.length) {
       throw new Error("MapDataSet.setVisualizedDatumId: index out of range");
     }
-    this.visualizedDatumIndexes[index] = datumIndex;
+    if (this.visualizedDatumIndexes[index] === datumIndex) {
+      return "exists";
+    } else {
+      this.visualizedDatumIndexes[index] = datumIndex;
+      return "updated";
+    }
   }
 
   public getTextureSource(): MapData<"float32", 4> {
@@ -230,6 +242,20 @@ export class MapDataSet {
     return dataMap;
   }
 
+  public addTextureUpdateListener(listener: () => void): () => void {
+    this.textureUpdateListeners.push(listener);
+    return () => this.removeTextureUpdateListener(listener);
+  }
+
+  private removeTextureUpdateListener(listener: () => void): void {
+    const index = this.textureUpdateListeners.indexOf(listener);
+    if (index < 0) {
+      console.error("WorldElevationsTiled.removeTextureUpdateListener: listener not found");
+      return;
+    }
+    this.textureUpdateListeners.splice(index, 1);
+  }
+
   public writeDataMap(args: {
     datumId: GenerationCellDatumId,
     topLeft: CellCoord,
@@ -237,6 +263,8 @@ export class MapDataSet {
   }): void {
     const { datumId, topLeft, data } = args;
     const dims = data.dims;
+
+    console.debug("KVKV writeDataMap BEGIN", { datumId, topLeft, dims });
 
     // Write it to the datum-id specific map.
     const dataMap = this.getDataMap(datumId);
@@ -247,6 +275,10 @@ export class MapDataSet {
     });
 
     // Write any visualized datum id values to the texture map.
+    console.debug("KVKV writeDataMap CHECK visualizedDatumIndexes", {
+      visualizedDatumIndexes: this.visualizedDatumIndexes,
+      observedDatumIds: this.observedDatumIds,
+    });
     this.visualizedDatumIndexes.forEach((datumIndex, vizIndex) => {
       if (datumIndex === null) {
         return;
@@ -255,25 +287,72 @@ export class MapDataSet {
       if (vizDatumId === undefined) {
         throw new Error("MapDataSet.writeDataMap: visualized datum id not found");
       }
-      if (datumIndex !== null && GenerationCellDatumId.equal(datumId, vizDatumId)) {
-        this.syncTextureData(vizDatumId, vizIndex as DatumVizIndex, topLeft, dims);
+      if (GenerationCellDatumId.equal(datumId, vizDatumId)) {
+        console.debug("KVKV writeDataMap - SyncTextureData", {
+          datumId,
+          topLeft,
+          dims,
+          vizDatumId,
+          vizIndex,
+        });
+        this.syncTextureData({
+          datumId: vizDatumId,
+          index: vizIndex as DatumVizIndex,
+          topLeft,
+          dims
+        });
       }
     });
   }
 
-  private syncTextureData(
+  public reinjectTextureData(): void {
+    this.visualizedDatumIndexes.forEach((datumIndex, vizIndex) => {
+      if (datumIndex === null) {
+        return;
+      }
+      const vizDatumId = this.observedDatumIds[datumIndex];
+      if (vizDatumId === undefined) {
+        throw new Error("MapDataSet.writeDataMap: visualized datum id not found");
+      }
+      this.syncTextureData({
+        datumId: vizDatumId,
+        index: vizIndex as DatumVizIndex,
+        topLeft: { col: 0, row: 0 },
+        dims: this.worldDims,
+      });
+    });
+  }
+
+  private syncTextureData(args: {
     datumId: GenerationCellDatumId,
     index: DatumVizIndex,
     topLeft: CellCoord,
     dims: WorldDims,
-  ): void {
+  }): void {
+    const { datumId, index, topLeft, dims } = args;
+
+    // Convert the input integer data to float data
+    // using the format rules to scale the value appropriately
+    // to [0, 1).
+    const range = this.getDataRangeForDatum(datumId);
     const mapData = this.getDataMap(datumId);
     this.textureSource.inject2D({
       topLeft,
       dims,
       index,
       src: mapData,
+      range,
     });
+  }
+
+  private getDataRangeForDatum(datumId: GenerationCellDatumId): [number, number] {
+    if ("RandGen" in datumId) {
+      return [0, 0xffff];
+    } else if ("Selector" in datumId) {
+      throw new Error("MapDataSet.getDataRange: Selector not supported");
+    } else {
+      throw new Error("MapDataSet.getDataRange: unknown datum id");
+    }
   }
 
   private ensureDataMap(datumId: GenerationCellDatumId): MapData<"uint32", 1> {

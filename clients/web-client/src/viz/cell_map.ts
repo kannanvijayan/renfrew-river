@@ -93,6 +93,10 @@ export default class CellMap extends PIXI.Container {
     this.worldRows = opts.worldRows;
     this.mapData = opts.mapData;
 
+    this.mapData.addInvalidationListener(() => {
+      this.handleMapInvalidation();
+    });
+
     this.maxWorldX = (
       normalOffsetXForCellBoundingBox(this.worldColumns - 1) +
       NORMAL_SCALE_CELL.width / 2
@@ -169,7 +173,7 @@ export default class CellMap extends PIXI.Container {
     // For animated sprites, update time in shader here.
   }
 
-  public setVisualizedDatumIds(visualizedDatumIds?: DatumVizSpec): void {
+  public setVisualizedDatumIds(visualizedDatumIds: DatumVizSpec|undefined): void {
     this.hexMesh.setVisualizedDatumIds(visualizedDatumIds);
   }
 
@@ -358,6 +362,7 @@ export default class CellMap extends PIXI.Container {
    * Final stage of updating the actual rendered view the user sees.
    */
   private updateMeshPosition(): Promise<void> {
+    console.log("KVKV Update Mesh Position");
     // This function is split into three stages:
     //   1. Update all the local tracking variables.
     //   2. Ensure that the view is loaded.
@@ -373,10 +378,14 @@ export default class CellMap extends PIXI.Container {
     const updateCounter = ++this.updateCounter;
 
     // STAGE 2: Ensure that view is loaded.
+    console.log("KVKV Update Mesh Position - calling ensureViewAndQueueSurroundings");
     return this.mapData.ensureViewAndQueueSurroundings(
       { col: this.topLeftWorldColumn, row: this.topLeftWorldRow },
       { columns: this.meshColumns, rows: this.meshRows },
     ).then(async ({ tilesUpdated: immediateTilesUpdated, surroundingsLoaded }) => {
+      console.log("KVKV Update Mesh Position - returned from ensureViewAndQueueSurroundings",
+        { immediateTilesUpdated, surroundingsLoaded, updateCounter, thisUpdateCounter: this.updateCounter }
+      );
       // If the update counter has changed, then this update is stale.
       // Don't update the mesh position.
       if (updateCounter !== this.updateCounter) {
@@ -406,11 +415,15 @@ export default class CellMap extends PIXI.Container {
       // Inform the change listeners registered on the observer.
       this.observer.invokeChangeListeners();
 
+      console.log("KVKV Update Mesh Position - checking surroundings");
       // Extra: If there were new tiles written after the surroundings were
       // loaded, then make sure to update the elevations texture again.
       // NOTE: We do NOT return this promise, because we don't want to
       // waiters of the `updateMeshPosition`'s promise to wait for this.
       surroundingsLoaded.then(({ tilesUpdated: surroundingTilesUpdated }) => {
+        console.log("KVKV Update Mesh Position - surroundings loaded",
+          { surroundingTilesUpdated }
+        );
         if (surroundingTilesUpdated > 0) {
           this.hexMesh.updateTextures();
         }

@@ -15,7 +15,6 @@ export default class Application {
   // Represents the current simulation.
   // CPU-memory simulation state is managed here.
   private simulation: Simulation | null = null;
-  private removeMapInvalidationListener: (() => void) | null = null;
 
   // Represents the current game rendering context.
   // GPU-memory rendering state is managed here.
@@ -32,7 +31,9 @@ export default class Application {
     return this.session;
   }
 
-  public async initSimulation(descriptor: WorldDescriptor): Promise<Simulation> {
+  public async initSimulation(descriptor: WorldDescriptor)
+    : Promise<Simulation>
+  {
     if (!this.session) {
       throw new Error("Session must be initialized before simulation");
     }
@@ -44,22 +45,17 @@ export default class Application {
     }
     const session = this.session;
     this.simulation = new Simulation({ descriptor, session });
-    if (this.removeMapInvalidationListener) {
-      this.removeMapInvalidationListener();
-    }
-    this.removeMapInvalidationListener =
-      this.simulation.mapData.addInvalidationListener(
-        () => this.handleMapInvalidation()
-      );
     return this.simulation;
   }
 
-  public async beginWorldCreation(descriptor: WorldDescriptor): Promise<true> {
+  public async beginWorldCreation(descriptor: WorldDescriptor)
+    : Promise<true>
+  {
+    console.log("KVKV beginWorldCreation", { descriptor });
     const session = this.getSession();
     await session.createWorld.beginWorldGeneration();
     await session.createWorld.takeGenerationStep("RandGen");
-    const simulation = await this.initSimulation(descriptor);
-    simulation.mapData.setObservedDatumIds([ { RandGen: {} } ]);
+    await this.initSimulation(descriptor);
 
     dispatchApp.view.connected(ConnectedViewState.action.setCreateWorld({
       GeneratingWorld: {
@@ -72,8 +68,11 @@ export default class Application {
   }
 
   public async initWorldCreationViz(canvas: HTMLCanvasElement): Promise<Viz> {
+    console.log("KVKV initWorldCreationViz");
     const simulation = this.getSimulation();
     const viz = await this.initViz(canvas);
+    simulation.setObservedDatumIds([ { RandGen: {} } ]);
+    simulation.setVisualizedDatumId(0, 0);
     viz.setVisualizedDatumIds({ colorTileWith: 0 });
     simulation.mapData.invalidate();
     return viz;
@@ -88,9 +87,11 @@ export default class Application {
     }
 
     if (this.viz) {
+      console.log("KVKV initWorldCreationViz - resetting existing viz");
       this.viz.reset(canvas);
     }
     if (!this.viz) {
+      console.log("KVKV initWorldCreationViz - creating existing viz");
       this.viz = Viz.create(canvas, this.simulation);
     }
     return this.viz;
@@ -158,12 +159,6 @@ export default class Application {
     if (this.session) {
       this.session.cleanup();
       this.session = null;
-    }
-  }
-
-  private handleMapInvalidation(): void {
-    if (this.viz) {
-      this.viz.handleMapInvalidation();
     }
   }
 }

@@ -25,12 +25,6 @@ export default function WorldViz(args: {
     const application = Application.getInstance();
    
     (async () => {
-      console.log("Initializing PIXI Application");
-
-      // Get the pixel width of the canvas element
-      //const width = canvas.clientWidth;
-      //const height = canvas.clientHeight;
-
       const { width, height } = canvas.getBoundingClientRect();
       console.log("Client dimensions", {width, height});
 

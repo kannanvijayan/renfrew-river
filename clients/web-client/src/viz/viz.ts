@@ -21,11 +21,6 @@ export default class Viz {
     return new Viz(canvas, pixi, simulation.mapData);
   }
 
-  public handleMapInvalidation(): void {
-    console.log("Viz: Handling map invalidation");
-    this.cellMap.handleMapInvalidation();
-  }
-
   public updateSize(width: number, height: number): void {
     this.pixi.renderer.resize(width, height);
   }

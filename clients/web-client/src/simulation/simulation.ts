@@ -1,4 +1,4 @@
-import { WorldDescriptor } from "renfrew-river-protocol-client";
+import { GenerationCellDatumId, WorldDescriptor } from "renfrew-river-protocol-client";
 import WorldMapTiledData from "./map/world_map_tiled_data";
 import Session from "../session/session";
 import MapData from "./map/map_data";
@@ -29,5 +29,13 @@ export default class Simulation {
         }));
       },
     });
+  }
+
+  public setObservedDatumIds(datumIds: GenerationCellDatumId[]): void {
+    this.mapData.setObservedDatumIds(datumIds);
+  }
+
+  public setVisualizedDatumId(index: number, datumIndex: number): void {
+    this.mapData.setVisualizedDatumId(index, datumIndex);
   }
 }
