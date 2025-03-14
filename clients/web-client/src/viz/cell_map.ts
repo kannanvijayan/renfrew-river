@@ -106,6 +106,13 @@ export default class CellMap extends PIXI.Container {
       NORMAL_SCALE_CELL.height / 2
     );
 
+    if (opts.areaWidth == 0 || opts.areaHeight == 0) {
+      console.error("KVKV Resize to zero width or height in constructor", {
+        width: opts.areaWidth,
+        height: opts.areaHeight,
+        stack: new Error().stack?.split("\n"),
+      });
+    }
     this.areaWidth = opts.areaWidth;
     this.areaHeight = opts.areaHeight;
 
@@ -204,6 +211,13 @@ export default class CellMap extends PIXI.Container {
   }
 
   public handleResize(width: number, height: number): void {
+    if (width == 0 || height == 0) {
+      console.error("KVKV Resize to zero width or height", {
+        width,
+        height,
+        stack: new Error().stack?.split("\n"),
+      });
+    }
     this.areaWidth = width;
     this.areaHeight = height;
 
@@ -212,7 +226,7 @@ export default class CellMap extends PIXI.Container {
   }
 
   public handleMapInvalidation(): void {
-    console.log("Map invalidated");
+    console.log("Map invalidated", { stack: new Error().stack?.split("\n") });
     this.updateMeshPosition();
   }
 
@@ -405,6 +419,7 @@ export default class CellMap extends PIXI.Container {
       const mesh = this.hexMesh.mesh;
 
       const clampedZoom = this.clampedZoomLevel();
+      console.log("KVKV Set zoom level", { clampedZoom, mesh: this.topLeftMesh });
       mesh.scale.set(clampedZoom);
       mesh.x = -this.topLeftMesh.x * clampedZoom;
       mesh.y = -this.topLeftMesh.y * clampedZoom;
@@ -475,6 +490,7 @@ export default class CellMap extends PIXI.Container {
   }
 
   private setTopLeftWorld(x: number, y: number): void {
+    console.log("KVKV Set Top Left World", { x, y });
     this.topLeftWorld.x = x;
     this.topLeftWorld.y = y;
 

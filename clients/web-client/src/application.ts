@@ -74,7 +74,7 @@ export default class Application {
     simulation.setObservedDatumIds([ { RandGen: {} } ]);
     simulation.setVisualizedDatumId(0, 0);
     viz.setVisualizedDatumIds({ colorTileWith: 0 });
-    simulation.mapData.invalidate();
+    simulation.invalidateMapData();
     return viz;
   }
 
@@ -87,11 +87,11 @@ export default class Application {
     }
 
     if (this.viz) {
-      console.log("KVKV initWorldCreationViz - resetting existing viz");
-      this.viz.reset(canvas);
+      console.log("KVKV initWorldCreationViz - reusing existing viz");
+      this.viz.reuse(canvas);
     }
     if (!this.viz) {
-      console.log("KVKV initWorldCreationViz - creating existing viz");
+      console.log("KVKV initWorldCreationViz - creating new viz");
       this.viz = Viz.create(canvas, this.simulation);
     }
     return this.viz;
@@ -121,17 +121,7 @@ export default class Application {
   public static getInstance(): Application {
     if (Application.instance === null) {
       Application.instance = new Application();
-    }
-    return Application.instance;
-  }
-  public static newInstance(): Application {
-    if (Application.instance === null) {
-      Application.instance = new Application();
-    } else {
-      console.error("Application: Multiple instances detected.  Continuing.", {
-        existingInstance: Application.instance
-      });
-      Application.instance.cleanup();
+      (window as unknown as Record<string, unknown>).RENFREW = Application.instance;
     }
     return Application.instance;
   }

@@ -38,4 +38,8 @@ export default class Simulation {
   public setVisualizedDatumId(index: number, datumIndex: number): void {
     this.mapData.setVisualizedDatumId(index, datumIndex);
   }
+
+  public invalidateMapData(): void {
+    this.mapData.invalidate();
+  }
 }

@@ -256,6 +256,20 @@ export class MapDataSet {
     this.textureUpdateListeners.splice(index, 1);
   }
 
+  private notifyTextureUpdateListeners(): void {
+    for (const listener of this.textureUpdateListeners) {
+      try {
+        listener();
+      } catch (error) {
+        console.error("MapDataSet.notifyTextureUpdateListeners: error in listener", {
+          error,
+          stack: new Error().stack?.split("\n"),
+          listener,
+        });
+      }
+    }
+  }
+
   public writeDataMap(args: {
     datumId: GenerationCellDatumId,
     topLeft: CellCoord,
@@ -279,6 +293,7 @@ export class MapDataSet {
       visualizedDatumIndexes: this.visualizedDatumIndexes,
       observedDatumIds: this.observedDatumIds,
     });
+    const vizIndexes: DatumVizIndex[] = [];
     this.visualizedDatumIndexes.forEach((datumIndex, vizIndex) => {
       if (datumIndex === null) {
         return;
@@ -295,17 +310,14 @@ export class MapDataSet {
           vizDatumId,
           vizIndex,
         });
-        this.syncTextureData({
-          datumId: vizDatumId,
-          index: vizIndex as DatumVizIndex,
-          topLeft,
-          dims
-        });
+        vizIndexes.push(vizIndex as DatumVizIndex);
       }
     });
+    this.syncTextureDataMulti({ vizIndexes, topLeft, dims });
   }
 
   public reinjectTextureData(): void {
+    const vizIndexes: DatumVizIndex[] = [];
     this.visualizedDatumIndexes.forEach((datumIndex, vizIndex) => {
       if (datumIndex === null) {
         return;
@@ -314,22 +326,62 @@ export class MapDataSet {
       if (vizDatumId === undefined) {
         throw new Error("MapDataSet.writeDataMap: visualized datum id not found");
       }
-      this.syncTextureData({
-        datumId: vizDatumId,
-        index: vizIndex as DatumVizIndex,
-        topLeft: { col: 0, row: 0 },
-        dims: this.worldDims,
-      });
+      vizIndexes.push(vizIndex as DatumVizIndex);
+    });
+    this.syncTextureDataMulti({
+      vizIndexes,
+      topLeft: { col: 0, row: 0 },
+      dims: this.worldDims,
     });
   }
 
-  private syncTextureData(args: {
-    datumId: GenerationCellDatumId,
-    index: DatumVizIndex,
+  private syncTextureDataMulti(args: {
+    vizIndexes: DatumVizIndex[],
     topLeft: CellCoord,
     dims: WorldDims,
   }): void {
-    const { datumId, index, topLeft, dims } = args;
+    const { vizIndexes, topLeft, dims } = args;
+    console.log("KVKV MapDataSet.syncTextureDataMulti", {
+      vizIndexes,
+      topLeft,
+      dims
+    });
+
+    for (const vizIndex of vizIndexes) {
+      this.syncTextureData({
+        vizIndex,
+        topLeft,
+        dims,
+      });
+    }
+    if (vizIndexes.length > 0) {
+      console.log("KVKV MapDataSet.syncTextureDataMulti - notifyTextureUpdateListeners");
+      this.notifyTextureUpdateListeners();
+    }
+  }
+
+  private syncTextureData(args: {
+    vizIndex: DatumVizIndex,
+    topLeft: CellCoord,
+    dims: WorldDims,
+  }): void {
+    const { vizIndex, topLeft, dims } = args;
+
+    const datumIndex = this.visualizedDatumIndexes[vizIndex];
+    if (datumIndex === null) {
+      console.error("MapDataSet.syncTextureData: datumId is null", {
+        vizIndex,
+      });
+      return;
+    }
+    const datumId = this.observedDatumIds[datumIndex];
+    if (datumId === undefined) {
+      console.error("MapDataSet.syncTextureData: datumId not found", {
+        datumIndex,
+        vizIndex,
+      });
+      return;
+    }
 
     // Convert the input integer data to float data
     // using the format rules to scale the value appropriately
@@ -339,7 +391,7 @@ export class MapDataSet {
     this.textureSource.inject2D({
       topLeft,
       dims,
-      index,
+      index: vizIndex,
       src: mapData,
       range,
     });

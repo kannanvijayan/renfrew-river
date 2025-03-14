@@ -71,8 +71,6 @@ export default class WorldMapTiledData {
   public setObservedDatumIds(datumIds: GenerationCellDatumId[]): void {
     console.log("KVKV setObservedDatumIds", { datumIds });
     this.mapDataSet.setObservedDatumIds(datumIds);
-    // Invalidate the data.
-    this.invalidate();
   }
   
   public setVisualizedDatumId(index: number, datumIndex: number): void {

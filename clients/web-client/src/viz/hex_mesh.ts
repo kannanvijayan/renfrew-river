@@ -17,9 +17,8 @@ export default class HexMesh {
 
   public readonly mapDataTexture: PIXI.Texture;
   public readonly mesh: PIXI.Mesh<PIXI.Shader>;
-  private dispatchedUpdateListeners: Deferred<void>[];
-  private pendingUpdateListeners: Deferred<void>[];
-  private textureUpdateInProgress: boolean;
+  private textureUpdateInProgress: Deferred<void> | undefined;
+  private textureUpdateScheduled: Deferred<void> | undefined;
 
   public constructor(opts: {
     mapData: WorldMapTiledData,
@@ -75,58 +74,48 @@ export default class HexMesh {
 
     this.mapDataTexture = mapDataTexture;
     this.mesh = new PIXI.Mesh(geometry, shader);
-    this.dispatchedUpdateListeners = [];
-    this.pendingUpdateListeners = [];
-    this.textureUpdateInProgress = false;
+    this.textureUpdateInProgress = undefined;
+    this.textureUpdateScheduled = undefined;
   }
 
   public updateTextures(): Promise<void> {
-    console.log("KVKV updateTextures BEGIN");
-    const deferred = new Deferred<void>();
-    if (this.textureUpdateInProgress) {
-      console.log("KVKV updateTextures HERE1");
-      // If update in progress, add the current request to the list of
-      // pending update listeners.
-      this.pendingUpdateListeners.push(deferred);
-    } else {
-      console.log("KVKV updateTextures HERE2");
-      // Otherwise, invoke an update, and add the current request to the list
-      // of dispatched update listeners.
-      this.textureUpdateInProgress = true;
-      // ASSERT: this.dispatchedUpdateListeners.length === 0
-      this.dispatchedUpdateListeners.push(deferred);
-
-      console.log("KVKV updateTextures UPDATING");
-      this.mapDataTexture.update();
+    console.log("KVKV updateTextures");
+    // If there's an update already scheduled, just return the promise.
+    if (this.textureUpdateScheduled) {
+      console.log("KVKV updateTextures - returning scheduled promise");
+      return this.textureUpdateScheduled.getPromise();
     }
-    return deferred.getPromise();
+
+    // Otherwise, if there's an update in progress, we'll need to
+    // update again after it finishes.  Schedule one.
+    if (this.textureUpdateInProgress) {
+      console.log("KVKV updateTextures - returning new scheduled promise");
+      this.textureUpdateScheduled = new Deferred<void>();
+      return this.textureUpdateScheduled.getPromise();
+    }
+
+    // Otherwise, we can just update the texture now.
+    console.log("KVKV updateTextures - updating immediately");
+    this.textureUpdateInProgress = new Deferred<void>();
+    const promise = this.textureUpdateInProgress.getPromise();
+    this.mapDataTexture.update();
+    return promise;
   }
 
   private handleTextureUpdated() {
-      console.log("KVKV handleTextureUpdated BEGIN", { progress: this.textureUpdateInProgress });
-    // ASSERT: this.updateInProgress > 0
-    // ASSERT: this.dispatchedUpdateListeners.length > 0
-    this.textureUpdateInProgress = false;
-
-    const invokeListeners = this.dispatchedUpdateListeners;
-    console.log("KVKV handleTextureUpdated HERE1", { invokeListeners });
-
-    if (this.pendingUpdateListeners.length > 0) {
-      // Schedule another update and make the pending listeners the dispatched.
-      this.textureUpdateInProgress = true;
-      this.mapDataTexture.update();
-      this.dispatchedUpdateListeners = this.pendingUpdateListeners;
-      this.pendingUpdateListeners = [];
-      // Leave updateInProgress as true.
-    } else {
-      // No more pending listeners, so clear the dispatched listeners.
-      this.dispatchedUpdateListeners = [];
+    // Clear the in-progress update.
+    if (!this.textureUpdateInProgress) {
+      console.error("HexMesh: texture update not in progress");
     }
+    this.textureUpdateInProgress?.resolvePromise();
+    this.textureUpdateInProgress = undefined;
 
-    console.log("KVKV handleTextureUpdated HERE2");
-    // Resolve the prior set of dispatched listeners.
-    for (const deferred of invokeListeners) {
-      deferred.resolvePromise();
+    if (this.textureUpdateScheduled) {
+      console.log("KVKV updateTextures - updating scheduled");
+      // If we have a scheduled update, perform it now.
+      this.textureUpdateInProgress = this.textureUpdateScheduled;
+      this.textureUpdateScheduled = undefined;
+      this.mapDataTexture.update();
     }
   }
 
