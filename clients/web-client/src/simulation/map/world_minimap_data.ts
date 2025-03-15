@@ -27,7 +27,7 @@ export default class WorldMinimapData {
     const datumIds = [ ...result.mapDataSet.getObservedDatumIds() ];
     const miniDataMaps = await readMiniMapDataCallback({ miniDims, datumIds });
     for (const [i, miniDataMap] of miniDataMaps.entries()) {
-      result.mapDataSet.getDataMap(datumIds[i]).write2D({
+      result.mapDataSet.getMapData(datumIds[i]).write2D({
         topLeft: { col: 0, row: 0 },
         dims: miniDims,
         data: miniDataMap,

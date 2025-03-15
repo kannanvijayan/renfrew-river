@@ -15,7 +15,7 @@ export type WorldMapTiledDataLoadResult = {
   }>,
 };
 
-const PER_TILE_DIMS: WorldDims = { columns: 256, rows: 256 };
+const PER_TILE_DIMS: WorldDims = { columns: 64, rows: 64 };
 
 /**
  * World elevations, but with support for dynamically loading them
@@ -69,12 +69,10 @@ export default class WorldMapTiledData {
   }
 
   public setObservedDatumIds(datumIds: GenerationCellDatumId[]): void {
-    console.log("KVKV setObservedDatumIds", { datumIds });
     this.mapDataSet.setObservedDatumIds(datumIds);
   }
   
   public setVisualizedDatumId(index: number, datumIndex: number): void {
-    console.log("KVKV setVisualizedDatumId", { index, datumIndex });
     const updated = this.mapDataSet.setVisualizedDatumId(index, datumIndex);
     if (updated === "updated") {
       this.mapDataSet.reinjectTextureData();
@@ -358,28 +356,23 @@ export default class WorldMapTiledData {
         PER_TILE_DIMS.rows
       ),
     };
-    console.debug("KVKV performTileLoad: readMapData", { topLeft, dims });
     const mapDataUpdates = await this.readMapData(topLeft, dims);
-    console.debug("KVKV performTileLoad: got updates", { mapDataUpdates });
     if (mapDataUpdates.length === 0) {
       this.tileLoadStates[tileIndex] = "Loaded";
       return "updated";
     }
 
-    console.debug("KVKV performTileLoad: in generation", { generation, thisGen: this.generation });
     // If the generation has changed since the request was made, then
     // the data is stale and we should not write it.
     if (generation !== this.generation) {
       return "invalidated";
     }
 
-    console.debug("KVKV performTileLoad: writing updates");
     for (const [datumId, updateData] of mapDataUpdates) {
-      console.debug("KVKV performTileLoad: writing update for datumId", { datumId });
-      this.mapDataSet.writeDataMap({
+      this.mapDataSet.updateMapData({
         datumId,
-        topLeft,
-        data: updateData,
+        dstTopLeft: topLeft,
+        src: updateData,
       });
     }
 

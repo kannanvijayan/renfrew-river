@@ -12,6 +12,9 @@ export default class Viz {
   private removePreventDefaultListener: (() => void) | undefined;
   private removeResizeListener: (() => void) | undefined;
   private removeWheelListener: (() => void) | undefined;
+  private removeMouseDownListener: (() => void) | undefined;
+  private removeMouseUpListener: (() => void) | undefined;
+  private removeMouseMoveListener: (() => void) | undefined;
 
   public static create(canvas: HTMLCanvasElement, simulation: Simulation): Viz {
     console.log("Creating Viz");
@@ -41,6 +44,15 @@ export default class Viz {
 
     this.removeWheelListener?.();
     this.removeWheelListener = undefined;
+
+    this.removeMouseDownListener?.();
+    this.removeMouseDownListener = undefined;
+
+    this.removeMouseUpListener?.();
+    this.removeMouseUpListener = undefined;
+
+    this.removeMouseMoveListener?.();
+    this.removeMouseMoveListener = undefined;
   }
 
   public reuse(canvas: HTMLCanvasElement): void {
@@ -98,23 +110,56 @@ export default class Viz {
     };
 
     // Handle resize events.
-    const resize = () => {
-      const { width, height } = this.canvas.getBoundingClientRect();
-      console.log("KVKV Resize", { width, height });
-      this.pixi.renderer.resize(width, height);
-      this.cellMap.handleResize(width, height);
-    };
+    const resize = this.handleResize.bind(this);
     window.addEventListener("resize", resize);
     this.removeResizeListener =
       () => window.removeEventListener("resize", resize);
 
-    const wheelListener = (ev: WheelEvent) => {
-      console.log("KVKV wheel event", { ev });
-      this.cellMap.handleWheel(ev.deltaY, { x: ev.clientX, y: ev.clientY });
-      ev.preventDefault();
-    }
+    const wheelListener = this.handleWheel.bind(this);
     this.canvas.addEventListener("wheel", wheelListener);
     this.removeWheelListener =
       () => this.canvas.removeEventListener("wheel", wheelListener);
+
+    const mousedownListener = this.handleMouseDown.bind(this);
+    this.canvas.addEventListener("mousedown", mousedownListener);
+    this.removeMouseDownListener =
+      () => this.canvas.removeEventListener("mousedown", mousedownListener);
+
+    const mouseupListener = this.handleMouseUp.bind(this);
+    this.canvas.addEventListener("mouseup", mouseupListener);
+    this.removeMouseUpListener =
+      () => this.canvas.removeEventListener("mouseup", mouseupListener);
+
+    const mouseMoveListener = this.handleMouseMove.bind(this);
+    this.canvas.addEventListener("mousemove", mouseMoveListener);
+    this.removeMouseMoveListener =
+      () => this.canvas.removeEventListener("mousemove", mouseMoveListener);
+  }
+
+  private handleResize(): void {
+    const { width, height } = this.canvas.getBoundingClientRect();
+    this.pixi.renderer.resize(width, height);
+    this.cellMap.handleResize(width, height);
+  }
+
+  private handleWheel(ev: WheelEvent): void {
+    this.cellMap.handleWheel(ev.deltaY, { x: ev.clientX, y: ev.clientY });
+    ev.preventDefault();
+  }
+
+  private handleMouseDown(ev: MouseEvent): void {
+    if (ev.button === 0) {
+      this.cellMap.handlePointerDown({ x: ev.clientX, y: ev.clientY });
+    }
+  }
+
+  private handleMouseUp(ev: MouseEvent): void {
+    if (ev.button === 0) {
+      this.cellMap.handlePointerUp({ x: ev.clientX, y: ev.clientY });
+    }
+  }
+
+  private handleMouseMove(ev: MouseEvent): void {
+    this.cellMap.handlePointerMove({ x: ev.clientX, y: ev.clientY });
   }
 }

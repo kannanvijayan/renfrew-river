@@ -79,23 +79,19 @@ export default class HexMesh {
   }
 
   public updateTextures(): Promise<void> {
-    console.log("KVKV updateTextures");
     // If there's an update already scheduled, just return the promise.
     if (this.textureUpdateScheduled) {
-      console.log("KVKV updateTextures - returning scheduled promise");
       return this.textureUpdateScheduled.getPromise();
     }
 
     // Otherwise, if there's an update in progress, we'll need to
     // update again after it finishes.  Schedule one.
     if (this.textureUpdateInProgress) {
-      console.log("KVKV updateTextures - returning new scheduled promise");
       this.textureUpdateScheduled = new Deferred<void>();
       return this.textureUpdateScheduled.getPromise();
     }
 
     // Otherwise, we can just update the texture now.
-    console.log("KVKV updateTextures - updating immediately");
     this.textureUpdateInProgress = new Deferred<void>();
     const promise = this.textureUpdateInProgress.getPromise();
     this.mapDataTexture.update();
@@ -105,13 +101,12 @@ export default class HexMesh {
   private handleTextureUpdated() {
     // Clear the in-progress update.
     if (!this.textureUpdateInProgress) {
-      console.error("HexMesh: texture update not in progress");
+      console.error("handleTextureUpdated(): texture update not in progress");
     }
     this.textureUpdateInProgress?.resolvePromise();
     this.textureUpdateInProgress = undefined;
 
     if (this.textureUpdateScheduled) {
-      console.log("KVKV updateTextures - updating scheduled");
       // If we have a scheduled update, perform it now.
       this.textureUpdateInProgress = this.textureUpdateScheduled;
       this.textureUpdateScheduled = undefined;

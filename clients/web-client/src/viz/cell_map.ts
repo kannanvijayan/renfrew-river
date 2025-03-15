@@ -107,7 +107,7 @@ export default class CellMap extends PIXI.Container {
     );
 
     if (opts.areaWidth == 0 || opts.areaHeight == 0) {
-      console.error("KVKV Resize to zero width or height in constructor", {
+      console.error("Resize to zero width or height in constructor", {
         width: opts.areaWidth,
         height: opts.areaHeight,
         stack: new Error().stack?.split("\n"),
@@ -212,7 +212,7 @@ export default class CellMap extends PIXI.Container {
 
   public handleResize(width: number, height: number): void {
     if (width == 0 || height == 0) {
-      console.error("KVKV Resize to zero width or height", {
+      console.error("Resize to zero width or height", {
         width,
         height,
         stack: new Error().stack?.split("\n"),
@@ -376,7 +376,6 @@ export default class CellMap extends PIXI.Container {
    * Final stage of updating the actual rendered view the user sees.
    */
   private updateMeshPosition(): Promise<void> {
-    console.log("KVKV Update Mesh Position");
     // This function is split into three stages:
     //   1. Update all the local tracking variables.
     //   2. Ensure that the view is loaded.
@@ -392,14 +391,10 @@ export default class CellMap extends PIXI.Container {
     const updateCounter = ++this.updateCounter;
 
     // STAGE 2: Ensure that view is loaded.
-    console.log("KVKV Update Mesh Position - calling ensureViewAndQueueSurroundings");
     return this.mapData.ensureViewAndQueueSurroundings(
       { col: this.topLeftWorldColumn, row: this.topLeftWorldRow },
       { columns: this.meshColumns, rows: this.meshRows },
     ).then(async ({ tilesUpdated: immediateTilesUpdated, surroundingsLoaded }) => {
-      console.log("KVKV Update Mesh Position - returned from ensureViewAndQueueSurroundings",
-        { immediateTilesUpdated, surroundingsLoaded, updateCounter, thisUpdateCounter: this.updateCounter }
-      );
       // If the update counter has changed, then this update is stale.
       // Don't update the mesh position.
       if (updateCounter !== this.updateCounter) {
@@ -419,7 +414,6 @@ export default class CellMap extends PIXI.Container {
       const mesh = this.hexMesh.mesh;
 
       const clampedZoom = this.clampedZoomLevel();
-      console.log("KVKV Set zoom level", { clampedZoom, mesh: this.topLeftMesh });
       mesh.scale.set(clampedZoom);
       mesh.x = -this.topLeftMesh.x * clampedZoom;
       mesh.y = -this.topLeftMesh.y * clampedZoom;
@@ -430,15 +424,11 @@ export default class CellMap extends PIXI.Container {
       // Inform the change listeners registered on the observer.
       this.observer.invokeChangeListeners();
 
-      console.log("KVKV Update Mesh Position - checking surroundings");
       // Extra: If there were new tiles written after the surroundings were
       // loaded, then make sure to update the elevations texture again.
       // NOTE: We do NOT return this promise, because we don't want to
       // waiters of the `updateMeshPosition`'s promise to wait for this.
       surroundingsLoaded.then(({ tilesUpdated: surroundingTilesUpdated }) => {
-        console.log("KVKV Update Mesh Position - surroundings loaded",
-          { surroundingTilesUpdated }
-        );
         if (surroundingTilesUpdated > 0) {
           this.hexMesh.updateTextures();
         }
@@ -490,7 +480,6 @@ export default class CellMap extends PIXI.Container {
   }
 
   private setTopLeftWorld(x: number, y: number): void {
-    console.log("KVKV Set Top Left World", { x, y });
     this.topLeftWorld.x = x;
     this.topLeftWorld.y = y;
 

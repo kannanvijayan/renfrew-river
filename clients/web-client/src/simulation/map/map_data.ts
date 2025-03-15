@@ -77,64 +77,75 @@ export class MapDataBase {
   }
 
   public inject2D(opts: {
-    topLeft: CellCoord,
-    dims: WorldDims,
-    index: DatumVizIndex,
+    srcTopLeft: CellCoord,
+    dstTopLeft: CellCoord,
+    copyDims: WorldDims,
+    srcVizIndex: DatumVizIndex,
+    dstVizIndex: DatumVizIndex,
     src: MapDataBase,
     range: [number, number],
   }): void {
-    console.log("KVKV MapDataBase.inject2D", { ...opts });
-    const { topLeft, dims, index, src, range } = opts;
+    const { srcTopLeft, dstTopLeft, copyDims, srcVizIndex, dstVizIndex, src, range } = opts;
     if (src.size !== 1) {
       throw new Error("MapDataBase.inject2D: can only inject size-1 maps");
     }
     const dstArray = this.array;
     const srcArray = src.array;
-    this.write2DWith(topLeft, dims, 1, offset => {
-      // Ignore srcIdx since we're copying from a same-sized buffer.
-      const value = srcArray[offset];
-      // Scale the value to [0, 1).
-      const scale = 1.0 / (range[1] - range[0]);
-      const scaledValue = (value - range[0]) * scale;
-      dstArray[offset + index] = scaledValue;
+    this.write2DWith({
+      srcTopLeft,
+      dstTopLeft,
+      srcDims: src.dims,
+      copyDims,
+      srcSize: src.size,
+      callback: (dstIndex, srcIndex) => {
+        const value = srcArray[srcIndex + srcVizIndex];
+        // Scale the value to [0, 1).
+        const scale = 1.0 / (range[1] - range[0]);
+        const scaledValue = (value - range[0]) * scale;
+        dstArray[dstIndex + dstVizIndex] = scaledValue;
+      },
     });
   }
 
   public write2D(opts: {
-    topLeft: CellCoord,
-    dims: WorldDims,
-    data: MapDataBase,
+    srcTopLeft: CellCoord,
+    dstTopLeft: CellCoord,
+    copyDims: WorldDims,
+    src: MapDataBase,
+    srcVizIndex: DatumVizIndex,
+    dstVizIndex: DatumVizIndex,
   }): void {
-    const { topLeft, dims, data } = opts;
-
-    if (this.size !== data.size) {
-      throw new Error("MapDataBase.write2D: size mismatch");
-    }
-    if (this.dataType !== data.dataType) {
-      throw new Error("MapDataBase.write2D: data type mismatch");
-    }
-    const dst = this.array;
-    const src = data.array;
-    this.write2DWith(topLeft, dims, data.size, (dstIdx, srcIdx) => {
-      for (let i = 0; i < this.size && i < data.size; i++) {
-        dst[dstIdx + i] = src[srcIdx + i];
+    const { srcTopLeft, dstTopLeft, copyDims, src, srcVizIndex, dstVizIndex } = opts;
+    const dstArray = this.array;
+    const srcArray = src.array;
+    this.write2DWith({
+      srcTopLeft,
+      dstTopLeft,
+      srcDims: src.dims,
+      copyDims,
+      srcSize: src.size,
+      callback: (dstIdx, srcIdx) => {
+        dstArray[dstIdx + dstVizIndex] = srcArray[srcIdx + srcVizIndex];
       }
     });
   }
 
-  private write2DWith(
-    topLeft: CellCoord,
-    dims: WorldDims,
+  private write2DWith(args: {
+    srcTopLeft: CellCoord,
+    dstTopLeft: CellCoord,
+    srcDims: WorldDims,
+    copyDims: WorldDims,
     srcSize: ValidSize,
-    callback: (dstIdx: number, srcIdx: number) => void,
-  ): void {
-    for (let j = 0; j < dims.rows; j++) {
-      const dstj = ((topLeft.row + j) * this.dims.columns + topLeft.col);
-      const srcj = (j * dims.columns);
-      for (let i = 0; i < dims.columns; i++) {
+    callback: (dstIdx: number, srcIdx: number, column: number, row: number) => void,
+  }): void {
+    const { srcTopLeft, dstTopLeft, srcDims, copyDims, srcSize, callback } = args;
+    for (let j = 0; j < copyDims.rows; j++) {
+      const dstj = (dstTopLeft.row + j) * this.dims.columns + dstTopLeft.col;
+      const srcj = ((srcTopLeft.row + j) * srcDims.columns) + srcTopLeft.col;
+      for (let i = 0; i < copyDims.columns; i++) {
         const dsti = (dstj + i) * this.size;
         const srci = (srcj + i) * srcSize;
-        callback(dsti, srci);
+        callback(dsti, srci, i, j);
       }
     }
   }
@@ -233,7 +244,7 @@ export class MapDataSet {
     return this.textureSource;
   }
 
-  public getDataMap(datumId: GenerationCellDatumId): MapData {
+  public getMapData(datumId: GenerationCellDatumId): MapData<"uint32", 1> {
     const datumKey = GenerationCellDatumId.toStringKey(datumId);
     const dataMap = this.dataMaps.get(datumKey);
     if (!dataMap) {
@@ -270,29 +281,26 @@ export class MapDataSet {
     }
   }
 
-  public writeDataMap(args: {
+  public updateMapData(args: {
     datumId: GenerationCellDatumId,
-    topLeft: CellCoord,
-    data: MapData<"uint32", 1>,
+    dstTopLeft: CellCoord,
+    src: MapData<"uint32", 1>,
   }): void {
-    const { datumId, topLeft, data } = args;
-    const dims = data.dims;
-
-    console.debug("KVKV writeDataMap BEGIN", { datumId, topLeft, dims });
+    const { datumId, dstTopLeft, src } = args;
+    const syncDims = src.dims;
 
     // Write it to the datum-id specific map.
-    const dataMap = this.getDataMap(datumId);
+    const dataMap = this.getMapData(datumId);
     dataMap.write2D({
-      topLeft,
-      dims,
-      data,
+      srcTopLeft: { col: 0, row: 0 },
+      dstTopLeft,
+      copyDims: syncDims,
+      src,
+      srcVizIndex: 0,
+      dstVizIndex: 0,
     });
 
     // Write any visualized datum id values to the texture map.
-    console.debug("KVKV writeDataMap CHECK visualizedDatumIndexes", {
-      visualizedDatumIndexes: this.visualizedDatumIndexes,
-      observedDatumIds: this.observedDatumIds,
-    });
     const vizIndexes: DatumVizIndex[] = [];
     this.visualizedDatumIndexes.forEach((datumIndex, vizIndex) => {
       if (datumIndex === null) {
@@ -303,17 +311,14 @@ export class MapDataSet {
         throw new Error("MapDataSet.writeDataMap: visualized datum id not found");
       }
       if (GenerationCellDatumId.equal(datumId, vizDatumId)) {
-        console.debug("KVKV writeDataMap - SyncTextureData", {
-          datumId,
-          topLeft,
-          dims,
-          vizDatumId,
-          vizIndex,
-        });
         vizIndexes.push(vizIndex as DatumVizIndex);
       }
     });
-    this.syncTextureDataMulti({ vizIndexes, topLeft, dims });
+    this.syncTextureDataMulti({
+      vizIndexes,
+      topLeft: dstTopLeft,
+      dims: syncDims,
+    });
   }
 
   public reinjectTextureData(): void {
@@ -341,21 +346,11 @@ export class MapDataSet {
     dims: WorldDims,
   }): void {
     const { vizIndexes, topLeft, dims } = args;
-    console.log("KVKV MapDataSet.syncTextureDataMulti", {
-      vizIndexes,
-      topLeft,
-      dims
-    });
 
     for (const vizIndex of vizIndexes) {
-      this.syncTextureData({
-        vizIndex,
-        topLeft,
-        dims,
-      });
+      this.syncTextureData({ vizIndex, topLeft, dims });
     }
     if (vizIndexes.length > 0) {
-      console.log("KVKV MapDataSet.syncTextureDataMulti - notifyTextureUpdateListeners");
       this.notifyTextureUpdateListeners();
     }
   }
@@ -366,18 +361,19 @@ export class MapDataSet {
     dims: WorldDims,
   }): void {
     const { vizIndex, topLeft, dims } = args;
+    console.log("MapDataSet.syncTextureData BEGIN", args);
 
-    const datumIndex = this.visualizedDatumIndexes[vizIndex];
-    if (datumIndex === null) {
+    const obsIndex = this.visualizedDatumIndexes[vizIndex];
+    if (obsIndex === null) {
       console.error("MapDataSet.syncTextureData: datumId is null", {
         vizIndex,
       });
       return;
     }
-    const datumId = this.observedDatumIds[datumIndex];
+    const datumId = this.observedDatumIds[obsIndex];
     if (datumId === undefined) {
       console.error("MapDataSet.syncTextureData: datumId not found", {
-        datumIndex,
+        obsIndex,
         vizIndex,
       });
       return;
@@ -386,18 +382,20 @@ export class MapDataSet {
     // Convert the input integer data to float data
     // using the format rules to scale the value appropriately
     // to [0, 1).
-    const range = this.getDataRangeForDatum(datumId);
-    const mapData = this.getDataMap(datumId);
+    const range = this.getDataRange(datumId);
+    const mapData = this.getMapData(datumId);
     this.textureSource.inject2D({
-      topLeft,
-      dims,
-      index: vizIndex,
+      srcTopLeft: topLeft,
+      dstTopLeft: topLeft,
+      copyDims: dims,
+      dstVizIndex: vizIndex,
+      srcVizIndex: 0,
       src: mapData,
       range,
     });
   }
 
-  private getDataRangeForDatum(datumId: GenerationCellDatumId): [number, number] {
+  private getDataRange(datumId: GenerationCellDatumId): [number, number] {
     if ("RandGen" in datumId) {
       return [0, 0xffff];
     } else if ("Selector" in datumId) {
@@ -418,6 +416,7 @@ export class MapDataSet {
       size: 1,
       dims: this.worldDims,
     });
+    dataMap.array.fill(0xffff);
     this.dataMaps.set(key, dataMap);
     return dataMap;
   }
