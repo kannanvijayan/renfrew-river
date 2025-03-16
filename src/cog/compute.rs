@@ -23,7 +23,7 @@ impl CogComputePipeline {
   pub(crate) fn build_bind_group(&self, index: usize) -> CogBindGroupBuilder {
     let layout = self.wgpu_compute_pipeline.get_bind_group_layout(index as u32);
     let num_entries = self.bind_group_sizes[index];
-    CogBindGroupBuilder::new(&self.device, layout, num_entries)
+    CogBindGroupBuilder::new(layout, num_entries)
   }
 
   pub(crate) fn wgpu_compute_pipeline(&self) -> &wgpu::ComputePipeline {
@@ -107,7 +107,6 @@ impl<'a> PassBase<'a> {
   fn add_bind_group<F>(&mut self, f: F)
     where F: FnOnce(CogBindGroupBuilder) -> CogBindGroupBuilder
   {
-    eprintln!("KVKV add_bind_group: idx={}", self.bind_groups.len());
     let bind_group_index = self.bind_groups.len();
     let bind_group_sizes = self.pipeline.bind_group_sizes;
     if self.bind_groups.len() >= bind_group_sizes.len() {
@@ -115,12 +114,10 @@ impl<'a> PassBase<'a> {
     }
     let mut builder = self.pipeline.build_bind_group(bind_group_index);
     if bind_group_index == 0 {
-      eprintln!("KVKV add_bind_group: adding uniform buffer");
       builder = builder.add_uniform_buffer(&self.uniform_buffer);
     }
     let builder = f(builder);
     let bind_group = builder.build();
-      eprintln!("KVKV add_bind_group: PUSHING");
     self.bind_groups.push(bind_group);
   }
 

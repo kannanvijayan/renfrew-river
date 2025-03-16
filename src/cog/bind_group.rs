@@ -49,19 +49,16 @@ impl CogBindGroupEntry {
 }
 
 pub(crate) struct CogBindGroupBuilder {
-  pub(crate) device: CogDevice,
   pub(crate) wgpu_layout: wgpu::BindGroupLayout,
   pub(crate) num_entries: u32,
   pub(crate) entries: Vec<CogBindGroupEntry>,
 }
 impl CogBindGroupBuilder {
   pub(crate) fn new(
-    device: &CogDevice,
     wgpu_layout: wgpu::BindGroupLayout,
     num_entries: u32,
  ) -> Self {
-    let device = device.clone();
-    Self { device, wgpu_layout, num_entries, entries: Vec::new() }
+    Self { wgpu_layout, num_entries, entries: Vec::new() }
   }
 
   fn add_buffer(mut self,

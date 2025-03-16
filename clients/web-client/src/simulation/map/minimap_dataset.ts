@@ -41,13 +41,11 @@ export default class MinimapDataset {
   }
 
   public setObservedDatumIds(datumIds: GenerationCellDatumId[]): void {
-    console.log("KVKV MinimapDataSet.setObservedDatumIds", { datumIds });
     this.observedDatumIds.splice(0, this.observedDatumIds.length, ...datumIds);
     this.invalidate();
   }
 
   public setVisualizedDatumId(datumIndex: number): void {
-    console.log("KVKV MinimapDataSet.setVisualizedDatumId", { datumIndex });
     if (this.visualizedDatumIndex === datumIndex) {
       return;
     }

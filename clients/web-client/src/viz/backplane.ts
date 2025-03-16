@@ -14,7 +14,6 @@ export default class Backplane extends PIXI.Container {
   }
 
   public resize(width: number, height: number): void {
-    console.debug("KVKV Backplane.handleResize", width, height);
     this.removeChild(this.rect);
     this.rect = new PIXI.Graphics();
     this.initBackplane(width, height);

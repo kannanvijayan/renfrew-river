@@ -73,16 +73,11 @@ export default class MiniMap extends PIXI.Container {
     });
 
     this.minimapData.addRefreshListener(() => {
-      // TODO: re-enable.
-      console.log("KVKV updating from source data", {
-        array: this.minimapData.getTextureSource().array,
-      });
       this.textureRefresher.update();
     })
   }
 
   public resize(screenSize: { width: number, height: number }): void {
-    console.log("Resizing minimap");
     this.removeAndAddViewport(screenSize);
   }
 
@@ -169,7 +164,6 @@ export default class MiniMap extends PIXI.Container {
   }
 
   private makeTexture(): PIXI.Texture {
-    console.log("KVKV Minimap makeTexture");
     const { miniDims } = this;
     const textureSource = this.minimapData.getTextureSource();
     const texture = PIXI.Texture.fromBuffer(
@@ -187,7 +181,6 @@ export default class MiniMap extends PIXI.Container {
   private makeMesh(texture: PIXI.Texture): PIXI.Mesh<PIXI.Shader> {
     const rectangle = new PIXI.Geometry();
     const { miniDims } = this;
-    console.log("KVKV makeMesh", { ...miniDims });
     rectangle.addAttribute(`aVertexPosition`, [
       0,                 0,
       miniDims.columns,  0,

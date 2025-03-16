@@ -21,7 +21,6 @@ export default class TextureRefresher {
   }
 
   public async update(): Promise<void> {
-    console.log("KVKV TextureRefresher.update");
     // If an update is scheduled, then it will pick up the changes.
     if (this.updateScheduled) {
       return this.updateScheduled.getPromise();
@@ -37,13 +36,11 @@ export default class TextureRefresher {
 
     // Otherwise, we can just update the texture now.
     this.updateInProgress = deferred;
-    console.log("KVKV TextureRefresher.updte: Updating texture");
     this.texture.update();
     return deferred.getPromise();
   }
 
   private afterTextureUpdate() {
-    console.log("KVKV TextureRefresher.afterTextureUpdate");
     // Clear the in-progress update.
     if (!this.updateInProgress) {
       console.error("afterTextureUpdate(): texture update not in progress");
@@ -55,7 +52,6 @@ export default class TextureRefresher {
     if (this.updateScheduled) {
       this.updateInProgress = this.updateScheduled;
       this.updateScheduled = undefined;
-       console.log("KVKV TextureRefresher.afterTextureUpdate: Updating scheduled texture");
       this.texture.update();
     }
   }
