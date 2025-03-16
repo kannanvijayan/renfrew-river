@@ -4,7 +4,8 @@ import {
   WorldDims
 } from "renfrew-river-protocol-client";
 import Deferred from "../../util/deferred";
-import MapData, { MapDataSet, ReadMapDataCallback } from "./map_data";
+import MapData, { ReadMapDataCallback } from "./map_data";
+import MapDataSet from "./map_dataset";
 
 export type WorldMapTiledDataLoadResult = {
   tilesUpdated: number,
@@ -70,6 +71,7 @@ export default class WorldMapTiledData {
 
   public setObservedDatumIds(datumIds: GenerationCellDatumId[]): void {
     this.mapDataSet.setObservedDatumIds(datumIds);
+    this.invalidate();
   }
   
   public setVisualizedDatumId(index: number, datumIndex: number): void {
@@ -109,11 +111,6 @@ export default class WorldMapTiledData {
         }
         viewLoadIndexes.push(tileIndex);
       }
-    }
-    if (viewLoadIndexes.length > 0) {
-      console.log("ensureViewAndQueueSurroundings viewLoadIndexes", viewLoadIndexes);
-    } else {
-      console.log("ensureViewAndQueueSurroundings viewLoadIndexes=[]");
     }
 
     let tilesUpdated = 0;

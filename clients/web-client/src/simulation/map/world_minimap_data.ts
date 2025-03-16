@@ -1,38 +1,53 @@
-import { WorldDims } from "renfrew-river-protocol-client";
-import { MapDataSet, ReadMiniMapDataCallback } from "./map_data";
+import { GenerationCellDatumId, WorldDims } from "renfrew-river-protocol-client";
+import MapData, { ReadMiniMapDataCallback } from "./map_data";
+import MinimapDataset from "./minimap_dataset";
 
 /**
  * Holder of mini-map data.
  */
 export default class WorldMinimapData {
-  public readonly readMiniMapDataCallback: ReadMiniMapDataCallback;
   public readonly miniDims: WorldDims;
-  private readonly mapDataSet: MapDataSet;
+  private readonly dataset: MinimapDataset;
 
-  private constructor(opts: {
+  static readonly DEFAULT_MINI_DIMS: WorldDims = { rows: 250, columns: 250 };
+
+  public constructor(opts: {
     readMiniMapDataCallback: ReadMiniMapDataCallback,
-    miniDims: WorldDims,
+    miniDims?: WorldDims,
   }) {
-    this.readMiniMapDataCallback = opts.readMiniMapDataCallback;
-    this.miniDims = opts.miniDims;
-    this.mapDataSet = new MapDataSet(this.miniDims);
+    const { readMiniMapDataCallback, miniDims: maybeMiniDims } = opts;
+    const miniDims = maybeMiniDims ?? WorldMinimapData.DEFAULT_MINI_DIMS;
+    this.miniDims = miniDims;
+    this.dataset = new MinimapDataset({ miniDims, readMiniMapDataCallback });
   }
 
-  public static async load(opts: {
-    readMiniMapDataCallback: ReadMiniMapDataCallback,
-    miniDims: WorldDims,
-  }): Promise<WorldMinimapData> {
-    const { readMiniMapDataCallback, miniDims } = opts;
-    const result = new WorldMinimapData({ readMiniMapDataCallback, miniDims });
-    const datumIds = [ ...result.mapDataSet.getObservedDatumIds() ];
-    const miniDataMaps = await readMiniMapDataCallback({ miniDims, datumIds });
-    for (const [i, miniDataMap] of miniDataMaps.entries()) {
-      result.mapDataSet.getMapData(datumIds[i]).write2D({
-        topLeft: { col: 0, row: 0 },
-        dims: miniDims,
-        data: miniDataMap,
-      })
-    }
-    return result;
+  public async forDatum(datumId: GenerationCellDatumId)
+    : Promise<MapData<"uint32", 1>>
+  {
+    return this.dataset.getMinimapData(datumId);
+  }
+
+  public getObservedDatumIds(): GenerationCellDatumId[] {
+    return this.dataset.getObservedDatumIds();
+  }
+
+  public setObservedDatumIds(datumIds: GenerationCellDatumId[]): void {
+    this.dataset.setObservedDatumIds(datumIds);
+  }
+
+  public setVisualizedDatumId(datumIndex: number): void {
+    this.dataset.setVisualizedDatumId(datumIndex);
+  }
+
+  public addRefreshListener(listener: () => void): () => void {
+    return this.dataset.addRefreshListener(listener);
+  }
+
+  public invalidate(): void {
+    this.dataset.invalidate();
+  }
+
+  public getTextureSource(): MapData<"float32", 1> {
+    return this.dataset.getTextureSource();
   }
 }

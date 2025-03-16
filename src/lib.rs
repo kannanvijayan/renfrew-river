@@ -9,6 +9,7 @@ mod ruleset;
 mod shady_vm;
 mod world;
 mod data_store;
+mod utility;
 
 pub use self::{
   protocol::{

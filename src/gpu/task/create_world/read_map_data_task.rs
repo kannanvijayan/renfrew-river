@@ -63,7 +63,7 @@ impl CogTask for ReadMapDataTask {
       encoder,
       uniforms,
       [self.uniforms.area.columns_u32(), self.uniforms.area.rows_u32()],
-      "CreateWorld_RandGenTask",
+      "CreateWorld_ReadMapTask",
       |cpass| {
         cpass.add_bind_group(|bg| {
           bg.add_seq_buffer(&self.input_buffer)

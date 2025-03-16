@@ -1,13 +1,18 @@
 import * as PIXI from "pixi.js";
-import WorldMapTiledData from "../simulation/map/world_map_tiled_data";
 import Simulation from "../simulation/simulation";
+import WorldMapTiledData from "../simulation/map/world_map_tiled_data";
+import WorldMinimapData from "../simulation/map/world_minimap_data";
 import CellMap from "./cell_map";
 import { DatumVizSpec } from "./datum";
+import Backplane from "./backplane";
+import MiniMap from "./mini_map";
 
 export default class Viz {
   public readonly canvas: HTMLCanvasElement;
   private readonly pixi: PIXI.Application;
+  private backplane: Backplane;
   private cellMap: CellMap;
+  private miniMap: MiniMap;
 
   private removePreventDefaultListener: (() => void) | undefined;
   private removeResizeListener: (() => void) | undefined;
@@ -18,7 +23,11 @@ export default class Viz {
 
   public static create(canvas: HTMLCanvasElement, simulation: Simulation): Viz {
     console.log("Creating Viz");
-    const viz = new Viz(canvas, simulation.mapData);
+    const viz = new Viz({
+      canvas,
+      mapData: simulation.mapData,
+      minimapData: simulation.minimapData,
+    });
     return viz;
   }
 
@@ -30,53 +39,41 @@ export default class Viz {
     this.cellMap.setVisualizedDatumIds(spec);
   }
 
-  public cleanup(): void {
-    console.log("Cleaning up Viz", { stack: new Error().stack?.split("\n") });
-    this.pixi.stage.removeChild(this.cellMap);
-    this.cellMap.cleanup();
-    this.cellMap.destroy();
-
-    this.removePreventDefaultListener?.();
-    this.removePreventDefaultListener = undefined;
-
-    this.removeResizeListener?.();
-    this.removeResizeListener = undefined;
-
-    this.removeWheelListener?.();
-    this.removeWheelListener = undefined;
-
-    this.removeMouseDownListener?.();
-    this.removeMouseDownListener = undefined;
-
-    this.removeMouseUpListener?.();
-    this.removeMouseUpListener = undefined;
-
-    this.removeMouseMoveListener?.();
-    this.removeMouseMoveListener = undefined;
-  }
-
   public reuse(canvas: HTMLCanvasElement): void {
     if (canvas !== this.canvas) {
       throw new Error("Canvas mismatch");
     }
+    this.init();
   }
 
-  private constructor(
+  private constructor(args: {
     canvas: HTMLCanvasElement,
     mapData: WorldMapTiledData,
-  ) {
+    minimapData: WorldMinimapData,
+  }) {
+    const { canvas, mapData, minimapData } = args;
+    const screenWidth = canvas.width;
+    const screenHeight = canvas.height;
     const pixi = new PIXI.Application({
       view: canvas,
-      width: canvas.width,
-      height: canvas.height,
-      eventMode: "passive",
+      width: screenWidth,
+      height: screenHeight,
+      eventMode: "static",
       antialias: false,
       clearBeforeRender: false,
     });
 
+    this.backplane = new Backplane(screenWidth, screenHeight);
     this.canvas = canvas;
     this.pixi = pixi;
     this.cellMap = Viz.makeCellMap(canvas, mapData);
+    this.miniMap = new MiniMap({
+      screenSize: { width: screenWidth, height: screenHeight },
+      cellMapAccess: this.cellMap.getAccess(),
+      worldDims: mapData.worldDims,
+      miniDims: minimapData.miniDims,
+      minimapData,
+    });
     this.init();
   }
 
@@ -94,8 +91,14 @@ export default class Viz {
   }
 
   private init(): void {
+    console.log("Initializing viz");
     this.cellMap.position.set(0, 0);
+    this.pixi.stage.eventMode = "static";
+    this.pixi.stage.addChild(this.backplane);
     this.pixi.stage.addChild(this.cellMap);
+
+    this.pixi.stage.addChild(this.miniMap);
+    this.miniMap.position.set(100, 100);
 
     // Suppress right-click and key down/up events on the game canvas
     // (we'll handle it ourselves later).
@@ -114,52 +117,77 @@ export default class Viz {
     window.addEventListener("resize", resize);
     this.removeResizeListener =
       () => window.removeEventListener("resize", resize);
-
+   
     const wheelListener = this.handleWheel.bind(this);
-    this.canvas.addEventListener("wheel", wheelListener);
-    this.removeWheelListener =
-      () => this.canvas.removeEventListener("wheel", wheelListener);
+    this.backplane.onwheel = wheelListener;
+    this.removeWheelListener = () => {
+      if (this.backplane.onwheel === wheelListener) {
+        this.backplane.onwheel = null;
+      }
+    };
 
     const mousedownListener = this.handleMouseDown.bind(this);
-    this.canvas.addEventListener("mousedown", mousedownListener);
-    this.removeMouseDownListener =
-      () => this.canvas.removeEventListener("mousedown", mousedownListener);
+    this.backplane.onmousedown = mousedownListener;
+    this.removeMouseDownListener = () => {
+      if (this.backplane.onmousedown === mousedownListener) {
+        this.backplane.onmousedown = null;
+      }
+    };
 
     const mouseupListener = this.handleMouseUp.bind(this);
-    this.canvas.addEventListener("mouseup", mouseupListener);
-    this.removeMouseUpListener =
-      () => this.canvas.removeEventListener("mouseup", mouseupListener);
+    this.backplane.onmouseup = mouseupListener;
+    this.backplane.onmouseupoutside = mouseupListener;
+    this.removeMouseUpListener = () => {
+      if (this.backplane.onmouseup === mouseupListener) {
+        this.backplane.onmouseup = null;
+        this.backplane.onmouseupoutside = null;
+      }
+    };
 
     const mouseMoveListener = this.handleMouseMove.bind(this);
-    this.canvas.addEventListener("mousemove", mouseMoveListener);
-    this.removeMouseMoveListener =
-      () => this.canvas.removeEventListener("mousemove", mouseMoveListener);
+    this.backplane.onmousemove = mouseMoveListener;
+    this.backplane.onglobalmousemove = mouseMoveListener;
+    this.removeMouseMoveListener = () => {
+      if (this.backplane.onmousemove === mouseMoveListener) {
+        this.backplane.onmousemove = null;
+      }
+    };
   }
 
   private handleResize(): void {
     const { width, height } = this.canvas.getBoundingClientRect();
     this.pixi.renderer.resize(width, height);
-    this.cellMap.handleResize(width, height);
+    this.backplane.resize(width, height);
+    this.cellMap.resize(width, height);
+    this.miniMap.resize({width, height});
   }
 
-  private handleWheel(ev: WheelEvent): void {
-    this.cellMap.handleWheel(ev.deltaY, { x: ev.clientX, y: ev.clientY });
+  private handleWheel(ev: PIXI.FederatedWheelEvent): void {
+    // this.cellMap.handleWheel(ev.deltaY, { x: ev.clientX, y: ev.clientY });
+    this.cellMap.handleWheel(ev.deltaY, this.localizePointerPosition(ev.global));
     ev.preventDefault();
   }
 
-  private handleMouseDown(ev: MouseEvent): void {
+  private handleMouseDown(ev: PIXI.FederatedMouseEvent): void {
     if (ev.button === 0) {
-      this.cellMap.handlePointerDown({ x: ev.clientX, y: ev.clientY });
+      this.cellMap.handlePointerDown(this.localizePointerPosition(ev.global));
     }
+    ev.stopPropagation();
   }
 
-  private handleMouseUp(ev: MouseEvent): void {
+  private handleMouseUp(ev: PIXI.FederatedMouseEvent): void {
     if (ev.button === 0) {
-      this.cellMap.handlePointerUp({ x: ev.clientX, y: ev.clientY });
+      this.cellMap.handlePointerUp(this.localizePointerPosition(ev.global));
     }
+    ev.stopPropagation();
   }
 
-  private handleMouseMove(ev: MouseEvent): void {
-    this.cellMap.handlePointerMove({ x: ev.clientX, y: ev.clientY });
+  private handleMouseMove(ev: PIXI.FederatedMouseEvent): void {
+    this.cellMap.handlePointerMove(this.localizePointerPosition(ev.global));
+    ev.stopPropagation();
+  }
+
+  private localizePointerPosition(pt: PIXI.IPointData): PIXI.IPointData {
+    return this.pixi.stage.toLocal(pt);
   }
 }

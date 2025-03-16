@@ -265,11 +265,14 @@ function makeShader(opts: {
     txMapData: mapDataTexture,
   };
 
+  return PIXI.Shader.from(VERTEX_SHADER, FRAGMENT_SHADER, uniforms);
+}
+
+const VERTEX_SHADER = (() => {
+
   const adjX = NORMAL_SCALE_CELL.width / 2;
   const adjY = NORMAL_SCALE_CELL.height / 2;
-
-  const shader = PIXI.Shader.from(
-    `
+  return (`
     precision mediump float;
     attribute vec2 aVPos;
     attribute vec2 aIPos;
@@ -295,64 +298,60 @@ function makeShader(opts: {
 
       vUvs = aIUv;
     }
-    `,
+  `);
+})();
 
-    `
-    precision mediump float;
 
-    varying vec3 vCol;
-    varying vec2 vUvs;
+const FRAGMENT_SHADER = (`
+  precision mediump float;
 
-    uniform float columns;
-    uniform float rows;
-    uniform float worldColumns;
-    uniform float worldRows;
-    uniform sampler2D txMapData;
-    uniform float topLeftWorldColumn;
-    uniform float topLeftWorldRow;
+  varying vec3 vCol;
+  varying vec2 vUvs;
 
-    void main() {
-      // Convert vUvs to world coordinates.
-      float worldX = topLeftWorldColumn + vUvs.x;
-      float worldY = topLeftWorldRow + vUvs.y;
+  uniform float columns;
+  uniform float rows;
+  uniform float worldColumns;
+  uniform float worldRows;
+  uniform sampler2D txMapData;
+  uniform float topLeftWorldColumn;
+  uniform float topLeftWorldRow;
 
-      // Convert world coordinates to texture coordinates.
-      float textureX = worldX / worldColumns;
-      float textureY = worldY / worldRows;
-      float adjX = 1.0 / (worldColumns * 2.0);
-      float adjY = 1.0 / (worldRows * 2.0);
+  void main() {
+    // Convert vUvs to world coordinates.
+    float worldX = topLeftWorldColumn + vUvs.x;
+    float worldY = topLeftWorldRow + vUvs.y;
 
-      float texX = textureX + adjX;
-      float texY = textureY + adjY;
+    // Convert world coordinates to texture coordinates.
+    float textureX = worldX / worldColumns;
+    float textureY = worldY / worldRows;
+    float adjX = 1.0 / (worldColumns * 2.0);
+    float adjY = 1.0 / (worldRows * 2.0);
 
-      float elevation = texture2D(txMapData, vec2(texX, texY)).r;
-      if (elevation < 0.0) {
-        gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-      } else if (elevation == 0.0) {
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-      } else if (elevation < 0.5) {
-        // color blue, lower elevation is darker blue.
-        float xxx = elevation * 1000.0;
-        float hundreds = floor(xxx / 100.0);
-        float rem = xxx - (hundreds * 100.0);
-        float blue = 0.1 + (rem / 100.0) * 0.8;
-        float green = 0.1 + (hundreds / 10.0) * 0.8;
-        gl_FragColor = vec4(0.3 * green, green, sqrt(green * green + blue * blue), 1.0);
-      } else if (elevation <= 1.0) {
-        float level = (elevation - 0.5) * 2.0;
-        float xxx = level * 1000.0;
-        float hundreds = floor(xxx / 100.0);
-        float rem = xxx - (hundreds * 100.0);
-        level = 0.25 + (rem / 100.0) * 0.5;
-        gl_FragColor = vec4(level, level * 0.75, level * 0.75, 1.0);
-      } else {
-        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-      }
+    float texX = textureX + adjX;
+    float texY = textureY + adjY;
+
+    float elevation = texture2D(txMapData, vec2(texX, texY)).r;
+    if (elevation < 0.0) {
+      gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+    } else if (elevation == 0.0) {
+      gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    } else if (elevation < 0.5) {
+      // color blue, lower elevation is darker blue.
+      float xxx = elevation * 1000.0;
+      float hundreds = floor(xxx / 100.0);
+      float rem = xxx - (hundreds * 100.0);
+      float blue = 0.1 + (rem / 100.0) * 0.8;
+      float green = 0.1 + (hundreds / 10.0) * 0.8;
+      gl_FragColor = vec4(0.3 * green, green, sqrt(green * green + blue * blue), 1.0);
+    } else if (elevation <= 1.0) {
+      float level = (elevation - 0.5) * 2.0;
+      float xxx = level * 1000.0;
+      float hundreds = floor(xxx / 100.0);
+      float rem = xxx - (hundreds * 100.0);
+      level = 0.25 + (rem / 100.0) * 0.5;
+      gl_FragColor = vec4(level, level * 0.75, level * 0.75, 1.0);
+    } else {
+      gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
     }
-    `,
-
-    uniforms
-  );
-
-  return shader;
-}
+  }
+`);

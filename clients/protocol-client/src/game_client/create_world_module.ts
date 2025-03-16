@@ -76,4 +76,14 @@ export class GameClientCreateWorldModule
     return result;
   }
 
+  public async getMinimapData(args: {
+    miniDims: WorldDims,
+    datumId: GenerationCellDatumId,
+  }): Promise<number[]> {
+    const { miniDims, datumId } = args;
+    const response = await this.sendSubcmd("GetMinimapData", args);
+    const mapData = response.MinimapData;
+    return mapData.data;
+  }
+
 }

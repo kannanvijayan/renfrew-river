@@ -2,7 +2,7 @@ use crate::{
   cog::{ CogDevice, CogMapBuffer, CogTask },
   data_store,
   gpu::{
-    task::create_world::{ RandGenTask, ReadMapDataTask },
+    task::create_world::{ RandGenTask, ReadMapDataTask, ReadMinimapDataTask },
     CellDataBuffer,
     ProgramBuffer,
     ShaderRegistry,
@@ -13,6 +13,8 @@ use crate::{
     CurrentGenerationPhaseRsp,
     GetMapDataCmd,
     GetMapDataRsp,
+    GetMinimapDataCmd,
+    GetMinimapDataRsp,
     TakeGenerationStepCmd,
   },
   ruleset::{ FormatComponentSelector, FormatComponentSelectorReadSpec, Ruleset },
@@ -170,6 +172,63 @@ impl GeneratingWorldState {
       top_left: cmd.top_left,
       dims: cmd.dims,
       data: result_vecs,
+    })
+  }
+
+  pub(crate) fn handle_get_minimap_data_cmd(&self,
+    cmd: GetMinimapDataCmd,
+    _data_store: &data_store::DataStore
+  ) -> CreateWorldSubcmdResponse {
+    // Create the output buffer.
+    let output_buffer = self.device.create_seq_buffer::<u32>(
+      cmd.mini_dims.area() as usize,
+      "GetMinimapData_Output"
+    );
+
+    let selector = match self.make_selector_for_datum_id(&cmd.datum_id) {
+      Ok(sel) => sel,
+      Err(err) => { return CreateWorldSubcmdResponse::Failed(err); }
+    };
+
+    // Create the task
+    let task = 
+      if matches!(self.phase, GenerationPhase::PreInitialize) {
+        ReadMinimapDataTask::new(
+          self.descriptor.dims,
+          cmd.mini_dims,
+          1,
+          selector,
+          self.randgen_buffer.as_seq_buffer(),
+          output_buffer.clone()
+        )
+      } else {
+        ReadMinimapDataTask::new(
+          self.descriptor.dims,
+          cmd.mini_dims,
+          CellData::NUM_WORDS,
+          selector,
+          self.cell_data_buffer.as_u32_seq_buffer(),
+          output_buffer.clone()
+        )
+      };
+
+    // Run the task
+    self.device.encode_and_run("CreateWorld_ReadMinimapData", |enc| {
+      task.encode(enc);
+    });
+
+    // Read the result from the output buffer.
+    let mut result_vec: Vec<u32> = Vec::new();
+    output_buffer.read_mapped_full(|data| {
+      for entry_i in 0 .. cmd.mini_dims.area() as usize {
+        let value = data[entry_i];
+        result_vec.push(value);
+      }
+    });
+
+    CreateWorldSubcmdResponse::MinimapData(GetMinimapDataRsp {
+      mini_dims: cmd.mini_dims,
+      data: result_vec,
     })
   }
 

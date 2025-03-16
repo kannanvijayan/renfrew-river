@@ -12,6 +12,7 @@ use crate::{
     UpdateDescriptorInputCmd,
     CurrentGenerationPhaseCmd,
     GetMapDataCmd,
+    GetMinimapDataCmd,
   },
   world::{ WorldDescriptor, WorldDescriptorInput }
 };
@@ -57,47 +58,27 @@ impl CreateWorldMode {
         self.handle_current_generation_phase_cmd(cmd),
       CreateWorldSubcmdEnvelope::GetMapData(cmd) =>
         self.handle_get_map_data_cmd(cmd, data_store),
+      CreateWorldSubcmdEnvelope::GetMinimapData(cmd) =>
+        self.handle_get_minimap_data_cmd(cmd, data_store),
     }
   }
 
-  fn handle_current_descriptor_input_cmd(
-    &mut self,
-    current_descriptor_input_cmd: CurrentDescriptorInputCmd,
+  fn handle_current_descriptor_input_cmd(&mut self,
+    cmd: CurrentDescriptorInputCmd,
     data_store: &mut DataStore,
   ) -> CreateWorldSubcmdResponse {
-    match &mut self.state {
-      CreateWorldState::SpecifyNewWorld(ref mut specify_new_world_state) => {
-        specify_new_world_state.handle_current_descriptor_input_cmd(
-          current_descriptor_input_cmd,
-          data_store
-        )
-      },
-      _ => {
-        CreateWorldSubcmdResponse::Failed(
-          vec!["Must be in SpecifyNewWorld state to issue this command.".to_string()]
-        )
-      }
-    }
+    self.in_specify_new_world_state("get current descriptor input", |st| {
+      st.handle_current_descriptor_input_cmd(cmd, data_store)
+    })
   }
 
-  fn handle_update_descriptor_input_cmd(
-    &mut self,
-    update_descriptor_input_cmd: UpdateDescriptorInputCmd,
+  fn handle_update_descriptor_input_cmd(&mut self,
+    cmd: UpdateDescriptorInputCmd,
     data_store: &DataStore,
   ) -> CreateWorldSubcmdResponse {
-    match &mut self.state {
-      CreateWorldState::SpecifyNewWorld(ref mut specify_new_world_state) => {
-        specify_new_world_state.handle_update_descriptor_input_cmd(
-          update_descriptor_input_cmd,
-          data_store
-        )
-      },
-      _ => {
-        CreateWorldSubcmdResponse::Failed(
-          vec!["Must be in SpecifyNewWorld state to issue this command.".to_string()]
-        )
-      }
-    }
+    self.in_specify_new_world_state("update descriptor input", |st| {
+      st.handle_update_descriptor_input_cmd(cmd, data_store)
+    })
   }
 
   fn handle_begin_generation_cmd(
@@ -131,55 +112,70 @@ impl CreateWorldMode {
 
   fn handle_take_generation_step_cmd(&mut self,
     cmd: TakeGenerationStepCmd,
-    data_store: &DataStore,
+    _data_store: &DataStore,
   ) -> CreateWorldSubcmdResponse {
-    match &mut self.state {
-      CreateWorldState::GeneratingWorld(ref mut generating_world_state) => {
-        generating_world_state.handle_take_generation_step_cmd(cmd)
-      },
-      _ => {
-        CreateWorldSubcmdResponse::Failed(
-          vec![
-            "Must be in GeneratingWorld state to take a generation step"
-              .to_string(),
-          ]
-        )
-      }
-    }
+    self.in_generating_world_state("take generation step", |st| {
+      st.handle_take_generation_step_cmd(cmd)
+    })
   }
 
-  fn handle_current_generation_phase_cmd(
-    &mut self,
+  fn handle_current_generation_phase_cmd(&mut self,
     cmd: CurrentGenerationPhaseCmd,
   ) -> CreateWorldSubcmdResponse {
-    match &mut self.state {
-      CreateWorldState::GeneratingWorld(ref mut generating_world_state) => {
-        generating_world_state.handle_current_generation_phase_cmd(cmd)
-      },
-      _ => {
-        CreateWorldSubcmdResponse::Failed(
-          vec![
-            "Must be in GeneratingWorld state to get current generation phase"
-              .to_string(),
-          ]
-        )
-      }
-    }
+    self.in_generating_world_state("get current generation phase", |st| {
+      st.handle_current_generation_phase_cmd(cmd)
+    })
   }
 
-  fn handle_get_map_data_cmd(
-    &mut self,
+  fn handle_get_map_data_cmd(&mut self,
     cmd: GetMapDataCmd,
     data_store: &DataStore,
   ) -> CreateWorldSubcmdResponse {
+    self.in_generating_world_state("get map data", |st| {
+      st.handle_get_map_data_cmd(cmd, data_store)
+    })
+  }
+
+  fn handle_get_minimap_data_cmd(&mut self,
+    cmd: GetMinimapDataCmd,
+    data_store: &DataStore,
+  ) -> CreateWorldSubcmdResponse {
+    self.in_generating_world_state("get minimap data", |st| {
+      st.handle_get_minimap_data_cmd(cmd, data_store)
+    })
+  }
+
+  fn in_generating_world_state<F>(&mut self, reason: &str, func: F)
+    -> CreateWorldSubcmdResponse
+    where F: FnOnce(&mut GeneratingWorldState) -> CreateWorldSubcmdResponse
+  {
     match &mut self.state {
       CreateWorldState::GeneratingWorld(ref mut generating_world_state) => {
-        generating_world_state.handle_get_map_data_cmd(cmd, data_store)
+        func(generating_world_state)
       },
       _ => {
         CreateWorldSubcmdResponse::Failed(
           vec![
-            "Must be in GeneratingWorld state to get current generation phase"
+            format!("Must be in GeneratingWorld state to {}", reason)
+              .to_string(),
+          ]
+        )
+      }
+    }
+  }
+
+  fn in_specify_new_world_state<F>(&mut self, reason: &str, func: F)
+    -> CreateWorldSubcmdResponse
+    where F: FnOnce(&mut SpecifyNewWorldState) -> CreateWorldSubcmdResponse
+  {
+    match &mut self.state {
+      CreateWorldState::SpecifyNewWorld(ref mut specify_new_world_state) => {
+        func(specify_new_world_state)
+      },
+      _ => {
+        CreateWorldSubcmdResponse::Failed(
+          vec![
+            format!("Must be in SpecifyNewWorld state to {}", reason)
               .to_string(),
           ]
         )

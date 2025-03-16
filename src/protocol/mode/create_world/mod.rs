@@ -8,6 +8,7 @@ mod begin_generation_cmd;
 mod take_generation_step_cmd;
 mod current_generation_phase_cmd;
 mod get_map_data_cmd;
+mod get_minimap_data_cmd;
 
 pub(crate) use self::{
   subcommand::CreateWorldSubcmdEnvelope,
@@ -37,6 +38,10 @@ pub(crate) use self::{
   get_map_data_cmd::{
     GetMapDataCmd,
     GetMapDataRsp,
+  },
+  get_minimap_data_cmd::{
+    GetMinimapDataCmd,
+    GetMinimapDataRsp,
   },
 };
 

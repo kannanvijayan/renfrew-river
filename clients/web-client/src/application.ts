@@ -51,7 +51,7 @@ export default class Application {
   public async beginWorldCreation(descriptor: WorldDescriptor)
     : Promise<true>
   {
-    console.log("KVKV beginWorldCreation", { descriptor });
+    console.log("beginWorldCreation", { descriptor });
     const session = this.getSession();
     await session.createWorld.beginWorldGeneration();
     await session.createWorld.takeGenerationStep("RandGen");
@@ -68,17 +68,19 @@ export default class Application {
   }
 
   public async initWorldCreationViz(canvas: HTMLCanvasElement): Promise<Viz> {
-    console.log("KVKV initWorldCreationViz");
+    console.log("initWorldCreationViz");
     const simulation = this.getSimulation();
-    const viz = await this.initViz(canvas);
-    simulation.setObservedDatumIds([ { RandGen: {} } ]);
-    simulation.setVisualizedDatumId(0, 0);
-    viz.setVisualizedDatumIds({ colorTileWith: 0 });
-    simulation.invalidateMapData();
-    return viz;
+    const reused = this.initViz(canvas);
+    if (reused === "new") {
+      simulation.setObservedDatumIds([ { RandGen: {} } ]);
+      simulation.setVisualizedDatumId(0, 0);
+      this.getViz().setVisualizedDatumIds({ colorTileWith: 0 });
+      simulation.invalidateMapData();
+    }
+    return this.getViz();
   }
 
-  public async initViz(canvas: HTMLCanvasElement): Promise<Viz> {
+  private initViz(canvas: HTMLCanvasElement): "new"|"reused" {
     if (!this.session) {
       throw new Error("Session must be initialized before viz");
     }
@@ -86,15 +88,17 @@ export default class Application {
       throw new Error("Simulation must be initialized before viz");
     }
 
+    let reused: "new"|"reused" = "new";
     if (this.viz) {
-      console.log("KVKV initWorldCreationViz - reusing existing viz");
+      console.log("initWorldCreationViz - reusing existing viz");
       this.viz.reuse(canvas);
+      reused = "reused";
     }
     if (!this.viz) {
-      console.log("KVKV initWorldCreationViz - creating new viz");
+      console.log("initWorldCreationViz - creating new viz");
       this.viz = Viz.create(canvas, this.simulation);
     }
-    return this.viz;
+    return reused;
   }
 
   public getSession(): Session {
@@ -126,29 +130,11 @@ export default class Application {
     return Application.instance;
   }
 
-  public static cleanupInstance(): void {
-    if (Application.instance) {
-      Application.instance.cleanup();
-      Application.instance = null;
-    }
-  }
-
   private constructor() {
     if (Application.instance) {
       console.error("Application: Multiple instances detected.  Continuing.", {
         existingInstance: Application.instance
       });
-    }
-  }
-
-  private cleanup(): void {
-    if (this.viz) {
-      this.viz.cleanup();
-      this.viz = null;
-    }
-    if (this.session) {
-      this.session.cleanup();
-      this.session = null;
     }
   }
 }

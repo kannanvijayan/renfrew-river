@@ -10,6 +10,7 @@ import HexMesh from './hex_mesh';
 import WorldMapTiledData from '../simulation/map/world_map_tiled_data';
 import { CellCoord } from "renfrew-river-protocol-client";
 import { DatumVizSpec } from './datum';
+import CellMapAccess from './cell_map_access';
 
 export type CellMapOptions = {
   worldColumns: number;
@@ -78,8 +79,8 @@ export default class CellMap extends PIXI.Container {
   // The PIXI mesh object.
   private hexMesh: HexMesh;
 
-  // Observer of the cell-map.
-  private readonly observer: CellMapObserver;
+  // Access api of the cell-map.
+  private readonly access: CellMapAccessImpl;
 
   // Update counter, incremented every time `updateMeshPosition` is called.
   // This helps ensure that quick successive calls to `updateMeshPosition`
@@ -147,7 +148,7 @@ export default class CellMap extends PIXI.Container {
       topLeftWorldRow: this.topLeftWorldRow,
     });
 
-    this.observer = new CellMapObserver(this);
+    this.access = new CellMapAccessImpl(this);
     this.updateCounter = 0;
 
     this.updateMeshPosition().then(() => {
@@ -155,13 +156,8 @@ export default class CellMap extends PIXI.Container {
     });
   }
 
-  public cleanup(): void {
-    this.removeChild(this.hexMesh.mesh);
-    this.hexMesh.mesh.destroy();
-  }
-
-  public getObserver(): CellMapObserver {
-    return this.observer;
+  public getAccess(): CellMapAccess {
+    return this.access;
   }
 
   public centerOnNormalScaleWorldPoint(
@@ -210,7 +206,7 @@ export default class CellMap extends PIXI.Container {
     this.adjustZoom(newZoomUnclamped, point);
   }
 
-  public handleResize(width: number, height: number): void {
+  public resize(width: number, height: number): void {
     if (width == 0 || height == 0) {
       console.error("Resize to zero width or height", {
         width,
@@ -316,7 +312,7 @@ export default class CellMap extends PIXI.Container {
       } else {
         this.hoverCellCoord = { col, row };
       }
-      this.observer.invokeHoverCellChangedListeners({...this.hoverCellCoord});
+      this.access.invokeHoverCellChangedListeners({...this.hoverCellCoord});
     }
   }
 
@@ -422,7 +418,7 @@ export default class CellMap extends PIXI.Container {
       mesh.shader.uniforms.topLeftWorldRow = this.topLeftWorldRow;
 
       // Inform the change listeners registered on the observer.
-      this.observer.invokeChangeListeners();
+      this.access.invokeChangeListeners();
 
       // Extra: If there were new tiles written after the surroundings were
       // loaded, then make sure to update the elevations texture again.
@@ -521,10 +517,10 @@ export default class CellMap extends PIXI.Container {
   }
 }
 
-export class CellMapObserver {
+class CellMapAccessImpl implements CellMapAccess {
   private cellMap: CellMap;
-  private changeListeners: Array<CellMapChangeListener>;
-  private hoverCellChangedListeners: Array<CellMapHoverCellChangedListener>;
+  private changeListeners: Array<(access: CellMapAccess) => void>;
+  private hoverCellChangedListeners: Array<(cell: CellCoord) => void>;
 
   constructor(cellMap: CellMap) {
     this.cellMap = cellMap;
@@ -532,8 +528,8 @@ export class CellMapObserver {
     this.hoverCellChangedListeners = [];
   }
 
-  public addChangeListener(listener: CellMapChangeListener)
-    : RemoveListener<CellMapChangeListener>
+  public addChangeListener(listener: (access: CellMapAccess) => void)
+    : () => void
   {
     this.changeListeners.push(listener);
     return () => {
@@ -544,8 +540,8 @@ export class CellMapObserver {
     };
   }
 
-  public addHoverCellChangedListener(listener: CellMapHoverCellChangedListener)
-    : RemoveListener<CellMapHoverCellChangedListener>
+  public addHoverCellChangedListener(listener: (cell: CellCoord) => void)
+    : () => void
   {
     this.hoverCellChangedListeners.push(listener);
     return () => {
@@ -575,17 +571,18 @@ export class CellMapObserver {
     };
   }
 
-  public areaWidth(): number {
-    return this.cellMap.areaWidth;
+  public screenSize(): { width: number, height: number } {
+    return {
+      width: this.cellMap.areaWidth,
+      height: this.cellMap.areaHeight,
+    };
   }
-  public areaHeight(): number {
-    return this.cellMap.areaHeight;
-  }
+
   public zoomLevel(): number {
     return this.cellMap.zoomLevel;
   }
-}
 
-export type RemoveListener<T> = () => T;
-export type CellMapChangeListener = (cellMapObserver: CellMapObserver) => void;
-export type CellMapHoverCellChangedListener = (cell: CellCoord) => void;
+  public centerOnNormalScaleWorldPoint(point: Readonly<PIXI.IPointData>): void {
+    this.cellMap.centerOnNormalScaleWorldPoint(point);
+  }
+}

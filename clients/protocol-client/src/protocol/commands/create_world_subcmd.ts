@@ -49,7 +49,7 @@ type CreateWorldSubcmd = {
     response: {
       CurrentGenerationPhase: {
         phase: GenerationPhase,
-      }
+      },
     },
   },
   GetMapData: {
@@ -63,9 +63,21 @@ type CreateWorldSubcmd = {
         topLeft: CellCoord,
         dims: WorldDims,
         data: number[][],
-      }
-    }
-  }
+      },
+    },
+  },
+  GetMinimapData: {
+    params: {
+      miniDims: WorldDims,
+      datumId: GenerationCellDatumId,
+    },
+    response: {
+      MinimapData: {
+        miniDims: WorldDims,
+        data: number[],
+      },
+    },
+  },
 }
 
 export default CreateWorldSubcmd;

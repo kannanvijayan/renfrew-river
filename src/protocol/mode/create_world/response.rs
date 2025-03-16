@@ -7,6 +7,7 @@ use super::{
   current_descriptor_input_cmd::CurrentDescriptorInputRsp,
   current_generation_phase_cmd::CurrentGenerationPhaseRsp,
   get_map_data_cmd::GetMapDataRsp,
+  get_minimap_data_cmd::GetMinimapDataRsp,
 };
 
 #[derive(Debug, Clone)]
@@ -20,4 +21,5 @@ pub(crate) enum CreateWorldSubcmdResponse {
   Failed(Vec<String>),
   CurrentGenerationPhase(CurrentGenerationPhaseRsp),
   MapData(GetMapDataRsp),
+  MinimapData(GetMinimapDataRsp),
 }

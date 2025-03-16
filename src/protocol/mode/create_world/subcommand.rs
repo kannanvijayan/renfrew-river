@@ -5,6 +5,7 @@ use super::{
   take_generation_step_cmd::TakeGenerationStepCmd,
   current_generation_phase_cmd::CurrentGenerationPhaseCmd,
   get_map_data_cmd::GetMapDataCmd,
+  get_minimap_data_cmd::GetMinimapDataCmd,
 };
 
 #[derive(Debug)]
@@ -16,4 +17,5 @@ pub(crate) enum CreateWorldSubcmdEnvelope {
   TakeGenerationStep(TakeGenerationStepCmd),
   CurrentGenerationPhase(CurrentGenerationPhaseCmd),
   GetMapData(GetMapDataCmd),
+  GetMinimapData(GetMinimapDataCmd),
 }

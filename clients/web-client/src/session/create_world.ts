@@ -67,6 +67,14 @@ export class CreateWorldModule {
     return this.client.createWorld.getMapData(args);
   }
 
+  public async getMinimapData(args: {
+    miniDims: WorldDims,
+    datumId: GenerationCellDatumId,
+  }): Promise<Uint32Array> {
+    const data = await this.client.createWorld.getMinimapData(args);
+    return new Uint32Array(data);
+  }
+
   public async leave(): Promise<true> {
     await this.client.createWorld.leave();
     dispatchApp.view.connected.createWorld.specifyDescriptor(
