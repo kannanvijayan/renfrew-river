@@ -161,7 +161,7 @@ export default class MinimapDataset {
 
   private getDataRange(datumId: GenerationCellDatumId): [number, number] {
     if ("RandGen" in datumId) {
-      return [0, 0xffff];
+      return [0, 0x10000];
     } else if ("Selector" in datumId) {
       throw new Error("MinimapDataSet.getDataRange: Selector not supported");
     } else {

@@ -1,6 +1,4 @@
 
-// LIBRARY(perlin64)
-
 // LIBRARY(xxhash)
 fn rot_left(val: vec4<u32>, rot: vec4<u32>) -> vec4<u32> {
   return (val << rot) | (val >> (32u - rot));
@@ -516,7 +514,7 @@ fn perlinfx_gen_u16(
     let randval = perlinfx_swizzle(seed, i, world_dims.x, world_dims.y, 0u);
     // let adjust = vec2<u32>(randval & 0xFFFu, (randval >> 12u) & 0xFFFu);
     let adjust = (cur_grid_size / ((i * 2u) + 1u));
-    
+
     let stage_result = perlinfx_stage(world_dims, seed, xy + adjust, cur_grid_size, i);
     result += stage_result >> cur_scaledown_log2;
     sum_scale += (1u << (PERLINFX_RESCALE_LOG2 - cur_scaledown_log2));
@@ -526,48 +524,4 @@ fn perlinfx_gen_u16(
   }
 
   return (result * PERLINFX_RESCALE) / sum_scale;
-}
-// END_LIBRARY(perlin64)
-
-struct Uniforms {
-  world_dims: vec2<u32>,
-  top_left: vec2<u32>,
-  out_dims: vec2<u32>,
-  seed: u32,
-};
-
-@group(0) @binding(0)
-var<uniform> uniforms: Uniforms;
-
-@group(0) @binding(1)
-var<storage, write> output_buffer: array<u32>;
-
-@compute
-@workgroup_size(8, 8)
-fn rand_gen_task(
-  @builtin(global_invocation_id) global_id: vec3<u32>
-) {
-  let world_dims = uniforms.world_dims;
-  let out_dims = uniforms.out_dims;
-  let seed = uniforms.seed;
-
-  // Bounds check against the output buffer.
-  let rel_xy = global_id.xy;
-  if (rel_xy.x >= out_dims.x || rel_xy.y >= out_dims.y) {
-    return;
-  }
-
-  // Bounds check against the world.
-  let cell_xy = uniforms.top_left + rel_xy;
-  if (cell_xy.x >= world_dims[0] || cell_xy.y >= world_dims[1]) {
-    return;
-  }
-
-  // Generate the value.
-  var value = perlinfx_gen_u16(
-    world_dims, seed, cell_xy, world_dims / 4u, 8u);
-
-  // Write it to correct location in output buffer.
-  let index: u32 = (rel_xy.y * out_dims.x) + rel_xy.x;
-  output_buffer[index] = value;
 }
