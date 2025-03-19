@@ -497,6 +497,7 @@ fn perlinfx_gen_u16(
   xy: vec2<u32>,
   grid_size: vec2<u32>,
   num_octaves: u32,
+  borderfade_pml: vec2<u32>,
 ) -> u32 {
   var result: u32 = 0u;
   var sum_scale: u32 = 0u;
@@ -523,5 +524,41 @@ fn perlinfx_gen_u16(
     cur_scaledown_log2 += 1u;
   }
 
-  return (result * PERLINFX_RESCALE) / sum_scale;
+  var result_u16 = (result * PERLINFX_RESCALE) / sum_scale;
+
+  // Check the distance to the border of the tile.
+  if (borderfade_pml.x > 0u && borderfade_pml.y > 0u) {
+    let border_dist = vec2<u32>(
+      min(xy.x, world_dims.x - xy.x),
+      min(xy.y, world_dims.y - xy.y)
+    );
+
+    let border_dist_pml = (border_dist * 1000u) / world_dims;
+
+    var xdist_pml: u32 = borderfade_pml.x;
+    if (border_dist_pml.x < borderfade_pml.x) {
+      xdist_pml = border_dist_pml.x;
+    }
+
+    var ydist_pml: u32 = borderfade_pml.y;
+    if (border_dist_pml.y < borderfade_pml.y) {
+      ydist_pml = border_dist_pml.y;
+    }
+
+    if (xdist_pml < borderfade_pml.x || ydist_pml < borderfade_pml.y) {
+      var dist_pml = (xdist_pml * ydist_pml + xdist_pml * ydist_pml) >> 8u;
+      var scale_pml =
+        (borderfade_pml.x * borderfade_pml.y + borderfade_pml.x * borderfade_pml.y)
+          >> 8u;
+
+      result_u16 = (result_u16 * dist_pml) / scale_pml;
+    }
+  }
+
+  // Scale all values in the range [0, 199] to [50, 199].
+  if (result_u16 < 50u) {
+    result_u16 = 50u + ((((result_u16 * 15u) << 8u) / 20u) >> 8u);
+  }
+
+  return result_u16;
 }
