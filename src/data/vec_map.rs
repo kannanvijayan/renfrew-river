@@ -1,5 +1,5 @@
 use std::iter::Iterator;
-use crate::world::{ WorldDims, CellCoord };
+use crate::data::map::{ WorldDims, CellCoord };
 
 /**
  * Map of some type T over the world tiles.

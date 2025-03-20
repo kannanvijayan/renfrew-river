@@ -1,4 +1,4 @@
-use super::cell_data::CellComponentSelector;
+use super::map::CellComponentSelector;
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

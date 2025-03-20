@@ -1,6 +1,6 @@
 use crate::{
   cog::{ CogDevice, CogSeqBuffer },
-  world::{ Histogram, WorldDims },
+  data::{ Histogram, map::WorldDims },
 };
 
 /**

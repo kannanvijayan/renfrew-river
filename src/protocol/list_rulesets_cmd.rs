@@ -1,5 +1,5 @@
 use serde;
-use crate::ruleset::RulesetEntry;
+use crate::data::ruleset::RulesetEntry;
 use super::{
   command::{ Command, CommandEnvelope },
   response::ResponseEnvelope,

@@ -5,9 +5,8 @@ mod gpu;
 mod network;
 //mod gpu;
 mod protocol;
-mod ruleset;
 mod shady_vm;
-mod world;
+mod data;
 mod data_store;
 mod utility;
 

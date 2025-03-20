@@ -85,7 +85,6 @@ impl<S: CogShaderScript> CogShaderModule<S> {
     pass.finish(E::WORKGROUP_SIZE);
   }
 
-
   fn create_pipeline_1d<E>(&self) -> CogComputePipeline
     where E: CogShaderEntrypoint1D<S>
   {

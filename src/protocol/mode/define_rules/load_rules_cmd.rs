@@ -5,7 +5,7 @@ use crate::{
     mode::define_rules::DefineRulesSubcmdResponse,
     response::ResponseEnvelope,
   },
-  ruleset::{ Ruleset, TerrainGenRules },
+  data::ruleset::{ Ruleset, TerrainGenRules },
 };
 use super::DefineRulesSubcmdEnvelope;
 

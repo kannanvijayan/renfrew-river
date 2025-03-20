@@ -5,8 +5,10 @@ use crate::{
     ReadMinimapDataShaderScript,
     ReadMinimapDataUniforms,
   },
-  ruleset::FormatComponentSelector,
-  world::WorldDims,
+  data::{
+    map::WorldDims,
+    ruleset::FormatComponentSelector,
+  },
 };
 
 pub(crate) struct ReadMinimapDataTask {

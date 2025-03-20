@@ -5,11 +5,9 @@ use crate::{
     mode::create_world::CreateWorldSubcmdResponse,
     response::ResponseEnvelope
   },
-  world::{
-    CellComponentSelector,
-    CellCoord,
+  data::{
+    map::{ CellComponentSelector, WorldDims },
     GenerationCellDatumId,
-    WorldDims,
   },
 };
 use super::CreateWorldSubcmdEnvelope;

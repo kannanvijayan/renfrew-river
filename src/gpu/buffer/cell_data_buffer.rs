@@ -1,6 +1,6 @@
 use crate::{
   cog::{ CogDevice, CogMapBuffer, CogSeqBuffer },
-  world::{ CellData, WorldDims },
+  data::map::{ CellData, WorldDims },
 };
 
 #[derive(Clone)]

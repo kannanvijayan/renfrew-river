@@ -14,7 +14,7 @@ use crate::{
     GetMapDataCmd,
     GetMinimapDataCmd,
   },
-  world::{ WorldDescriptor, WorldDescriptorInput }
+  data::map::{ WorldDescriptor, WorldDescriptorInput }
 };
 use self::{
   specify_new_world_state::SpecifyNewWorldState,

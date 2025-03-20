@@ -6,7 +6,7 @@ use crate::{
     response::ResponseEnvelope,
   },
   shady_vm::{ ShasmParseError, ShasmProgramValidation },
-  ruleset::{
+  data::ruleset::{
     FormatComponentInput,
     FormatComponentValidation,
     FormatInput,

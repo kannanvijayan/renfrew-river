@@ -1,6 +1,6 @@
 use crate::{
   cog::{ CogShaderEntrypoint2D, CogShaderScript, CogUniformType },
-  world::WorldDims,
+  data::map::WorldDims,
 };
 
 pub(crate) struct CalcMapHistoBranchShaderScript;

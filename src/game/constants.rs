@@ -1,4 +1,4 @@
-use crate::world::WorldDims;
+use crate::data::map::WorldDims;
 
 /** Maximum size of a game world. */
 pub const MAX_WORLD_DIMS: WorldDims = WorldDims::new(1000, 1000);

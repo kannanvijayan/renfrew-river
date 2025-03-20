@@ -7,7 +7,11 @@ use crate::{
     CurrentDescriptorInputRsp,
     UpdateDescriptorInputCmd,
   },
-  world::{ WorldDescriptor, WorldDescriptorInput, WorldDescriptorValidation }
+  data::map::{
+    WorldDescriptor,
+    WorldDescriptorInput,
+    WorldDescriptorValidation
+  }
 };
 
 pub(crate) struct SpecifyNewWorldState {

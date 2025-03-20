@@ -1,7 +1,9 @@
 use crate::{
   cog::{ CogShaderEntrypoint2D, CogShaderScript, CogUniformType },
-  ruleset::FormatComponentSelectorReadSpec,
-  world::{ CellCoord, WorldDims },
+  data::{
+    map::{ CellCoord, WorldDims },
+    ruleset::FormatComponentSelectorReadSpec,
+  },
 };
 
 pub(crate) struct ReadMapDataShaderScript;

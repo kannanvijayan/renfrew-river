@@ -1,4 +1,4 @@
-use crate::world::{
+use crate::data::map::{
   WorldDescriptor,
   WorldDescriptorInput,
   WorldDescriptorLimits,

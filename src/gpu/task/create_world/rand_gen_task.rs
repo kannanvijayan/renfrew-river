@@ -2,26 +2,24 @@ use std::cell::Cell;
 use crate::{
   cog::{ CogEncoder, CogTask },
   gpu::{
-    wgsl::{
-      create_world::{
-        RandGenEntrypoint,
-        RandGenShaderScript,
-        RandGenUniforms,
-      },
-      common::{
-        CalcMapHistoBranchEntrypoint,
-        CalcMapHistoBranchShaderScript,
-        CalcMapHistoBranchUniforms,
-        CalcMapHistoLeafEntrypoint,
-        CalcMapHistoLeafShaderScript,
-        CalcMapHistoLeafUniforms,
-      }
+    wgsl::create_world::{
+      CalcMapHistoBranchEntrypoint,
+      CalcMapHistoBranchShaderScript,
+      CalcMapHistoBranchUniforms,
+      CalcMapHistoLeafEntrypoint,
+      CalcMapHistoLeafShaderScript,
+      CalcMapHistoLeafUniforms,
+      RandGenEntrypoint,
+      RandGenShaderScript,
+      RandGenUniforms,
     },
     RandGenBuffer,
     HistogramBuffer,
   },
-  ruleset::FormatComponentSelector,
-  world::{ CellCoord, WorldDims },
+  data::{
+    map::{ CellCoord, WorldDims },
+    ruleset::FormatComponentSelector,
+  },
 };
 
 pub(crate) struct RandGenTask {

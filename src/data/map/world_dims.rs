@@ -1,5 +1,5 @@
 use serde;
-use crate::world::CellCoord;
+use crate::data::map::CellCoord;
 
 /**
  * The dimensions of the game world.

@@ -11,7 +11,7 @@ use std::{
     atomic::AtomicBool,
   },
 };
-use crate::world::WorldDims;
+use crate::data::map::WorldDims;
 use super::{
   constants::GPU_MIN_BUFFER_SIZE,
   CogUniformBuffer,

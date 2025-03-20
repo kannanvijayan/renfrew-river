@@ -8,7 +8,6 @@ use crate::{
       ReadMinimapDataTask,
     },
     CellDataBuffer,
-    HistogramBuffer,
     RandGenBuffer,
     ProgramBuffer,
   },
@@ -22,15 +21,21 @@ use crate::{
     GetMinimapDataRsp,
     TakeGenerationStepCmd,
   },
-  ruleset::{ FormatComponentSelector, FormatComponentSelectorReadSpec, Ruleset },
   shady_vm::{ ShadyProgram, ShadyProgramIndex, ShasmProgram },
-  world::{
-    CellData,
+  data::{
+    map::{
+      CellData,
+      WorldDescriptor,
+    },
+    ruleset::{
+      FormatComponentSelector,
+      FormatComponentSelectorReadSpec,
+      Ruleset,
+    },
     GenerationCellDatumId,
     GenerationPhase,
     GenerationStepKind,
     Histogram,
-    WorldDescriptor,
   },
 };
 

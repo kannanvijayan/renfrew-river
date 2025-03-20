@@ -1,5 +1,5 @@
 use super::FileManagerSubtree;
-use crate::ruleset::{ Ruleset, RulesetEntry };
+use crate::data::ruleset::{ Ruleset, RulesetEntry };
 
 #[derive(Debug, Clone)]
 #[derive(serde::Serialize, serde::Deserialize)]

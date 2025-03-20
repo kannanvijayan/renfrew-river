@@ -1,6 +1,6 @@
 use crate::{
   cog::{ CogShaderEntrypoint2D, CogShaderScript, CogUniformType },
-  world::{ CellCoord, WorldDims }
+  data::map::{ CellCoord, WorldDims }
 };
 
 pub(crate) struct RandGenShaderScript;

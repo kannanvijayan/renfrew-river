@@ -1,7 +1,9 @@
 use crate::{
   cog::{ CogShaderEntrypoint2D, CogShaderScript, CogUniformType },
-  ruleset::FormatComponentSelector,
-  world::WorldDims,
+  data::{
+    map::WorldDims,
+    ruleset::FormatComponentSelector,
+  },
 };
 
 pub(crate) struct CalcMapHistoLeafShaderScript;

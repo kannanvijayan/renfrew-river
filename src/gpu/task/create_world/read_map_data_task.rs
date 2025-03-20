@@ -5,8 +5,10 @@ use crate::{
     ReadMapDataShaderScript,
     ReadMapDataUniforms,
   },
-  ruleset::FormatComponentSelectorReadSpec,
-  world::{ CellCoord, WorldDims },
+  data::{
+    map::{ CellCoord, WorldDims },
+    ruleset::FormatComponentSelectorReadSpec,
+  },
 };
 
 pub(crate) struct ReadMapDataTask {

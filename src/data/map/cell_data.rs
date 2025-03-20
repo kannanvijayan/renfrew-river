@@ -1,5 +1,11 @@
 use serde;
-use crate::{cog::CogBufferType, ruleset::{FormatComponentSelector, FormatRules}};
+use crate::{
+  cog::CogBufferType,
+  data::ruleset::{
+    FormatComponentSelector,
+    FormatRules,
+  },
+};
 
 pub(crate) const CELL_DATA_NUM_WORDS: usize = 8;
 pub(crate) type CellDataWords = [u32; CELL_DATA_NUM_WORDS];

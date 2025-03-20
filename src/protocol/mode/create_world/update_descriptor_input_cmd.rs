@@ -5,7 +5,7 @@ use crate::{
     mode::create_world::CreateWorldSubcmdResponse,
     response::ResponseEnvelope,
   },
-  world::{
+  data::map::{
     WorldDescriptor,
     WorldDescriptorInput,
     WorldDescriptorValidation,

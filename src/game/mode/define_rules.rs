@@ -9,7 +9,7 @@ use crate::{
     CurrentRulesCmd,
     CurrentRulesRsp,
   },
-  ruleset::RulesetInput,
+  data::ruleset::RulesetInput,
 };
 
 pub(crate) struct DefineRulesMode {

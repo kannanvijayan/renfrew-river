@@ -2,7 +2,7 @@ use std::{ marker::PhantomData, mem };
 use futures;
 use crate::{
   cog::{ CogSeqBuffer, CogDevice },
-  world::{ CellCoord, WorldDims },
+  data::map::{ CellCoord, WorldDims },
 };
 use super::{ CogBufferBase, CogBufferType };
 

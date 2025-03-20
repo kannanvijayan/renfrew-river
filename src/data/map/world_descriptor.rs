@@ -1,7 +1,10 @@
 use sha256;
-use crate::ruleset::RulesetEntry;
-
-use super::{ WorldDims, WorldDimsInput, WorldDimsValidation };
+use crate::data::ruleset::RulesetEntry;
+use super::{
+  WorldDims,
+  WorldDimsInput,
+  WorldDimsValidation,
+};
 
 #[derive(Clone, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
