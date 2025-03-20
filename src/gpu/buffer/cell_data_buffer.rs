@@ -9,7 +9,7 @@ pub(crate) struct CellDataBuffer {
 }
 impl CellDataBuffer {
   pub(crate) fn new(device: &CogDevice, dims: WorldDims) -> Self {
-    let buffer = CogMapBuffer::new_uninit(device, dims, "cell_data");
+    let buffer = CogMapBuffer::new_uninit(device, dims, "CellDataBuf");
     CellDataBuffer { buffer }
   }
 

@@ -1,6 +1,7 @@
 mod cell_coord;
 mod cell_data;
 mod generation;
+mod hisotgram;
 mod vec_map;
 mod world_descriptor;
 mod world_dims;
@@ -16,6 +17,7 @@ pub(crate) use self::{
     GenerationPhase,
     GenerationCellDatumId,
   },
+  hisotgram::Histogram,
   world_descriptor::{
     WorldDescriptor,
     WorldDescriptorInput,

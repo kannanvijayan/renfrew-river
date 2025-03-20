@@ -1,11 +1,16 @@
 use crate::{
-  cog::{ CogDevice, CogMapBuffer, CogTask },
+  cog::{ CogDevice, CogTask },
   data_store,
   gpu::{
-    task::create_world::{ RandGenTask, ReadMapDataTask, ReadMinimapDataTask },
+    task::create_world::{
+      RandGenTask,
+      ReadMapDataTask,
+      ReadMinimapDataTask,
+    },
     CellDataBuffer,
+    HistogramBuffer,
+    RandGenBuffer,
     ProgramBuffer,
-    ShaderRegistry,
   },
   protocol::mode::create_world::{
     CreateWorldSubcmdResponse,
@@ -24,6 +29,7 @@ use crate::{
     GenerationCellDatumId,
     GenerationPhase,
     GenerationStepKind,
+    Histogram,
     WorldDescriptor,
   },
 };
@@ -33,7 +39,8 @@ pub(crate) struct GeneratingWorldState {
   ruleset: Ruleset,
   phase: GenerationPhase,
   device: CogDevice,
-  randgen_buffer: CogMapBuffer<u32>,
+  randgen_buffer: RandGenBuffer,
+  randgen_histogram: Option<Histogram>,
   cell_data_buffer: CellDataBuffer,
   programs: GeneratingWorldPrograms,
 }
@@ -42,10 +49,7 @@ impl GeneratingWorldState {
     let phase = GenerationPhase::NewlyCreated;
     let device = CogDevice::new();
     let cell_data_buffer = CellDataBuffer::new(&device, descriptor.dims);
-    let randgen_buffer = device.create_map_buffer::<u32>(
-      descriptor.dims,
-      "RandGen_Output"
-    );
+    let randgen_buffer = RandGenBuffer::new(&device, descriptor.dims);
     let programs = GeneratingWorldPrograms::new(&device, &ruleset);
     GeneratingWorldState {
       descriptor,
@@ -53,6 +57,7 @@ impl GeneratingWorldState {
       phase,
       device,
       randgen_buffer,
+      randgen_histogram: None,
       cell_data_buffer,
       programs,
     }
@@ -135,7 +140,7 @@ impl GeneratingWorldState {
           cmd.top_left,
           cmd.dims,
           selectors.clone(),
-          self.randgen_buffer.as_seq_buffer().clone(),
+          self.randgen_buffer.buffer().as_seq_buffer().clone(),
           1,
           output_buffer.clone()
         )
@@ -198,7 +203,7 @@ impl GeneratingWorldState {
           cmd.mini_dims,
           1,
           selector,
-          self.randgen_buffer.as_seq_buffer(),
+          self.randgen_buffer.buffer().as_seq_buffer(),
           output_buffer.clone()
         )
       } else {
@@ -271,14 +276,31 @@ impl GeneratingWorldState {
         ),
       ]);
     }
+
     let randgen_task = RandGenTask::new(
       self.descriptor.dims,
       self.descriptor.seed_u32(),
       self.randgen_buffer.clone(),
     );
+
+    // Run the tasks.
     self.device.encode_and_run("CreateWorld_RandGen", |enc| {
       randgen_task.encode(enc);
     });
+
+    // KVKV REMOVE
+    // Read and save the histogram from the last buffer.
+    let histo_buffers = randgen_task.take_outhist_buffers();
+    eprintln!("Randgen_histograms: {:?}", histo_buffers.len());
+    for (i, histo) in histo_buffers.iter().enumerate() {
+      eprintln!("Computed randgen histogram {}: {:?} (buflen={})",
+        i, histo.compute_histogram(), histo.buffer().len());
+      if i > 0 {
+        histo.buffer().read_mapped_full(|data| {
+            eprintln!("Randgen histogram {}: {:?}", i, data);
+        });
+      }
+    }
 
     self.phase = GenerationPhase::PreInitialize;
     CreateWorldSubcmdResponse::Ok {}

@@ -46,6 +46,10 @@ impl<T: CogBufferType> CogSeqBuffer<T> {
     self.len
   }
 
+  pub(crate) fn size(&self) -> usize {
+    self.len * mem::size_of::<T::GpuType>()
+  }
+
   pub(crate) fn wgpu_buffer(&self) -> &wgpu::Buffer {
     self.base.wgpu_buffer()
   }

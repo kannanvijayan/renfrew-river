@@ -68,6 +68,24 @@ impl WorldDims {
       top_left.row + self.rows - 1
     )
   }
+
+  pub(crate) const fn scaledown_roundup(&self, scale: u32) -> WorldDims {
+    let cols = self.columns_u32().div_ceil(scale);
+    let rows = self.rows_u32().div_ceil(scale);
+    WorldDims::new(cols as u16, rows as u16)
+  }
+
+  pub(crate) fn each_index_by_row<P>(&self, p: P)
+    where P: FnMut(u32, CellCoord)
+  {
+    let mut proc = p;
+    for row in 0..self.rows {
+      for col in 0..self.columns {
+        let index = self.coord_index(CellCoord::new(col, row));
+        proc(index, CellCoord::new(col, row));
+      }
+    }
+  }
 }
 
 #[derive(Clone, Debug)]

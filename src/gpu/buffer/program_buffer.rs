@@ -32,7 +32,7 @@ impl ProgramBuffer {
     let buffer = ShadyProgramGpuBuffer::new_uninit(
       device,
       Self::INIT_BUFFER_INSTRS,
-      "program_buffer"
+      "ProgramBuf"
     );
 
     ProgramBuffer { programs, name_to_position, buffer }

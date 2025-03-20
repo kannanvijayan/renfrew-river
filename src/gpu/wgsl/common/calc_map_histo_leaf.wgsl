@@ -237,9 +237,11 @@ fn format_selector_spec_word_decode(fssw: FormatSelectorReadSpecWord)
 
 struct Uniforms {
   world_dims: vec2<u32>,
-  mini_dims: vec2<u32>,
+  area_dims: vec2<u32>,
+  value_range: vec2<u32>,
+  num_buckets: u32,
   entry_size: u32,
-  selector: u32,
+  selector: u32
 };
 
 @group(0) @binding(0)
@@ -249,74 +251,62 @@ var<uniform> uniforms: Uniforms;
 var<storage, read> input_buffer: array<u32>;
 
 @group(0) @binding(2)
-var<storage, write> output_buffer: array<u32>;
+var<storage, read_write> output_buffer: array<u32>;
 
 @compute
 @workgroup_size(8, 8)
-fn read_minimap_data(
+fn calc_map_histo_leaf(
   @builtin(global_invocation_id) global_id: vec3<u32>
 ) {
   let world_dims = uniforms.world_dims;
-  let mini_dims = uniforms.mini_dims;
+  let area_dims = uniforms.area_dims;
+  let value_range = uniforms.value_range;
+  let num_buckets = uniforms.num_buckets;
   let entry_size = uniforms.entry_size;
   let selector = uniforms.selector;
 
-  let mini_world_scale = vec2<f32>(world_dims) / vec2<f32>(mini_dims);
+  let grid_dims = (world_dims + area_dims - vec2<u32>(1u, 1u)) / area_dims;
 
   // Bounds check against the output buffer.
-  let mini_xy: vec2<u32> = global_id.xy;
-  if (mini_xy.x >= mini_dims.x || mini_xy.y >= mini_dims.y) {
+  let grid_xy: vec2<u32> = global_id.xy;
+  if (grid_xy.x >= grid_dims.x || grid_xy.y >= grid_dims.y) {
     return;
   }
 
-  // Calculate the world cell coordinate boundaries that
-  // correspond to the minimap cell.
-  let cell_xy_cf = (
-    vec2<f32>(world_dims) *
-    (vec2<f32>(mini_xy) / vec2<f32>(mini_dims))
+  let sel_fmt = format_selector_word_decode(
+    FormatSelectorReadSpecWord(selector)
   );
-  let cell_xy_br_f = cell_xy_cf + (vec2<f32>(0.5, 0.5) * mini_world_scale);
-  let cell_xy_tl_f = cell_xy_cf - (vec2<f32>(0.5, 0.5) * mini_world_scale);
 
-  let cell_xy_tl_signed = vec2<i32>(floor(cell_xy_tl_f));
-  let cell_xy_br_unclamped = vec2<u32>(ceil(cell_xy_br_f));
-
-  // Clamp the top left corner to (0, 0)
-  // Clamp the bottom right corner to (world_dims.x, world_dims.y)
-  let cell_xy_tl = vec2<u32>(max(cell_xy_tl_signed, vec2<i32>(0, 0)));
-  let cell_xy_br = min(cell_xy_br_unclamped, world_dims - vec2<u32>(1u, 1u));
-
-  let cells_span = vec2<u32>(cell_xy_br - cell_xy_tl);
-
-  let sel_word = FormatSelectorWord(selector);
-  let sel = format_selector_word_decode(sel_word);
-
-  var sum = 0u;
-  var count = 0u;
-
-  for (var j = 0u; j < cells_span.y; j++) {
-    for (var i = 0u; i < cells_span.x; i++) {
-      let cell = hexcell_checked(world_dims, cell_xy_tl + vec2<u32>(i, j));
-      if (hexcell_is_invalid(cell)) {
+  let output_idx: u32 = hexcell_index(grid_dims, grid_xy) * num_buckets;
+  let tl_xy = grid_xy * area_dims;
+  for (var j = 0u; j < area_dims.y; j++) {
+    for (var i = 0u; i < area_dims.x; i++) {
+      let cell_xy = tl_xy + vec2<u32>(i, j);
+      if (cell_xy.x >= world_dims.x || cell_xy.y >= world_dims.y) {
         continue;
       }
-      let cell_index = hexcell_index(world_dims, cell);
-
+      let cell_index = hexcell_index(world_dims, cell_xy);
       let entry_index = cell_index * entry_size;
-      let word_index = entry_index + sel.word;
+      let word_index = entry_index + sel_fmt.word;
       let word_value = input_buffer[word_index];
-      let shifted_value = word_value >> sel.shift;
-      let value = shifted_value & format_selector_get_mask(sel);
-
-      sum += value;
-      count += 1u;
+      let cell_value =
+        (word_value >> sel_fmt.shift) & format_selector_get_mask(sel_fmt);
+      let cell_bucket = bucket_for_value(cell_value, value_range, num_buckets);
+      let cell_bucket_clamped = clamp(cell_bucket, 0u, num_buckets - 1u);
+      let bucket_index = output_idx + cell_bucket_clamped;
+      output_buffer[bucket_index] += 1u;
     }
   }
+}
 
-  var avg = 0xFFFFFFFFu;
-  if (count > 0u) {
-    avg = u32(f32(sum) / f32(count));
+fn bucket_for_value(value: u32, value_range: vec2<u32>, num_buckets: u32) -> u32 {
+  if (value < value_range.x) {
+    return u32(-1);
   }
-  let mini_index = hexcell_index(mini_dims, mini_xy);
-  output_buffer[mini_index] = avg;
+  if (value >= value_range.y) {
+    return num_buckets;
+  }
+
+  let range = value_range.y - value_range.x;
+  return ((value - value_range.x) * num_buckets) / range;
 }
