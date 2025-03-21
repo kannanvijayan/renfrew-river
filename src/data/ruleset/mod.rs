@@ -1,14 +1,22 @@
 mod format;
+mod format_word;
+mod format_component;
 mod terrain_gen;
+mod terrain_gen_randgen;
+mod terrain_gen_stage;
 
 pub(crate) use self::{
   format::{
     FormatRules,
     FormatInput,
     FormatValidation,
+  },
+  format_word::{
     FormatWordRules,
     FormatWordInput,
     FormatWordValidation,
+  },
+  format_component::{
     FormatComponentRules,
     FormatComponentInput,
     FormatComponentValidation,
@@ -19,12 +27,16 @@ pub(crate) use self::{
     TerrainGenRules,
     TerrainGenInput,
     TerrainGenValidation,
-    TerrainGenStageRules,
-    TerrainGenStageInput,
-    TerrainGenStageValidation,
+  },
+  terrain_gen_randgen::{
     TerrainGenPerlinRules,
     TerrainGenPerlinInput,
     TerrainGenPerlinValidation,
+  },
+  terrain_gen_stage::{
+    TerrainGenStageRules,
+    TerrainGenStageInput,
+    TerrainGenStageValidation,
   },
 };
 
