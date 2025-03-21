@@ -1,4 +1,6 @@
 
+// LIBRARY(int64)
+
 // Int64 - 64-bit signed integer type
 ////////////////////////////////////////////////////////////
 
@@ -240,4 +242,54 @@ fn vec2int64_sub(a: Vec2Int64, b: Vec2Int64) -> Vec2Int64 {
 
 fn vec2int64_mul(a: Vec2Int64, b: Vec2Int64) -> Vec2Int64 {
   return Vec2Int64(int64_mul(a.x, b.x), int64_mul(a.y, b.y));
+}
+// END_LIBRARY(int64)
+
+
+// Statistics
+////////////////////////////////////////////////////////////
+
+struct Statistics {
+  min: Int64,
+  max: Int64,
+  sum: Int64,
+  sqsum: Int64,
+  count: u32,
+}
+
+fn statistics_new() -> Statistics {
+  return Statistics(
+    int64_max_value(),
+    int64_min_value(),
+    int64_from_u32(0u),
+    int64_from_u32(0u),
+    0u
+  );
+}
+
+fn statistics_add_value(
+  stats: Statistics,
+  value: Int64
+) -> Statistics {
+  var new_stats = stats;
+  new_stats.count += 1u;
+  new_stats.sum = int64_add(new_stats.sum, value);
+  new_stats.sqsum = int64_add(new_stats.sqsum, int64_mul(value, value));
+  new_stats.min = int64_min(new_stats.min, value);
+  new_stats.max = int64_max(new_stats.max, value);
+  return new_stats;
+}
+
+
+fn statistics_merge(
+  stats_a: Statistics,
+  stats_b: Statistics
+) -> Statistics {
+  var new_stats = stats_a;
+  new_stats.count += stats_b.count;
+  new_stats.sum = int64_add(new_stats.sum, stats_b.sum);
+  new_stats.sqsum = int64_add(new_stats.sqsum, stats_b.sqsum);
+  new_stats.min = int64_min(new_stats.min, stats_b.min);
+  new_stats.max = int64_max(new_stats.max, stats_b.max);
+  return new_stats;
 }

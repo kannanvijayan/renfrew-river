@@ -1,5 +1,6 @@
 mod generation;
-mod hisotgram;
+mod histogram;
+mod statistics;
 mod vec_map;
 
 pub(crate) mod map;
@@ -11,6 +12,7 @@ pub(crate) use self::{
     GenerationPhase,
     GenerationCellDatumId,
   },
-  hisotgram::Histogram,
+  histogram::Histogram,
+  statistics::Statistics,
   vec_map::VecMap,
 };

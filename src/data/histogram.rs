@@ -1,7 +1,7 @@
 
 #[derive(Debug, Clone)]
 pub(crate) struct Histogram {
-  pub(crate) data: Vec<u64>,
+  pub(crate) data: Vec<i64>,
 }
 
 impl Histogram {
@@ -10,17 +10,17 @@ impl Histogram {
     Self { data }
   }
 
-  pub(crate) fn add(&mut self, bucket: usize, value: u32) {
-    self.data[bucket] += value as u64;
+  pub(crate) fn add(&mut self, bucket: usize, value: i32) {
+    self.data[bucket] += value as i64;
   }
 
-  pub(crate) fn add_from_slice(&mut self, slice: &[u32]) {
+  pub(crate) fn add_from_slice(&mut self, slice: &[i32]) {
     for (i, &value) in slice.iter().enumerate() {
-      self.data[i] += value as u64;
+      self.data[i] += value as i64;
     }
   }
 
-  pub(crate) fn value(&self, bucket: usize) -> u64 {
+  pub(crate) fn value(&self, bucket: usize) -> i64 {
     self.data[bucket]
   }
 }

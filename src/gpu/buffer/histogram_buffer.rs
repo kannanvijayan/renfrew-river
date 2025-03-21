@@ -10,7 +10,7 @@ use crate::{
 pub(crate) struct HistogramBuffer {
   dims: WorldDims,
   num_buckets: u32,
-  buffer: CogSeqBuffer<u32>
+  buffer: CogSeqBuffer<i32>
 }
 impl HistogramBuffer {
   pub(crate) fn new(device: &CogDevice, dims: WorldDims, num_buckets: u32)
@@ -29,7 +29,11 @@ impl HistogramBuffer {
     }
   }
 
-  pub(crate) fn buffer(&self) -> &CogSeqBuffer<u32> {
+  pub(crate) fn dims(&self) -> &WorldDims {
+    &self.dims
+  }
+
+  pub(crate) fn buffer(&self) -> &CogSeqBuffer<i32> {
     &self.buffer
   }
 

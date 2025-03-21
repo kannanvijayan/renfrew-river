@@ -60,6 +60,13 @@ impl WorldDims {
   pub(crate) const fn columns_usize(&self) -> usize { self.columns as usize }
   pub(crate) const fn rows_usize(&self) -> usize { self.rows as usize }
 
+  pub(crate) const fn div_ceil_dims(&self, other_dims: WorldDims) -> WorldDims {
+    WorldDims::new(
+      self.columns.div_ceil(other_dims.columns),
+      self.rows.div_ceil(other_dims.rows)
+    )
+  }
+
   pub(crate) const fn bottom_right_inclusive(&self, top_left: CellCoord)
     -> CellCoord
   {
@@ -69,7 +76,7 @@ impl WorldDims {
     )
   }
 
-  pub(crate) const fn scaledown_roundup(&self, scale: u32) -> WorldDims {
+  pub(crate) const fn div_ceil_u32(&self, scale: u32) -> WorldDims {
     let cols = self.columns_u32().div_ceil(scale);
     let rows = self.rows_u32().div_ceil(scale);
     WorldDims::new(cols as u16, rows as u16)

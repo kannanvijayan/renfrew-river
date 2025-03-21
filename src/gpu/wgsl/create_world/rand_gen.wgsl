@@ -38,6 +38,13 @@ struct Int64 {
   value: vec2<u32>,
 }
 
+fn int64_min_value() -> Int64 {
+  return Int64(vec2<u32>(0u, 1u << 31u));
+}
+fn int64_max_value() -> Int64 {
+  return Int64(vec2<u32>(0xFFFFFFFFu, 0x7FFFFFFFu));
+}
+
 fn int64_from_u32(value: u32) -> Int64 {
   return Int64(vec2<u32>(value, 0u));
 }
@@ -190,6 +197,22 @@ fn int64_ge(a: Int64, b: Int64) -> bool {
 
 fn int64_gt(a: Int64, b: Int64) -> bool {
   return int64_cmp(a, b) > 0;
+}
+
+fn int64_min(a: Int64, b: Int64) -> Int64 {
+  if (int64_lt(a, b)) {
+    return a;
+  } else {
+    return b;
+  }
+}
+
+fn int64_max(a: Int64, b: Int64) -> Int64 {
+  if (int64_gt(a, b)) {
+    return a;
+  } else {
+    return b;
+  }
 }
 
 fn int64_clamp(a: Int64, min: Int64, max: Int64) -> Int64 {

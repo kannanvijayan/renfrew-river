@@ -10,6 +10,7 @@ pub(crate) use self::{
     ProgramBuffer,
     RandGenBuffer,
     RegisterFileBuffer,
+    StatisticsMapBuffer,
   },
   shader_registry::ShaderRegistry,
 };

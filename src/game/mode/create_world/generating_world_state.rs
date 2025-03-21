@@ -1,11 +1,15 @@
 use crate::{
   cog::{ CogDevice, CogTask },
+  data::Statistics,
   data_store,
   gpu::{
     task::create_world::{
+      ComputeHistogramTask,
+      ComputeStatisticsTask,
       RandGenTask,
       ReadMapDataTask,
       ReadMinimapDataTask,
+      RescaleMapDataTask,
     },
     CellDataBuffer,
     RandGenBuffer,
@@ -46,6 +50,7 @@ pub(crate) struct GeneratingWorldState {
   device: CogDevice,
   randgen_buffer: RandGenBuffer,
   randgen_histogram: Option<Histogram>,
+  randgen_statistics: Option<Statistics>,
   cell_data_buffer: CellDataBuffer,
   programs: GeneratingWorldPrograms,
 }
@@ -63,6 +68,7 @@ impl GeneratingWorldState {
       device,
       randgen_buffer,
       randgen_histogram: None,
+      randgen_statistics: None,
       cell_data_buffer,
       programs,
     }
@@ -272,7 +278,16 @@ impl GeneratingWorldState {
     }
   }
 
+  const RANDGEN_FORMAT_SELECTOR: FormatComponentSelector =
+    FormatComponentSelector::new(0, 0, 30);
+  const HISTOGRAM_NUM_BUCKETS: u32 = 7;
+  const PERLIN_TARGET_RANGE: [u32; 2] = [1024, 0xFFFF - 1024];
+
   fn step_rand_gen(&mut self) -> CreateWorldSubcmdResponse {
+    let dims = self.descriptor.dims;
+    let seed = self.descriptor.seed_u32();
+    let randgen_buffer = self.randgen_buffer.clone();
+
     if self.phase != GenerationPhase::NewlyCreated {
       return CreateWorldSubcmdResponse::Failed(vec![
         format!(
@@ -282,30 +297,57 @@ impl GeneratingWorldState {
       ]);
     }
 
-    let randgen_task = RandGenTask::new(
-      self.descriptor.dims,
-      self.descriptor.seed_u32(),
-      self.randgen_buffer.clone(),
+    let randgen_task = RandGenTask::new(dims, seed, randgen_buffer.clone());
+    let compute_histogram_task = ComputeHistogramTask::new(
+      &self.device,
+      dims,
+      1,
+      Self::RANDGEN_FORMAT_SELECTOR,
+      Self::HISTOGRAM_NUM_BUCKETS,
+      randgen_buffer.buffer().as_seq_buffer().clone(),
     );
+    let compute_stats_task = ComputeStatisticsTask::new(
+      &self.device,
+      dims,
+      1,
+      Self::RANDGEN_FORMAT_SELECTOR,
+      randgen_buffer.buffer().as_seq_buffer().clone(),
+    );
+    
 
     // Run the tasks.
     self.device.encode_and_run("CreateWorld_RandGen", |enc| {
       randgen_task.encode(enc);
+      compute_histogram_task.encode(enc);
+      compute_stats_task.encode(enc);
     });
 
-    // KVKV REMOVE
-    // Read and save the histogram from the last buffer.
-    let histo_buffers = randgen_task.take_outhist_buffers();
-    eprintln!("Randgen_histograms: {:?}", histo_buffers.len());
-    for (i, histo) in histo_buffers.iter().enumerate() {
-      eprintln!("Computed randgen histogram {}: {:?} (buflen={})",
-        i, histo.compute_histogram(), histo.buffer().len());
-      if i > 0 {
-        histo.buffer().read_mapped_full(|data| {
-            eprintln!("Randgen histogram {}: {:?}", i, data);
-        });
-      }
-    }
+    // Print the histogram.
+    let histogram = compute_histogram_task.compute_histogram();
+    self.randgen_histogram = Some(histogram.clone());
+    log::info!("RandGen histogram: {:?}", histogram);
+
+    let statistics = compute_stats_task.compute_statistics();
+    log::info!("RandGen statistics: {:?}", statistics);
+
+    // Run the rescale map data task.
+    let rescaled_randgen_buffer = RandGenBuffer::new(&self.device, dims);
+    let rescale_map_data_task = RescaleMapDataTask::new(
+      dims,
+      statistics.range_u32(),
+      Self::PERLIN_TARGET_RANGE,
+      1,
+      FormatComponentSelector::new(0, 0, 30),
+      randgen_buffer.buffer().as_seq_buffer(),
+      rescaled_randgen_buffer.buffer().as_seq_buffer(),
+    );
+
+    self.device.encode_and_run("CreateWorld_RescaleMapData", |enc| {
+      rescale_map_data_task.encode(enc);
+    });
+
+    // Replace the randgen buffer with the rescaled one.
+    self.randgen_buffer = rescaled_randgen_buffer;
 
     self.phase = GenerationPhase::PreInitialize;
     CreateWorldSubcmdResponse::Ok {}

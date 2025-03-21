@@ -92,7 +92,9 @@ impl CogBindGroupBuilder {
   }
 
   pub(crate) fn build(self) -> CogBindGroup {
-    debug_assert!(self.entries.len() <= self.num_entries as usize);
+    debug_assert!(self.entries.len() <= self.num_entries as usize,
+      "Too many buffer binding entries in group: {} > {}",
+      self.entries.len(), self.num_entries);
     if self.entries.len() != self.num_entries as usize {
       panic!("Wrong number of buffer binding entries in group");
     }

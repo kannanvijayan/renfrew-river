@@ -398,7 +398,7 @@ impl FormatComponentSelector {
   pub(crate) const COUNT_BITS: u32 = 5;
   pub(crate) const COUNT_MASK: u32 = (1 << Self::COUNT_BITS) - 1;
 
-  pub(crate) fn new(word: u8, offset: u8, count: u8) -> Self {
+  pub(crate) const fn new(word: u8, offset: u8, count: u8) -> Self {
     Self { word, offset, count }
   }
 
