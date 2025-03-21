@@ -1,3 +1,4 @@
+mod border_fade;
 mod rand_gen;
 mod rescale_map_data;
 mod calc_map_histo_branch;
@@ -6,6 +7,11 @@ mod calc_map_stats_branch;
 mod calc_map_stats_leaf;
 
 pub(crate) use self::{
+  border_fade::{
+    BorderFadeEntrypoint,
+    BorderFadeShaderScript,
+    BorderFadeUniforms,
+  },
   calc_map_histo_branch::{
     CalcMapHistoBranchEntrypoint,
     CalcMapHistoBranchShaderScript,

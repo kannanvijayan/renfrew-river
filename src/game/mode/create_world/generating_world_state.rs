@@ -4,6 +4,7 @@ use crate::{
   data_store,
   gpu::{
     task::create_world::{
+      BorderFadeTask,
       ComputeHistogramTask,
       ComputeStatisticsTask,
       RandGenTask,
@@ -330,24 +331,36 @@ impl GeneratingWorldState {
     let statistics = compute_stats_task.compute_statistics();
     log::info!("RandGen statistics: {:?}", statistics);
 
-    // Run the rescale map data task.
+    // Rescale the map and apply border fade.
     let rescaled_randgen_buffer = RandGenBuffer::new(&self.device, dims);
     let rescale_map_data_task = RescaleMapDataTask::new(
       dims,
       statistics.range_u32(),
       Self::PERLIN_TARGET_RANGE,
       1,
-      FormatComponentSelector::new(0, 0, 30),
+      Self::RANDGEN_FORMAT_SELECTOR,
       randgen_buffer.buffer().as_seq_buffer(),
       rescaled_randgen_buffer.buffer().as_seq_buffer(),
     );
 
+    let faded_randgen_buffer = RandGenBuffer::new(&self.device, dims);
+    let border_fade_task = BorderFadeTask::new(
+      dims,
+      [10, 10],
+      1,
+      Self::RANDGEN_FORMAT_SELECTOR,
+      1024,
+      rescaled_randgen_buffer.buffer().as_seq_buffer(),
+      faded_randgen_buffer.buffer().as_seq_buffer(),
+    );
+
     self.device.encode_and_run("CreateWorld_RescaleMapData", |enc| {
       rescale_map_data_task.encode(enc);
+      border_fade_task.encode(enc);
     });
 
-    // Replace the randgen buffer with the rescaled one.
-    self.randgen_buffer = rescaled_randgen_buffer;
+    // Replace the randgen buffer with the rescaled and faded one.
+    self.randgen_buffer = faded_randgen_buffer;
 
     self.phase = GenerationPhase::PreInitialize;
     CreateWorldSubcmdResponse::Ok {}
